@@ -51,12 +51,39 @@
     position: absolute; left: calc(12px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom));
     font-size: 12px; line-height: 1.6; opacity: .9; transition: opacity 1.2s;
   }
-  #help kbd {
+  #help kbd, #pause kbd {
     display: inline-block; min-width: 14px; padding: 0 5px; margin-right: 2px; border-radius: 4px; text-align: center;
     background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); font: 600 11px/16px inherit;
   }
   #help.hide { opacity: 0; }
   body.touch #help { display: none; }
+  body.touch.pad #help { display: block; bottom: auto; top: calc(150px + env(safe-area-inset-top)); }
+  .chip {
+    display: inline-block; min-width: 14px; padding: 0 6px; margin-right: 2px; border-radius: 9px; text-align: center;
+    background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); font: 700 11px/16px inherit;
+  }
+  .ps-x { color: #9cc2ff; } .ps-o { color: #ff9c9c; } .ps-s { color: #f3b0e2; } .ps-t { color: #6fe6bb; }
+  .hint-ps, .hint-xb { display: none; }
+  body.pad .hint-kb { display: none; }
+  body.pad.ps .hint-ps { display: inline; }
+  body.pad:not(.ps) .hint-xb { display: inline; }
+  #toast {
+    position: absolute; top: calc(14px + env(safe-area-inset-top)); left: 50%; transform: translate(-50%, -10px);
+    font-size: 13px; font-weight: 700; letter-spacing: .06em; white-space: nowrap; opacity: 0; transition: opacity .35s, transform .35s;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  #fx { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; opacity: 0;
+    background: radial-gradient(ellipse at 50% 46%, rgba(255,244,228,0) 52%, rgba(255,236,210,.10) 74%, rgba(30,14,4,.38) 100%);
+  }
+  #pause {
+    position: fixed; inset: 0; z-index: 5; display: none; cursor: pointer; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(8,12,20,.55); color: #fff; text-align: center; text-shadow: 0 1px 3px rgba(0,0,0,.6);
+  }
+  body.paused #pause { display: flex; }
+  #pause h2 { margin: 0 0 6px; font-size: 34px; letter-spacing: .16em; }
+  #pause p { margin: 4px 0; font-size: 13px; opacity: .85; letter-spacing: .04em; }
   body.touch #speedo {
     bottom: auto; top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right));
   }
@@ -87,6 +114,8 @@
 </head>
 <body>
 <canvas id="game"></canvas>
+<canvas id="fx"></canvas>
+<div id="vignette"></div>
 
 <div id="hud">
   <div id="laps" class="panel">
@@ -107,9 +136,14 @@
     </div>
   </div>
   <div id="banner"></div>
+  <div id="toast" class="panel"></div>
   <div id="help" class="panel">
-    <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows drive &nbsp;
-    <kbd>Space</kbd> handbrake &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics
+    <span class="hint-kb"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows drive &nbsp;
+      <kbd>Space</kbd> handbrake &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics &nbsp; <kbd>Esc</kbd> pause &nbsp;&middot;&nbsp; controller: press any button</span>
+    <span class="hint-ps"><span class="chip">L</span> steer &nbsp; <span class="chip">R2</span> throttle &nbsp; <span class="chip">L2</span> brake / reverse &nbsp;
+      <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip ps-t">&#x25B3;</span> camera &nbsp; <span class="chip">CREATE</span> reset &nbsp; <span class="chip">OPTIONS</span> pause</span>
+    <span class="hint-xb"><span class="chip">LS</span> steer &nbsp; <span class="chip">RT</span> throttle &nbsp; <span class="chip">LT</span> brake / reverse &nbsp;
+      <span class="chip">A</span> handbrake &nbsp; <span class="chip">Y</span> camera &nbsp; <span class="chip">VIEW</span> reset &nbsp; <span class="chip">MENU</span> pause</span>
   </div>
 </div>
 
@@ -121,6 +155,15 @@
   <div class="tbtn" id="t-hand"  data-ctl="hand">DRIFT</div>
   <div class="tbtn" id="t-reset" data-ctl="reset">RESET</div>
   <div class="tbtn" id="t-cam"   data-ctl="cam">CAM</div>
+</div>
+
+<div id="pause">
+  <h2>PAUSED</h2>
+  <p>Menu coming in a later step.</p>
+  <p class="hint-kb">Press <kbd>Esc</kbd> to resume</p>
+  <p class="hint-ps">Press <span class="chip">OPTIONS</span> to resume &nbsp;&middot;&nbsp; <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip ps-o">&#x25CB;</span> &mdash; &nbsp; <span class="chip ps-s">&#x25A1;</span> &mdash; &nbsp; <span class="chip ps-t">&#x25B3;</span> camera</p>
+  <p class="hint-xb">Press <span class="chip">MENU</span> to resume</p>
+  <p>&mdash; or tap / click anywhere &mdash;</p>
 </div>
 
 <div id="err"></div>
@@ -159,6 +202,7 @@ const CONFIG = {
     dt: 1 / 120,          // fixed physics step (s)
     maxSteps: 12,         // max physics steps per rendered frame
     gravity: 9.81,
+    lateralGripAccel: 11, // m/s² cornering limit at grip 1.0 (Physics + input steering scale)
     wallRestitution: 0.3, // bounciness of barriers
     wallFriction: 0.25,   // speed scrubbed along the wall on impact
   },
@@ -214,7 +258,7 @@ const CONFIG = {
       handbrakeDecel: 3.5,    // m/s²
       rollingDrag: 0.35,      // m/s² when coasting
       aeroDrag: 0.00025,      // * v² when coasting
-      grip: 1.0,              // cornering grip (≈ 11 m/s² lateral at 1.0)
+      grip: 1.0,              // cornering grip (× physics.lateralGripAccel)
       lateralGrip: 9,         // how fast sideways slip is killed (1/s)
       driftFactor: 0.78,      // 0..1 rear grip lost on handbrake
       maxDriftAngle: 0.8,     // rad, drift assist keeps slides below this angle
@@ -223,7 +267,6 @@ const CONFIG = {
       highSpeedSteer: 0.3,    // fraction of maxSteer left at top speed
       understeer: 0.28,       // yaw reduction at top speed
       yawResponse: 7,         // how fast the car rotates towards the steering target
-      steerSpeed: 4.0, steerSpeedHigh: 2.2, steerReturn: 6,
       weightTransfer: 0.18,   // grip gained on the front when braking (lost when accelerating)
       weightTransferRate: 5,
       slopeEffect: 0.6,       // how strongly hills slow / speed you up
@@ -236,11 +279,34 @@ const CONFIG = {
   },
   playerCar: 'brisaGT',
 
+  // Input feel (per device, not per car)
+  input: {
+    gripAwareSteering: true, // scale steering input to the lock the tyres can use at this speed
+    lockMargin: 1.3,         // full input = grip limit × this (keeps max cornering identical)
+    minLock: 0.06,
+    digital: {               // keyboard + touch buttons
+      rampTimeLow: 0.18,     // s from centre to full (useful) lock when slow
+      rampTimeHigh: 0.45,    // s at top speed
+      easeStart: 0.6,        // a fresh press starts at this fraction of the ramp rate…
+      easeTime: 0.08,        // …reaching full rate after this long (taps stay small)
+      returnTime: 0.16,      // s to self-centre (or flick through centre) from full lock
+    },
+    gamepad: { deadzone: 0.08, steerCurve: 1.35, triggerDeadzone: 0.04, steerSmoothing: 25, switchAfterIdle: 1.0 },
+    rumble: {                // magnitudes 0..1, times in ms
+      kerb: 0.35, drift: 0.28, driftPeriod: 450, driftOn: 160, offroad: 0.16,
+      wallBase: 0.4, wallMs: 220, tickMs: 90,
+    },
+  },
+
   camera: {
     near: 0.2, far: 4200,
     chase: { distance: 6.0, distanceAtSpeed: 1.8, height: 2.0, heightAtSpeed: -0.2, lookHeight: 1.1, lookAhead: 4,
-             yawLag: 4.5, offsetLag: 10, fov: 60, fovAtSpeed: 22 },
+             yawLag: 4.5, offsetLag: 10,
+             fov: 60, fovAtSpeed: 30, fovCurve: 2.0,          // FOV ramps hardest near top speed (60° → 90°)
+             accelPull: 0.9, brakePush: 0.45,                 // m: pull back under acceleration, close in under braking
+             shake: 0.05, shakeFrom: 180, shakeFull: 240 },   // m of high-frequency vibration above 180 km/h
     hood:  { offset: [0, 1.28, 0.2], look: [0, 1.05, 30], fov: 70, fovAtSpeed: 14 },
+    speedFx: { from: 195, full: 240, lineAlpha: 0.5, vignette: 0.8 },   // speed lines + edge vignette (km/h)
   },
 
   world: {
@@ -255,16 +321,17 @@ const CONFIG = {
   scenery: {
     trees: 1800, palmClusters: 34, umbrellas: 70, scrub: 500, townBuildings: 46,
     buildingGap: [1, 4], lampSpacing: 32,
+    delineatorSpacing: 20, roadsidePalmSpacing: 24,   // m: close-to-road objects for the sense of speed
   },
 
   // Graphics quality presets (G key or the GFX button cycles them)
   quality: {
     low:    { pixelRatio: 1,   antialias: false, shadows: false, shadowMapSize: 0,    shadowRange: 0,  shadowCasters: 0,
-              density: 0.4,  terrainSegments: 128, seaSegments: 48,  envMap: false, paint: 'phong',    anisotropy: 1 },
+              density: 0.4,  terrainSegments: 128, seaSegments: 48,  speedLines: 26,  envMap: false, paint: 'phong',    anisotropy: 1 },
     medium: { pixelRatio: 1.5, antialias: false, shadows: true,  shadowMapSize: 1024, shadowRange: 45, shadowCasters: 1,
-              density: 0.7,  terrainSegments: 160, seaSegments: 96,  envMap: true,  paint: 'standard', anisotropy: 4 },
+              density: 0.7,  terrainSegments: 160, seaSegments: 96,  speedLines: 40,  envMap: true,  paint: 'standard', anisotropy: 4 },
     high:   { pixelRatio: 2,   antialias: true,  shadows: true,  shadowMapSize: 2048, shadowRange: 70, shadowCasters: 2,
-              density: 1.0,  terrainSegments: 200, seaSegments: 120, envMap: true,  paint: 'physical', anisotropy: 8 },
+              density: 1.0,  terrainSegments: 200, seaSegments: 120, speedLines: 56,  envMap: true,  paint: 'physical', anisotropy: 8 },
   },
 };
 
@@ -1027,6 +1094,7 @@ class Scenery {
     this.districtSigns();
     this.distant();
     this.flushPosts();
+    this.delineators();
   }
 
   count(base) { return Math.max(1, Math.round(base * this.Q.density)); }
@@ -1302,6 +1370,16 @@ class Scenery {
       scrub.push({ m: M(p.x, t.h - 0.15, p.z, r() * 6.28, s * 1.3, s * 0.7, s), c: new THREE.Color().setHSL(0.17 + r() * 0.08, 0.35, 0.3 + r() * 0.12).getHex() });
     }
 
+    // a row of palms right behind both barriers: tall objects close enough to rush past at speed
+    for (const side of [-1, 1]) {
+      let next = 0;
+      for (const i of beachIdx) {
+        if (T.DIST[i] < next) continue;
+        const p = this.at(i, side * (this.edge(i) + 2.6)), t = W.heightAt(p.x, p.z);
+        if (t.h > 0.8) palms.push({ m: M(p.x, Math.min(t.h, T.Y[i]) - 0.2, p.z, r() * 6.28, 0.85 + r() * 0.3, 0.8 + r() * 0.35), c: 0xffffff });
+        next = T.DIST[i] + CONFIG.scenery.roadsidePalmSpacing / Math.sqrt(this.Q.density);
+      }
+    }
     this.instanced(Scenery.palmGeo(), this.vc2, palms, 1);
     const umb = mergeGeos([
       [new THREE.CylinderGeometry(0.035, 0.035, 2.5, 5), 0xdddddd, M(0, 1.25, 0)],
@@ -1349,6 +1427,7 @@ class Scenery {
         this.posts.push({ m: M(p.x, p.y - 0.3, p.z, yaw, 0.09, 1.4, 0.09) });
         chevrons.push({ m: M(p.x, p.y + 1.45, p.z, yaw, hp.turn, 1, 1) });
       }
+      if (hp.b - hp.a < 12) continue;                           // short tight corner: chevrons only, no countdown
       for (const dist of [150, 100, 50]) {
         const k = this.ahead(hp.a, -dist), e = this.edge(k), p = this.at(k, side * (e + 0.35));
         const yaw = Math.atan2(-T.RZ[k], T.RX[k]);               // faces oncoming traffic
@@ -1415,6 +1494,63 @@ class Scenery {
       const fx = Math.cos(yaw), fz = -Math.sin(yaw);
       for (const s of [-3.4, 3.4]) this.posts.push({ m: M(p.x + fx * s, p.y - 0.3, p.z + fz * s, yaw, 0.16, 4.3, 0.16) });
     }
+  }
+
+  /** Flexible delineator posts just off the kerb on both sides: they whip past at speed. */
+  delineators() {
+    const T = this.T, n = T.n, items = [], spacing = CONFIG.scenery.delineatorSpacing;
+    const D = this.delin = { x: [], y: [], z: [], yaw: [], t: [], rest: [], bySample: new Map(), active: new Set() };
+    for (const side of [-1, 1]) {
+      let next = side > 0 ? spacing / 2 : 0;                    // stagger the two sides
+      for (let i = 0; i < n; i++) {
+        if (T.DIST[i] < next) continue;
+        next = T.DIST[i] + spacing;
+        if (i < 10 || i > n - 10) continue;                     // keep the start/finish gantry clear
+        const p = this.at(i, side * (T.HW[i] + CONFIG.track.kerbWidth + 0.9)), m = M(p.x, p.y, p.z, this.fwdYaw(i));
+        const id = items.length;
+        items.push({ m });
+        D.x.push(p.x); D.y.push(p.y); D.z.push(p.z); D.yaw.push(0); D.t.push(-1); D.rest.push(m);
+        if (!D.bySample.has(i)) D.bySample.set(i, []);
+        D.bySample.get(i).push(id);
+      }
+    }
+    const geo = mergeGeos([
+      [new THREE.BoxGeometry(0.1, 1.05, 0.1), 0xf4f4f0, M(0, 0.525, 0)],
+      [new THREE.BoxGeometry(0.106, 0.14, 0.106), 0x1d1d1d, M(0, 0.8, 0)],
+      [new THREE.BoxGeometry(0.112, 0.1, 0.112), 0xff8a1e, M(0, 0.95, 0)],
+    ]);
+    D.mesh = this.instanced(geo, this.vc, items, 0);
+  }
+
+  /** Delineators the car drives through are knocked flat and spring back up. */
+  update(dt, car) {
+    const D = this.delin;
+    if (!D || !D.mesh || dt <= 0) return;
+    const s = car.state, n = this.T.n;
+    if (Math.abs(s.vF) > 1.5) {
+      const fx = Math.sin(s.h), fz = Math.cos(s.h), hw = car.cfg.width / 2 + 0.15, hl = car.cfg.length / 2 + 0.15;
+      const swept = Math.min(12, Math.abs(s.vF) * dt);                 // footprint stretched back over this frame's travel
+      for (let k = -8; k <= 3; k++) {
+        const list = D.bySample.get((s.idx + k + n) % n);
+        if (!list) continue;
+        for (const id of list) {
+          if (D.t[id] >= 0) continue;
+          const dx = D.x[id] - s.x, dz = D.z[id] - s.z;
+          const along = (dx * fx + dz * fz) * Math.sign(s.vF || 1);
+          if (along < hl && along > -hl - swept && Math.abs(-dx * fz + dz * fx) < hw) {   // inside the swept footprint
+            D.t[id] = 0; D.yaw[id] = Math.atan2(s.vx, s.vz); D.active.add(id);
+          }
+        }
+      }
+    }
+    if (!D.active.size) return;
+    for (const id of D.active) {
+      const t = (D.t[id] += dt);
+      if (t > 2.4) { D.mesh.setMatrixAt(id, D.rest[id]); D.t[id] = -1; D.active.delete(id); continue; }
+      const ang = t < 0.3 ? 1.45 * Math.min(1, t / 0.05) : 1.45 * Math.exp(-(t - 0.3) * 3) * Math.cos((t - 0.3) * 6.5);
+      D.mesh.setMatrixAt(id, M(D.x[id], D.y[id], D.z[id], D.yaw[id], 1, 1, 1, ang));
+    }
+    D.mesh.instanceMatrix.needsUpdate = true;
   }
 
   flushPosts() {
@@ -1633,7 +1769,7 @@ class Car {
     this.visRoll = damp(this.visRoll, clamp(s.latAccel * cfg.visualRoll, -0.08, 0.08), 8, dt);
     m.body.rotation.x = this.visPitch;
     m.body.rotation.z = this.visRoll;
-    m.body.position.y = s.surfaceShake > 0 ? (Math.random() - 0.5) * s.surfaceShake : 0;
+    if (dt > 0) m.body.position.y = s.surfaceShake > 0 ? (Math.random() - 0.5) * s.surfaceShake : 0;   // frozen while paused
 
     for (const w of m.wheels) {
       if (w.front) w.pivot.rotation.y = -s.steerAngle;
@@ -1728,7 +1864,7 @@ const Physics = {
     const hb = handbrake && speedAbs > 4;
     const powerSlide = !hb && s.drifting && thr > 0.5 && slip > 0.15 && speedAbs > 12;
     let targetYaw = -vF * Math.tan(s.steerAngle) / c.wheelbase;     // steer right (+) → yaw clockwise (−)
-    const aLatMax = c.grip * 11 * sGrip * (1 + c.weightTransfer * s.load);
+    const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * (1 + c.weightTransfer * s.load);
     let yawLimit = aLatMax / Math.max(speedAbs, 2);
     if (hb) yawLimit *= 1 + c.driftFactor * 3.0;
     else if (powerSlide) yawLimit *= 1 + c.driftFactor * 0.9;
@@ -1834,8 +1970,10 @@ const Physics = {
 /* =====================================================================
  * CAMERA
  * Chase: yaw lags behind the car (shows the turn), offset is smoothed
- * relative to the car so it never falls behind at speed. FOV widens
- * with speed. Hood: rigidly attached to the car.
+ * relative to the car so it never falls behind at speed. Sense of speed:
+ * FOV widens hardest near top speed, the camera pulls back under
+ * acceleration (closes in under braking) and vibrates above ~180 km/h.
+ * Hood: rigidly attached to the car (unchanged).
  * ===================================================================== */
 class CameraRig {
   constructor(camera, track) {
@@ -1847,6 +1985,7 @@ class CameraRig {
     this.tmp = new THREE.Vector3();
     this.q = track.makeQuery();
     this.fov = camera.fov;
+    this.pull = 0; this.time = 0;
   }
 
   toggle() { this.mode = this.mode === 'chase' ? 'hood' : 'chase'; }
@@ -1863,7 +2002,10 @@ class CameraRig {
     if (this.mode === 'chase') {
       const cc = CONFIG.camera.chase;
       this.yaw += wrapAngle(car.renderH - this.yaw) * (1 - Math.exp(-cc.yawLag * dt));
-      const dist = (cc.distance + cc.distanceAtSpeed * ratio) * (cam.aspect < 1 ? 1.3 : 1);  // pull back in portrait
+      // pull back while accelerating, close in while braking
+      this.pull = damp(this.pull, clamp(s.longAccel / car.cfg.acceleration, -1, 1), 3, dt);
+      const surge = this.pull > 0 ? this.pull * cc.accelPull : this.pull * cc.brakePush;
+      const dist = (cc.distance + cc.distanceAtSpeed * ratio + surge) * (cam.aspect < 1 ? 1.3 : 1);  // pull back in portrait
       const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
       this.tmp.set(-sy * dist, cc.height + cc.heightAtSpeed * ratio, -cy * dist);
       this.offset.x = damp(this.offset.x, this.tmp.x, cc.offsetLag, dt);
@@ -1873,10 +2015,19 @@ class CameraRig {
       const g = this.track.query(cam.position.x, cam.position.z, s.idx, this.q, 16);
       cam.position.y = Math.max(cam.position.y, g.height + 1.0);
       const shake = s.surfaceShake * 2 + s.impact * 0.25;
-      if (shake > 0) cam.position.add(this.tmp.set((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake));
+      if (shake > 0 && dt > 0) cam.position.add(this.tmp.set((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake));
+      // high-speed vibration: smooth, high-frequency, only above shakeFrom
+      this.time += dt;
+      const vib = cc.shake * smoothstep(cc.shakeFrom, cc.shakeFull, Math.abs(s.vF) * 3.6);
+      if (vib > 0) {
+        const t = this.time;
+        cam.position.x += (Math.sin(t * 67) * 0.6 + Math.sin(t * 109 + 1.3) * 0.4) * vib * 0.6;
+        cam.position.y += (Math.sin(t * 83 + 0.7) * 0.55 + Math.sin(t * 131 + 2.1) * 0.45) * vib;
+        cam.position.z += Math.sin(t * 97 + 2.9) * vib * 0.4;
+      }
       this.look.set(p.x + sy * cc.lookAhead, p.y + cc.lookHeight, p.z + cy * cc.lookAhead);
       cam.lookAt(this.look);
-      targetFov = cc.fov + cc.fovAtSpeed * Math.pow(ratio, 1.5);
+      targetFov = cc.fov + cc.fovAtSpeed * Math.pow(ratio, cc.fovCurve);
     } else {
       const hc = CONFIG.camera.hood, root = car.model.root;
       root.updateMatrixWorld();
@@ -1893,33 +2044,350 @@ class CameraRig {
 
 /* =====================================================================
  * INPUT
- * Keyboard + auto-detected touch buttons. Produces a control frame:
- * { throttle, brake, steer (-1 left … +1 right), handbrake }.
- * Steering is smoothed so digital inputs feel analog.
+ * Keyboard, touch buttons and gamepads (Gamepad API). Produces a control
+ * frame: { throttle 0..1, brake 0..1, steer (-1 left … +1 right), handbrake }.
+ * - Digital steering (keys / touch) ramps in, eases on the first few
+ *   frames of a tap, ramps slower at speed and self-centres on release.
+ * - Analog steering (left stick) is used directly after a deadzone/curve.
+ * - Both are scaled to the lock that is actually useful at the current
+ *   speed (just past the tyre grip limit), so the whole input range does
+ *   something; full lock returns while handbraking or drifting.
  * ===================================================================== */
+
+// Button / axis layouts. `standard` is the W3C mapping: Chrome, Edge and Safari on
+// every OS, Firefox 153+ on every OS and Firefox 123+ on Linux. The raw profiles
+// are the manual DualSense fallbacks for browsers that report mapping === ''
+// (older Firefox, incl. ESR), picked by the pad's axes/buttons count.
+// Raw buttons in HID order: □ ✕ ○ △ L1 R1 L2 R2 Create Options L3 R3 PS Touchpad (Mute).
+const PAD_PROFILES = {
+  standard: {
+    buttons: { handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0 }, triggerAxes: false,
+  },
+  // Firefox 123-150 on Linux (incl. ESR 140) reports "standard" but leaves the analog
+  // triggers on extra axes 4 (L2) and 5 (R2); buttons 6/7 are digital only there.
+  standardFxLinux: {
+    buttons: { handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true,
+  },
+  // Windows HID (10 axes; also Linux joydev on hid-generic, 8 axes / 15 buttons):
+  // axes X(LX) Y(LY) Z(RX) Rx(L2) Ry(R2) Rz(RY)
+  dualsenseHid: {
+    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0, l2: 3, r2: 4 }, triggerAxes: true,
+  },
+  // macOS IOHID, USB (7 axes, 15 buttons): LX LY RX RY L2 R2 hat
+  dualsenseMacUsb: {
+    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true,
+  },
+  // macOS IOHID, Bluetooth simple report (7 axes, 14 buttons): LX LY RX RY hat L2 R2
+  dualsenseMacBt: {
+    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0, l2: 5, r2: 6 }, triggerAxes: true,
+  },
+  // Linux joydev with the hid-playstation driver (8 axes, 13 buttons):
+  // ✕ ○ △ □ L1 R1 L2 R2 Create Options PS L3 R3; axes X Y Z(L2) Rx Ry Rz(R2) hatX hatY
+  dualsenseLinux: {
+    buttons: { handbrake: 0, camera: 2, reset: 8, pause: 9, l2: 6, r2: 7 },
+    axes: { lx: 0, l2: 2, r2: 5 }, triggerAxes: true,
+  },
+};
+
+class GamepadInput {
+  constructor() {
+    this.index = -1; this.pad = null; this.info = null; this.profile = null;
+    this.prevButtons = {}; this.triggerArmed = [false, false];
+    this.seen = new Map(); this.lastPads = null; this.idleTime = 0; this.onSwitch = null; this.frame = 0;
+    this.state = { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, active: false, fresh: false };
+    this.edges = [];
+    this.onConnect = null; this.onDisconnect = null;
+    window.addEventListener('gamepadconnected', (e) => this.offer(e.gamepad));
+    window.addEventListener('gamepaddisconnected', (e) => {
+      if (!e.gamepad) return;
+      this.seen.delete(e.gamepad.index);                              // a reconnect starts from a fresh baseline
+      if (e.gamepad.index === this.index) this.detach();
+    });
+  }
+
+  static describe(pad) {
+    const id = pad.id || '';
+    const ps = /054c|dualsense|dualshock|playstation|sony/i.test(id) || /^wireless controller/i.test(id);
+    const xbox = !ps && /045e|xbox|xinput/i.test(id);
+    const name = /dualsense|0ce6|0df2/i.test(id) ? 'DualSense' : ps ? 'PlayStation controller' : xbox ? 'Xbox controller' : 'Controller';
+    return { id, ps, xbox, name, standard: pad.mapping === 'standard' };
+  }
+
+  /**
+   * Non-standard mapping: manual DualSense layout, chosen by the axes/buttons
+   * signature (the user agent can lie under Firefox fingerprinting protection,
+   * so it is only the tie-breaker).
+   */
+  static rawProfileName(pad) {
+    const na = pad.axes.length, nb = pad.buttons.length, ua = navigator.userAgent || '';
+    if (na >= 10) return 'dualsenseHid';
+    if (na === 8) return nb >= 15 ? 'dualsenseHid' : 'dualsenseLinux';
+    if (na === 7) return nb >= 15 ? 'dualsenseMacUsb' : 'dualsenseMacBt';
+    if (/Macintosh|Mac OS X/i.test(ua)) return 'dualsenseMacUsb';
+    if (/Linux|X11/i.test(ua) && !/Android/i.test(ua)) return 'dualsenseLinux';
+    return 'dualsenseHid';
+  }
+
+  /** Preference when choosing among connected pads: PlayStation > standard-mapped > unknown device. */
+  static rank(pad) { const d = GamepadInput.describe(pad); return d.ps ? 3 : d.standard ? 2 : 1; }
+
+  /**
+   * Fresh input on a pad, judged against the pad's own settled state so a resting
+   * offset (pedals, a drifting stick, Firefox's exact-0 untouched triggers) never
+   * counts: a newly pressed button, or an axis > 0.35 away from its slowly-settling
+   * average (static offsets are absorbed within ~1.5 s; real movement is not).
+   */
+  freshInput(pad, dt) {
+    let m = this.seen.get(pad.index);
+    if (!m || m.id !== pad.id) {
+      m = { id: pad.id, settle: Array.from(pad.axes), buttons: pad.buttons.map(b => !!b && (b.pressed || b.value > 0.5)), lastFresh: -1 };
+      this.seen.set(pad.index, m);
+      return false;
+    }
+    let fresh = false;
+    pad.buttons.forEach((b, i) => {
+      const down = !!b && (b.pressed || b.value > 0.5);
+      if (down && !m.buttons[i]) fresh = true;
+      m.buttons[i] = down;
+    });
+    const k = Math.min(1, dt * 2);
+    pad.axes.forEach((a, i) => {
+      const st = m.settle[i] === undefined ? a : m.settle[i];
+      if (Math.abs(a - st) > 0.35) fresh = true;
+      m.settle[i] = st + (a - st) * k;
+    });
+    if (fresh) m.lastFresh = this.frame;
+    return fresh;
+  }
+
+  /** Two pads whose fresh input happened in the same frames: one physical pad exposed twice. */
+  mirrors(a, b) {
+    const ma = this.seen.get(a), mb = this.seen.get(b);
+    return !!ma && !!mb && ma.lastFresh >= 0 && mb.lastFresh >= 0 && Math.abs(ma.lastFresh - mb.lastFresh) <= 3;
+  }
+
+  /** gamepadconnected: take the new pad only if none is active, or it outranks the current one. */
+  offer(pad) {
+    if (!pad) return;
+    const cur = this.index >= 0 && this.lastPads ? this.lastPads[this.index] : null;
+    if (!this.state.connected || this.index === pad.index || !cur || GamepadInput.rank(pad) > GamepadInput.rank(cur)) this.attach(pad);
+  }
+
+  /**
+   * Make `pad` the active controller. `wake` (a new connection): the press that woke
+   * the pad is not an action and a "Controller connected" toast shows. A quiet switch
+   * (the player picked up another connected pad) keeps the switching press as an action.
+   */
+  attach(pad, wake = true) {
+    if (!pad) return;
+    if (this.state.connected && this.index === pad.index) return;     // same pad again (event after poll): keep edge state
+    this.index = pad.index;
+    this.info = GamepadInput.describe(pad);
+    const ua = navigator.userAgent || '';
+    const fxLinux = /Firefox\//.test(ua) && /Linux|X11/.test(ua) && !/Android/.test(ua);
+    this.info.profile = this.info.standard ? (fxLinux && pad.axes.length >= 6 ? 'standardFxLinux' : 'standard')
+                                           : GamepadInput.rawProfileName(pad);
+    this.profile = PAD_PROFILES[this.info.profile];
+    this.triggerArmed = [false, false];
+    const P = this.profile;
+    this.prevButtons = {};
+    for (const name of ['camera', 'reset', 'pause']) { const b = pad.buttons[P.buttons[name]]; this.prevButtons[name] = wake && !!b && (b.pressed || b.value > 0.5); }
+    this.state.connected = true;
+    this.idleTime = 0;
+    if (wake ? this.onConnect : this.onSwitch) (wake ? this.onConnect : this.onSwitch)(this.info);
+  }
+
+  detach() {
+    const info = this.info;
+    this.index = -1; this.pad = null; this.info = null;
+    Object.assign(this.state, { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, active: false, fresh: false });
+    if (this.onDisconnect) this.onDisconnect(info);
+  }
+
+  /** Read the controller (call once per frame: Gamepad objects are snapshots). */
+  poll(dt = 0) {
+    let pads = [];
+    try { pads = navigator.getGamepads ? navigator.getGamepads() || [] : []; } catch (e) { pads = []; }
+    this.lastPads = pads;
+    this.frame++;
+    const fresh = new Map();
+    for (const p of pads) if (p && p.connected) fresh.set(p.index, this.freshInput(p, dt));
+    for (const i of [...this.seen.keys()]) if (!fresh.has(i)) this.seen.delete(i);   // gone: forget its baseline
+    let pad = this.index >= 0 ? pads[this.index] : null;
+    if (!pad || !pad.connected) {
+      // pick the best connected pad (Steam / DS4Windows can expose a DualSense a second time as an XInput pad)
+      pad = null;
+      for (const p of pads) if (p && p.connected && (!pad || GamepadInput.rank(p) > GamepadInput.rank(pad))) pad = p;
+      if (pad) this.attach(pad); else if (this.index >= 0) this.detach();
+    } else {
+      // the player picked up another connected pad: switch quietly, but only after this one has
+      // been unused for a while (a mirrored twin reports the same presses and never wins)
+      this.idleTime = fresh.get(pad.index) || this.state.active ? 0 : this.idleTime + dt;
+      if (this.idleTime > CONFIG.input.gamepad.switchAfterIdle) {
+        for (const p of pads) if (p && p.connected && p.index !== pad.index && fresh.get(p.index)) { this.attach(p, false); pad = p; break; }
+      }
+    }
+    this.pad = pad;
+    const st = this.state;
+    if (!pad) return null;
+    const P = this.profile, G = CONFIG.input.gamepad;
+    const pressed = (i) => { const b = i != null ? pad.buttons[i] : null; return !!b && (b.pressed || b.value > 0.5); };
+
+    // left stick X: deadzone, rescale, response curve (finer near the centre)
+    let x = pad.axes[P.axes.lx] || 0;
+    const ax = Math.abs(x);
+    x = ax <= G.deadzone ? 0 : Math.sign(x) * Math.pow(Math.min(1, (ax - G.deadzone) / (1 - G.deadzone)), G.steerCurve);
+    st.steer = x;
+    st.throttle = this.trigger(pad, 1);
+    st.brake = this.trigger(pad, 0);
+    st.handbrake = pressed(P.buttons.handbrake);
+    for (const name of ['camera', 'reset', 'pause']) {             // rising edges → actions
+      const now = pressed(P.buttons[name]);
+      if (now && !this.prevButtons[name]) this.edges.push(name);
+      this.prevButtons[name] = now;
+    }
+    st.active = Math.abs(st.steer) > 0.2 || st.throttle > 0.1 || st.brake > 0.1 || st.handbrake ||
+                pad.buttons.some(b => b && b.pressed);
+    st.fresh = !!fresh.get(pad.index);                               // new input this frame (drift / resting axes don't count)
+    return pad;
+  }
+
+  /** Analog trigger 0..1. k = 0: brake (LT/L2), 1: throttle (RT/R2). */
+  trigger(pad, k) {
+    const P = this.profile, G = CONFIG.input.gamepad;
+    let v = 0;
+    const ai = k ? P.axes.r2 : P.axes.l2, b = pad.buttons[k ? P.buttons.r2 : P.buttons.l2];
+    if (P.triggerAxes && ai != null && typeof pad.axes[ai] === 'number') {
+      const a = pad.axes[ai];
+      // Raw trigger axes rest at -1, but Firefox on macOS / Linux joydev reports an
+      // exact 0 until the trigger first moves: only trust the axis once it has.
+      if (a !== 0) this.triggerArmed[k] = true;
+    }
+    if (P.triggerAxes && this.triggerArmed[k]) v = (pad.axes[ai] + 1) / 2;  // live analog axis: its digital twin would snap to 1
+    else if (b) v = b.value > 0 ? b.value : (b.pressed ? 1 : 0);
+    return v <= G.triggerDeadzone ? 0 : clamp((v - G.triggerDeadzone) / (1 - G.triggerDeadzone), 0, 1);
+  }
+}
+
+/** Controller rumble. Every call is guarded: unsupported browsers stay silent. */
+class Rumble {
+  constructor() { this.clock = 0; this.next = 0; this.lastImpact = 0; this.on = false; }   // clock: game time (ms), stops while paused
+
+  send(pad, strong, weak, ms) {
+    if (!pad || document.visibilityState === 'hidden') return;   // effects are cancelled on hidden pages anyway
+    try {
+      pad = this.hapticPad(pad, this.gamepad);
+      if (!pad) return;
+      const a = pad.vibrationActuator;
+      if (a && typeof a.playEffect === 'function') {
+        const p = a.playEffect('dual-rumble', { startDelay: 0, duration: ms, weakMagnitude: clamp(weak, 0, 1), strongMagnitude: clamp(strong, 0, 1) });
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+        this.on = true;
+        return;
+      }
+      const h = pad.hapticActuators && pad.hapticActuators[0];
+      if (h && typeof h.pulse === 'function') {
+        const p = h.pulse(clamp(Math.max(strong, weak), 0, 1), ms);
+        if (p && typeof p.catch === 'function') p.catch(() => {});
+        this.on = true;
+      }
+    } catch (e) { /* no haptics */ }
+  }
+
+  stop(pad) {
+    this.on = false;
+    try {
+      const a = (pad = this.hapticPad(pad, this.gamepad)) && pad.vibrationActuator;
+      if (a && typeof a.reset === 'function') { const p = a.reset(); if (p && typeof p.catch === 'function') p.catch(() => {}); }
+    } catch (e) { /* no haptics */ }
+  }
+
+  /** Any wheel on the kerb strip (same wheel geometry as Physics.step, incl. the car's angle to the road). */
+  onKerb(car, track) {
+    const s = car.state, c = car.cfg, i = s.idx, hw = track.HW[i], k = CONFIG.track.kerbWidth;
+    const fx = Math.sin(s.h), fz = Math.cos(s.h), rx = -fz, rz = fx, hx = c.trackWidth / 2;
+    for (const lz of [c.frontAxle, c.frontAxle - c.wheelbase]) for (const lx of [-hx, hx]) {
+      const ox = fx * lz - rx * lx, oz = fz * lz - rz * lx;
+      const l = Math.abs(s.lateral + ox * track.RX[i] + oz * track.RZ[i]);
+      if (l > hw - 0.15 && l < hw + k) return true;
+    }
+    return false;
+  }
+
+  /**
+   * The pad to rumble: the active one if it has an actuator, otherwise a connected
+   * twin that does (e.g. DS4Windows/Steam's XInput copy of a DualSense in Chrome on Windows).
+   */
+  hapticPad(pad, gamepad) {
+    const can = (p) => p && ((p.vibrationActuator && typeof p.vibrationActuator.playEffect === 'function') ||
+                             (p.hapticActuators && p.hapticActuators[0] && typeof p.hapticActuators[0].pulse === 'function'));
+    if (can(pad)) return pad;
+    if (!GamepadInput.describe(pad).ps) return null;                // only a PlayStation pad has a virtual twin
+    try {
+      for (const p of navigator.getGamepads ? navigator.getGamepads() : [])
+        if (p && p.connected && p.index !== pad.index && /xinput|xbox 360|steam/i.test(p.id) && can(p) &&
+            (!gamepad || gamepad.mirrors(pad.index, p.index))) return p;
+    } catch (e) { /* none */ }
+    return null;
+  }
+
+  update(dt, pad, car, track, enabled) {
+    const s = car.state, R = CONFIG.input.rumble;
+    if (!pad || !enabled) { if (this.on) this.stop(pad); this.lastImpact = s.impact; return; }
+    const now = (this.clock += dt * 1000);
+    if (s.impact > this.lastImpact + 0.04) {                         // wall hit: strong, pre-empts the rest
+      const m = clamp(R.wallBase + s.impact * (1 - R.wallBase), 0, 1);
+      this.send(pad, m, Math.min(1, m + 0.15), R.wallMs);
+      this.next = now + R.wallMs;
+    }
+    this.lastImpact = s.impact;
+    if (now < this.next) return;
+    const speed = Math.abs(s.vF);
+    let strong = 0, weak = 0;
+    if (speed > 3 && this.onKerb(car, track)) weak = Math.max(weak, R.kerb * (0.6 + 0.4 * Math.min(1, speed / 40)));
+    if (s.drifting && now % R.driftPeriod < R.driftOn) { strong = Math.max(strong, R.drift * 0.6); weak = Math.max(weak, R.drift); }
+    if (s.offroad > 0 && speed > 3) weak = Math.max(weak, R.offroad * s.offroad);
+    if (strong > 0 || weak > 0) { this.send(pad, strong, weak, R.tickMs + 40); this.next = now + R.tickMs; }
+  }
+}
+
 class Input {
   constructor() {
     this.keys = new Set();
     this.touch = { left: false, right: false, gas: false, brake: false, hand: false };
     this.actions = [];
-    this.steer = 0;
+    this.steer = 0; this.hold = 0; this.lastTarget = 0; this.fromSteer = false;
     this.ctrl = { throttle: 0, brake: 0, steer: 0, handbrake: false };
     this.touchEnabled = false;
+    this.device = IS_TOUCH ? 'touch' : 'keyboard';
+    this.onDevice = null;
+    this.gamepad = new GamepadInput();
 
-    const actionKeys = { KeyR: 'reset', KeyC: 'camera', KeyG: 'quality' };
-    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG']);
+    const actionKeys = { KeyR: 'reset', KeyC: 'camera', KeyG: 'quality', Escape: 'pause', KeyP: 'pause' };
+    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG', 'KeyP']);
     window.addEventListener('keydown', (e) => {
       if (gameKeys.has(e.code)) e.preventDefault();
       if (!e.repeat && actionKeys[e.code]) this.actions.push(actionKeys[e.code]);
       this.keys.add(e.code);
-      if (this.onActivity) this.onActivity();
+      this.setDevice('keyboard');
     });
     window.addEventListener('keyup', (e) => this.keys.delete(e.code));
     window.addEventListener('blur', () => { this.keys.clear(); for (const k in this.touch) this.touch[k] = false; });
 
     if (IS_TOUCH) this.enableTouch();
-    window.addEventListener('touchstart', () => this.enableTouch(), { once: true, passive: true });
+    window.addEventListener('touchstart', () => { this.enableTouch(); this.setDevice('touch'); }, { passive: true });
     this.bindTouch();
+  }
+
+  setDevice(d) {
+    if (this.device === d) return;
+    this.device = d;
+    if (this.onDevice) this.onDevice(d, this.gamepad.info);
   }
 
   enableTouch() {
@@ -1955,35 +2423,76 @@ class Input {
 
   popAction() { return this.actions.shift(); }
 
+  /**
+   * Steering lock (0..1 of the car's speed-dependent maximum) that just exceeds
+   * what the tyres can use at this speed: full input = the grip limit + margin.
+   */
+  usefulLock(car, handbrake) {
+    const I = CONFIG.input, s = car.state, c = car.cfg, v = Math.abs(s.vF);
+    if (!I.gripAwareSteering || handbrake || s.drifting || v < 4) return 1;
+    const ratio = Math.min(1, v / (c.topSpeed / 3.6));
+    const steerLimit = c.maxSteer * (1 - (1 - c.highSpeedSteer) * Math.pow(ratio, 0.8));   // as in Physics.step
+    const need = Math.atan(c.grip * CONFIG.physics.lateralGripAccel * c.wheelbase / (v * v));
+    return clamp(need / steerLimit * I.lockMargin, I.minLock, 1);
+  }
+
   update(dt, car) {
-    const k = this.keys, t = this.touch, c = car.cfg;
+    const k = this.keys, t = this.touch, s = car.state, c = car.cfg, D = CONFIG.input.digital;
+    const pad = this.gamepad.poll(dt), gp = this.gamepad.state;
+    while (this.gamepad.edges.length) this.actions.push(this.gamepad.edges.shift());
+    if (pad && gp.fresh) this.setDevice('gamepad');
+
     const left = k.has('KeyA') || k.has('ArrowLeft') || t.left;
     const right = k.has('KeyD') || k.has('ArrowRight') || t.right;
     const target = (right ? 1 : 0) - (left ? 1 : 0);
-    const ratio = clamp(Math.abs(car.state.vF) / (c.topSpeed / 3.6), 0, 1);
-    const returning = target === 0 || Math.sign(target) !== Math.sign(this.steer);
-    const rate = returning ? c.steerReturn : lerp(c.steerSpeed, c.steerSpeedHigh, ratio);
-    this.steer = moveTowards(this.steer, target, rate * dt);
+    const handbrake = k.has('Space') || t.hand || gp.handbrake;
+    const lock = this.usefulLock(car, handbrake);
+
+    if (target !== 0 && this.lastTarget !== target) { this.hold = 0; this.fromSteer = Math.abs(this.steer) > 0.1 * lock; }
+    this.lastTarget = target;
+    if (target !== 0) {
+      // digital: ramp in (gently for the first moments of a tap), slower at speed
+      const opposite = this.steer !== 0 && Math.sign(target) !== Math.sign(this.steer);
+      this.hold += dt;
+      const ratio = clamp(Math.abs(s.vF) / (c.topSpeed / 3.6), 0, 1);
+      const sliding = handbrake || s.drifting;
+      const rampTime = sliding ? D.rampTimeLow : lerp(D.rampTimeLow, D.rampTimeHigh, ratio);
+      // gentle first moments only for a fresh press from centre (not for counter-steer / drifts)
+      const ease = (sliding || this.fromSteer) ? 1 : D.easeStart + (1 - D.easeStart) * smoothstep(0, D.easeTime, this.hold);
+      const rate = opposite ? Math.max(lock, Math.abs(this.steer)) / D.returnTime   // flick back through centre
+                            : lock * ease / rampTime;
+      this.steer = moveTowards(this.steer, target * lock, rate * dt);
+    } else if (gp.steer !== 0) {
+      // analog stick: follow it (light smoothing only removes jitter)
+      this.hold = 0;
+      this.steer = damp(this.steer, gp.steer * lock, CONFIG.input.gamepad.steerSmoothing, dt);
+    } else {
+      // released: self-centre
+      this.hold = 0;
+      this.steer = moveTowards(this.steer, 0, Math.max(lock, Math.abs(this.steer)) / D.returnTime * dt);
+    }
     this.ctrl.steer = this.steer;
-    this.ctrl.throttle = (k.has('KeyW') || k.has('ArrowUp') || t.gas) ? 1 : 0;
-    this.ctrl.brake = (k.has('KeyS') || k.has('ArrowDown') || t.brake) ? 1 : 0;
-    this.ctrl.handbrake = k.has('Space') || t.hand;
+    this.ctrl.throttle = Math.max((k.has('KeyW') || k.has('ArrowUp') || t.gas) ? 1 : 0, gp.throttle);
+    this.ctrl.brake = Math.max((k.has('KeyS') || k.has('ArrowDown') || t.brake) ? 1 : 0, gp.brake);
+    this.ctrl.handbrake = handbrake;
     return this.ctrl;
   }
 }
 
 /* =====================================================================
  * HUD
+ * Lap / speed readouts, banners, toasts, input-device hints, and the
+ * speed effects overlay (speed lines + edge vignette).
  * ===================================================================== */
 class Hud {
   constructor(qualityName, onQuality) {
     const $ = (id) => document.getElementById(id);
-    this.el = { lapNum: $('lapNum'), lapTime: $('lapTime'), last: $('lastLap'), best: $('bestLap'), speed: $('speed'), gear: $('gear'), banner: $('banner'), help: $('help'), gfx: $('gfx') };
+    this.el = { lapNum: $('lapNum'), lapTime: $('lapTime'), last: $('lastLap'), best: $('bestLap'), speed: $('speed'), gear: $('gear'),
+                banner: $('banner'), help: $('help'), gfx: $('gfx'), toast: $('toast') };
     this.cache = {};
-    this.bannerTimer = 0;
+    this.bannerTimer = 0; this.toastTimer = 0; this.helpTimer = 12;
     this.el.gfx.textContent = 'GFX: ' + qualityName.toUpperCase();
     this.el.gfx.addEventListener('click', onQuality);
-    setTimeout(() => this.el.help.classList.add('hide'), 12000);
   }
 
   set(key, value) {
@@ -1998,6 +2507,21 @@ class Hud {
     this.bannerTimer = seconds;
   }
 
+  toast(text, seconds = 3) {
+    this.el.toast.textContent = text;
+    this.el.toast.classList.add('show');
+    this.toastTimer = seconds;
+  }
+
+  /** Show the hints for the device in use (keyboard / PlayStation / Xbox pad); touch has its own buttons. */
+  setDevice(device, padInfo) {
+    const b = document.body.classList;
+    b.toggle('pad', device === 'gamepad');
+    b.toggle('ps', device === 'gamepad' && !!(padInfo && padInfo.ps));
+    this.el.help.classList.remove('hide');
+    this.helpTimer = 10;
+  }
+
   update(dt, game) {
     const car = game.car, laps = game.laps;
     this.set('speed', String(Math.round(Math.abs(car.state.vF) * 3.6)));
@@ -2010,6 +2534,73 @@ class Hud {
       this.bannerTimer -= dt;
       if (this.bannerTimer <= 0) this.el.banner.classList.remove('show');
     }
+    if (this.toastTimer > 0) {
+      this.toastTimer -= dt;
+      if (this.toastTimer <= 0) this.el.toast.classList.remove('show');
+    }
+    if (this.helpTimer > 0) {
+      this.helpTimer -= dt;
+      if (this.helpTimer <= 0) this.el.help.classList.add('hide');
+    }
+  }
+}
+
+/** Speed lines streaking out of the screen edges + a light edge vignette, above ~200 km/h. */
+class SpeedFx {
+  constructor(quality) {
+    this.cv = document.getElementById('fx');
+    this.g = this.cv.getContext('2d');
+    this.vig = document.getElementById('vignette');
+    this.rnd = mulberry32(77);
+    this.parts = [];
+    this.maxRatio = Math.min(1.5, quality.pixelRatio);   // never sharper than the 3D view
+    for (let i = 0; i < quality.speedLines; i++) this.parts.push(this.spawn({}, true));
+    this.intensity = 0; this.drawn = false; this.vigOpacity = -1;
+    this.resize();
+    window.addEventListener('resize', () => this.resize());
+  }
+
+  resize() {
+    const s = Math.min(window.devicePixelRatio || 1, this.maxRatio);
+    this.cv.width = Math.round(window.innerWidth * s);
+    this.cv.height = Math.round(window.innerHeight * s);
+    this.drawn = false;
+  }
+
+  spawn(p, initial) {
+    const r = this.rnd;
+    p.a = r() * Math.PI * 2;
+    p.d = initial ? 0.35 + r() * 0.8 : 0.32 + r() * 0.2;    // distance from the centre (fraction of the half-diagonal)
+    p.v = 0.8 + r() * 1.3;
+    p.len = 0.05 + r() * 0.11;
+    p.w = 0.7 + r() * 1.6;
+    return p;
+  }
+
+  update(dt, kmh, enabled) {
+    const F = CONFIG.camera.speedFx;
+    this.intensity = damp(this.intensity, enabled ? smoothstep(F.from, F.full, kmh) : 0, 5, dt);
+    const I = this.intensity;
+    const vo = Math.round(I * F.vignette * 100) / 100;
+    if (vo !== this.vigOpacity) { this.vigOpacity = vo; this.vig.style.opacity = vo; }
+    const g = this.g, W = this.cv.width, H = this.cv.height;
+    if (I < 0.01) { if (this.drawn) { g.clearRect(0, 0, W, H); this.drawn = false; } return; }
+    g.clearRect(0, 0, W, H);
+    this.drawn = true;
+    const cx = W * 0.5, cy = H * 0.46, R = Math.hypot(W, H) * 0.5, sc = Math.max(1, W / 1280);
+    g.strokeStyle = '#fff6e8';
+    g.lineCap = 'round';
+    for (const p of this.parts) {
+      p.d += dt * p.v * (0.7 + I * 1.8);
+      if (p.d > 1.15) this.spawn(p, false);
+      const fade = smoothstep(0.42, 0.75, p.d) * (1 - smoothstep(0.95, 1.15, p.d));   // centre stays clear
+      if (fade <= 0) continue;
+      const ca = Math.cos(p.a), sa = Math.sin(p.a), r0 = p.d * R, r1 = (p.d + p.len * (0.5 + I)) * R;
+      g.globalAlpha = I * F.lineAlpha * fade;
+      g.lineWidth = p.w * sc;
+      g.beginPath(); g.moveTo(cx + ca * r0, cy + sa * r0); g.lineTo(cx + ca * r1, cy + sa * r1); g.stroke();
+    }
+    g.globalAlpha = 1;
   }
 }
 
@@ -2096,6 +2687,22 @@ class Game {
     this.car = new Car(CONFIG.cars[CONFIG.playerCar], this.scene, this.world.envMap, Q);
     this.input = new Input();
     this.hud = new Hud(this.qualityName, () => this.cycleQuality());
+    this.speedFx = new SpeedFx(Q);
+    this.rumble = new Rumble();
+    this.rumble.gamepad = this.input.gamepad;
+    this.paused = false;
+    this.input.onDevice = (d, info) => this.hud.setDevice(d, info);
+    this.input.gamepad.onConnect = (info) => {
+      this.hud.toast('Controller connected \u00b7 ' + info.name);
+      this.input.setDevice('gamepad');
+      this.hud.setDevice('gamepad', info);                // refresh hint icons (PS vs Xbox)
+    };
+    this.input.gamepad.onSwitch = (info) => { this.input.setDevice('gamepad'); this.hud.setDevice('gamepad', info); };   // no toast
+    document.getElementById('pause').addEventListener('click', () => this.setPaused(false));
+    this.input.gamepad.onDisconnect = () => {
+      this.hud.toast('Controller disconnected');
+      this.input.setDevice(this.input.touchEnabled ? 'touch' : 'keyboard');
+    };
     this.cameraRig = new CameraRig(this.camera, this.track);
     this.laps = new LapTimer(this.track.length);
 
@@ -2140,17 +2747,27 @@ class Game {
   handleActions() {
     let a;
     while ((a = this.input.popAction())) {
-      if (a === 'reset') this.resetCar();
+      if (a === 'pause') this.setPaused(!this.paused);
+      else if (this.paused) continue;                        // other actions wait until resumed
+      else if (a === 'reset') this.resetCar();
       else if (a === 'camera') this.cameraRig.toggle();
       else if (a === 'quality') this.cycleQuality();
     }
   }
 
+  /** Pause placeholder (Start / Options, Esc or P): freezes the simulation and the lap clock. */
+  setPaused(on) {
+    this.paused = on;
+    document.body.classList.toggle('paused', on);
+    if (on) this.rumble.stop(this.input.gamepad.pad);
+  }
+
   /** Advance the simulation by dt seconds (fixed steps). */
   simulate(dt) {
     const P = CONFIG.physics;
+    const ctrl = this.input.update(dt, this.car);           // polls the gamepad (its buttons queue actions)
     this.handleActions();
-    const ctrl = this.input.update(dt, this.car);
+    if (this.paused) return;
     this.car.throttleOn = ctrl.throttle > 0;
     this.acc += dt;
     let steps = 0;
@@ -2187,10 +2804,14 @@ class Game {
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
     this.simulate(dt);
-    this.car.updateVisual(this.acc / CONFIG.physics.dt, dt);
-    this.cameraRig.update(dt, this.car);
-    this.world.update(dt, this.camera);
+    const live = this.paused ? 0 : dt;
+    this.car.updateVisual(this.acc / CONFIG.physics.dt, live);
+    this.cameraRig.update(live, this.car);
+    this.world.update(live, this.camera);
+    this.scenery.update(live, this.car);
     this.updateSun();
+    this.rumble.update(dt, this.input.gamepad.pad, this.car, this.track, !this.paused && this.input.device === 'gamepad');
+    this.speedFx.update(dt, Math.abs(this.car.state.vF) * 3.6, !this.paused);
     this.hud.update(dt, this);
     this.renderer.render(this.scene, this.camera);
   }
