@@ -191,6 +191,16 @@
   .sw { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.3); cursor: pointer; box-shadow: inset 0 -6px 10px rgba(0,0,0,.25); }
   .sw.sel { border-color: #fff; transform: scale(1.12); }
   /* controls */
+  .rhead, .brow { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; align-items: center; }
+  .rhead { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .65; padding: 0 12px 4px; }
+  .brow { padding: 5px 12px; margin: 2px 0; }
+  .brow .lbl { font-size: 13px; }
+  .cell { display: inline-block; text-align: center; padding: 4px 6px; border-radius: 8px; border: 2px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06);
+    font-size: 12px; font-weight: 700; cursor: pointer; min-height: 18px; }
+  .cell.fixed { opacity: .5; cursor: default; }
+  .brow.focus .cell.sel { border-color: #ffb36b; background: rgba(255,140,40,.22); }
+  .cell.wait { border-color: #8fe3ff; color: #8fe3ff; animation: blink .8s steps(2) infinite; }
+  .chip.ps-s { color: #ff8fd0; }
   .ctable { display: grid; grid-template-columns: auto auto auto auto; gap: 7px 14px; font-size: 13px; align-items: center; }
   .ctable .h { font-weight: 800; letter-spacing: .14em; font-size: 11px; opacity: .7; text-transform: uppercase; }
   .ctable kbd { display: inline-block; padding: 0 6px; border-radius: 4px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); font: 600 11px/18px inherit; }
@@ -267,14 +277,7 @@
   <div id="tags"></div>
   <div id="banner"></div>
   <div id="toast" class="panel"></div>
-  <div id="help" class="panel">
-    <span class="hint-kb"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows drive &nbsp;
-      <kbd>Space</kbd> handbrake &nbsp; <kbd>Shift</kbd> nitro &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics &nbsp; <kbd>Esc</kbd> pause &nbsp;&middot;&nbsp; controller: press any button</span>
-    <span class="hint-ps"><span class="chip">L</span> steer &nbsp; <span class="chip">R2</span> throttle &nbsp; <span class="chip">L2</span> brake / reverse &nbsp;
-      <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip">L1</span> nitro &nbsp; <span class="chip ps-t">&#x25B3;</span> camera &nbsp; <span class="chip">CREATE</span> reset &nbsp; <span class="chip">OPTIONS</span> pause</span>
-    <span class="hint-xb"><span class="chip">LS</span> steer &nbsp; <span class="chip">RT</span> throttle &nbsp; <span class="chip">LT</span> brake / reverse &nbsp;
-      <span class="chip">A</span> handbrake &nbsp; <span class="chip">LB</span> nitro &nbsp; <span class="chip">Y</span> camera &nbsp; <span class="chip">VIEW</span> reset &nbsp; <span class="chip">MENU</span> pause</span>
-  </div>
+  <div id="help" class="panel"><span class="hint-kb"></span><span class="hint-ps"></span><span class="hint-xb"></span>  </div>
 </div>
 
 <div id="touch">
@@ -321,6 +324,10 @@
     <div class="panelx">
       <div class="opt" data-nav data-kind="choice" data-key="quality"><span class="lbl">Graphics quality<br><span class="note" id="q-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt" data-nav data-kind="choice" data-key="handling" data-values="motorfest,grip" data-labels="Motorfest,Grip"><span class="lbl">Handling style<br><span class="note" id="handling-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt" data-nav data-kind="choice" data-key="assist" data-values="off,low,high" data-labels="Off,Low,High"><span class="lbl">Drift assist<br><span class="note" id="assist-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="sensitivity" data-min="50" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Steering sensitivity</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="speedFx" data-min="0" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Speed effects</span>
@@ -362,20 +369,9 @@
 
   <div class="screen shade" id="scr-controls" data-back="back">
     <h2 class="mtitle">Controls</h2>
-    <div class="panelx"><div class="ctable">
-      <span class="h">Action</span><span class="h">Keyboard</span><span class="h">PlayStation</span><span class="h">Xbox</span>
-      <span>Steer</span><span><kbd>A</kbd><kbd>D</kbd> / <kbd>&larr;</kbd><kbd>&rarr;</kbd></span><span>Left stick</span><span>Left stick</span>
-      <span>Throttle</span><span><kbd>W</kbd> / <kbd>&uarr;</kbd></span><span><span class="chip">R2</span></span><span>RT</span>
-      <span>Brake / reverse</span><span><kbd>S</kbd> / <kbd>&darr;</kbd></span><span><span class="chip">L2</span></span><span>LT</span>
-      <span>Handbrake</span><span><kbd>Space</kbd></span><span><span class="chip ps-x">&#x2715;</span></span><span>A</span>
-      <span>Nitro</span><span><kbd>Shift</kbd></span><span><span class="chip">L1</span></span><span>LB</span>
-      <span>Camera</span><span><kbd>C</kbd></span><span><span class="chip ps-t">&#x25B3;</span></span><span>Y</span>
-      <span>Reset car</span><span><kbd>R</kbd></span><span><span class="chip">CREATE</span></span><span>View</span>
-      <span>Pause</span><span><kbd>Esc</kbd> / <kbd>P</kbd></span><span><span class="chip">OPTIONS</span></span><span>Menu</span>
-      <span>Mute</span><span><kbd>M</kbd></span><span>&ndash;</span><span>&ndash;</span>
-      <span>Menus</span><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> <kbd>Enter</kbd> <kbd>Esc</kbd></span><span>D-pad, <span class="chip ps-x">&#x2715;</span> <span class="chip ps-o">&#x25CB;</span></span><span>D-pad, A B</span>
-    </div><p class="note" style="margin:12px 0 0;opacity:.75;font-size:12px">Touch: on-screen pedals, steering and NITRO appear automatically; &#10073;&#10073; pauses. Drift (hold the angle) to fill the nitro bar.</p></div>
-    <div class="mbtns row" style="margin-top:14px"><button class="mbtn" data-nav data-act="back">Back</button></div>
+    <div class="panelx"><div class="rhead"><span>Action</span><span>Keyboard</span><span id="rhead-pad">Controller</span></div><div id="remap"></div>
+      <p class="note" id="remap-note" style="margin:10px 0 0;opacity:.8;font-size:12px"></p></div>
+    <div class="mbtns row" style="margin-top:12px"><button class="mbtn" data-nav data-act="defaults">Reset to Motorfest default</button><button class="mbtn" data-nav data-act="back">Back</button></div>
   </div>
 
   <div class="screen shade" id="scr-pause" data-back="resume">
@@ -384,6 +380,7 @@
       <button class="mbtn" data-nav data-act="resume">Resume</button>
       <button class="mbtn" data-nav data-act="restart">Restart</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
+      <button class="mbtn" data-nav data-act="controls">Controls</button>
       <button class="mbtn" data-nav data-act="quit">Quit to menu</button>
     </div>
   </div>
@@ -431,8 +428,8 @@ const CONFIG = {
     dt: 1 / 120,          // fixed physics step (s)
     maxSteps: 12,         // max physics steps per rendered frame
     gravity: 9.81,
-    lateralGripAccel: 15.5, // m/s² cornering limit at grip 1.0 (≈1.6 g; Physics + input steering scale)
-    slideGripAccel: 11,     // m/s² grip while handbrake / power sliding (keeps drifts as loose as before)
+    lateralGripAccel: 20.5, // m/s² cornering limit at grip 1.0 (≈2.1 g, arcade grip; Physics + input steering scale)
+    slideGripAccel: 13,     // m/s² grip while handbrake / power sliding
     corneringDrag: 0.055,   // tyre scrub: m/s² of drag per m/s² of cornering
     wallRestitution: 0.3, // bounciness of barriers
     wallFriction: 0.25,   // speed scrubbed along the wall on impact
@@ -486,7 +483,7 @@ const CONFIG = {
       powerCurve: 2.2,        // how quickly acceleration fades towards top speed
       throttleCurve: 0.5,     // part throttle runs out of pull at topSpeed × throttle^this (25% → half)
       engineBraking: 1.0,     // m/s² at top speed with the throttle released
-      braking: 16,            // m/s²
+      braking: 18.4,            // m/s²
       reverseSpeed: 35,       // km/h
       handbrakeDecel: 3.5,    // m/s²
       rollingDrag: 0.35,      // m/s², always
@@ -495,10 +492,11 @@ const CONFIG = {
       lateralGrip: 9,         // how fast sideways slip is killed (1/s)
       driftFactor: 0.78,      // 0..1 rear grip lost on handbrake
       maxDriftAngle: 0.8,     // rad, drift assist keeps slides below this angle
+      drift: { grip: 29, angle: 50, inRate: 3.0, outRate: 2.2, scrub: 0.42, resp: 6 },   // balanced, easy to hold
       slideMomentum: 0.75,    // fraction of the speed a slide loses that is kept going forward
       maxSteer: 0.55,         // rad, front wheel angle at low speed
-      highSpeedSteer: 0.4,    // fraction of maxSteer left at top speed
-      understeer: 0.12,       // yaw reduction at top speed
+      highSpeedSteer: 0.55,    // fraction of maxSteer left at top speed
+      understeer: 0.06,       // yaw reduction at top speed
       yawResponse: 7,         // how fast the car rotates towards the steering target
       weightTransfer: 0.18,   // front grip gained when braking (a third of it lost when accelerating)
       weightTransferRate: 5,
@@ -542,7 +540,7 @@ const CONFIG = {
       powerCurve: 2.0,
       throttleCurve: 0.5,
       engineBraking: 1.2,
-      braking: 14.5,          // heavy car stops later
+      braking: 16.7,          // heavy car stops later
       reverseSpeed: 35,
       handbrakeDecel: 3.5,
       rollingDrag: 0.35,
@@ -551,11 +549,12 @@ const CONFIG = {
       lateralGrip: 7,
       driftFactor: 0.82,
       maxDriftAngle: 0.85,
+      drift: { grip: 26, angle: 58, inRate: 3.6, outRate: 1.3, scrub: 0.38, resp: 4.2, stickOn: 0.78, minKmh: 70 },   // drifts easiest, big lazy angles, slow to recover
       slideMomentum: 0.8,
       powerOversteer: 0.4,    // loose rear end: throttle mid-corner steps the tail out
       maxSteer: 0.5,
-      highSpeedSteer: 0.36,
-      understeer: 0.3,       // pushes wide in fast sweepers
+      highSpeedSteer: 0.5,
+      understeer: 0.14,       // pushes wide in fast sweepers
       yawResponse: 5.6,       // lazy turn-in
       weightTransfer: 0.22,
       weightTransferRate: 4.5,
@@ -594,12 +593,12 @@ const CONFIG = {
       name: 'Kaze RS',
       color: 0xf4f4f4,
       mass: 1050,             // light
-      topSpeed: 232,
-      acceleration: 8.6,
+      topSpeed: 244,
+      acceleration: 9.2,
       powerCurve: 1.9,
       throttleCurve: 0.5,
       engineBraking: 0.8,
-      braking: 18,            // light car, big brakes
+      braking: 20.7,            // light car, big brakes
       reverseSpeed: 35,
       handbrakeDecel: 3.0,
       rollingDrag: 0.35,
@@ -608,10 +607,11 @@ const CONFIG = {
       lateralGrip: 10,
       driftFactor: 0.86,      // easiest to drift
       maxDriftAngle: 0.95,
+      drift: { grip: 33, angle: 47, inRate: 4.6, outRate: 3.6, scrub: 0.44, resp: 9.5 },   // snappy, quickest transitions
       slideMomentum: 0.95,     // keeps its speed through a slide
       maxSteer: 0.6,
-      highSpeedSteer: 0.46,
-      understeer: 0.05,
+      highSpeedSteer: 0.6,
+      understeer: 0.03,
       yawResponse: 10.5,      // quickest turn-in
       weightTransfer: 0.2,
       weightTransferRate: 6,
@@ -650,25 +650,26 @@ const CONFIG = {
       name: 'Monta\u00f1a X',
       color: 0xc8a46a,
       mass: 1580,
-      topSpeed: 228,
+      topSpeed: 240,
       acceleration: 8.8,      // AWD launch
       powerCurve: 2.0,
       throttleCurve: 0.5,
       engineBraking: 1.0,
-      braking: 15,
+      braking: 17.2,
       reverseSpeed: 40,
       handbrakeDecel: 3.2,
       rollingDrag: 0.38,
       aeroDrag: 0.0003,       // brick-shaped
-      grip: 0.98,
+      grip: 1.02,
       lateralGrip: 8.5,
       driftFactor: 0.72,
       maxDriftAngle: 0.8,
+      drift: { grip: 29.5, angle: 45, inRate: 2.0, outRate: 1.8, scrub: 0.4, resp: 4 },   // heavier, gradual slides
       slideMomentum: 0.8,
       offroadRecovery: 0.7,   // barely slows on grass and sand
       maxSteer: 0.56,
-      highSpeedSteer: 0.38,
-      understeer: 0.15,
+      highSpeedSteer: 0.52,
+      understeer: 0.08,
       yawResponse: 6.5,
       weightTransfer: 0.2,
       weightTransferRate: 4.5,
@@ -715,22 +716,21 @@ const CONFIG = {
       throttleCurve: 0.5,
       throttleGamma: 1.5,     // part throttle is softened so 20-30% still holds a corner
       engineBraking: 1.3,
-      braking: 19,
+      braking: 21.8,
       reverseSpeed: 35,
       handbrakeDecel: 3.2,
       rollingDrag: 0.35,
       aeroDrag: 0.00018,      // slippery
-      grip: 1.24,             // huge grip at medium speed…
-      gripFade: [200, 300, 0.68],   // …fading away above 200 km/h (km/h from, km/h to, grip left)
-      brakeInstability: 0.85, // braking hard while turning at speed loosens the rear
+      grip: 1.32,             // the most planted car in the game
       lateralGrip: 8.5,
       driftFactor: 0.6,       // reluctant to slide
       maxDriftAngle: 0.7,
+      drift: { grip: 34, angle: 44, inRate: 3.4, outRate: 3.0, scrub: 0.36, resp: 7.5 },   // planted, drifts cleanly at full lock
       slideMomentum: 0.7,
       offroadRecovery: -0.35, // scrapes its splitter on grass and sand
       maxSteer: 0.52,
-      highSpeedSteer: 0.5,    // still lots of lock at speed: twitchy
-      understeer: 0.04,
+      highSpeedSteer: 0.58,
+      understeer: 0.02,
       yawResponse: 11,
       weightTransfer: 0.24,
       weightTransferRate: 7,
@@ -741,7 +741,7 @@ const CONFIG = {
       shiftTime: 0.07,
       visualPitch: 0.035, rollMax: 0.03,
       hoodCam: [0, 1.0, 0.45],
-      hoodShake: 1,           // the hood cam shakes hard near top speed
+      hoodShake: 0.5,         // a little cockpit buzz near top speed
       sound: { cyl: 10, idle: 1250, redline: 9600, low: 0.22, mid: 0.3, high: 0.38, highMul: 4, drive: 2.4, tone: [1500, 8800], lump: 0, gruff: 0, crackle: 0.9, turbo: 1 },   // screaming V10 + turbos
       tagline: 'Hypercar - the fastest thing on the island',
       badge: 'HYPERCAR',
@@ -770,6 +770,24 @@ const CONFIG = {
       },
     },
   },
+  // Motorfest-style handling (all cars, player and AI)
+  handling: {
+    drift: {
+      minKmh: 80,           // steer-to-drift only above this speed
+      stickOn: 0.85,        // stick past this (with throttle) breaks the rear loose
+      thrOn: 0.2,
+      stickHold: 0.35,      // keep the stick into the turn past this to hold the drift
+      tapTime: 0.35,        // s: an L2 tap shorter than this while turning kicks a drift
+      tapKmh: 60,
+      drive: 0.45,          // share of engine drive lost to wheelspin at full drift
+    },
+    lift: { decel: 4.5, grip: 0.22 },   // lifting while turning: m/s² of engine/drag braking and front grip gained
+    brakeUndersteer: 0.35,              // front grip lost braking hard at full lock
+    // drift assist: spring towards the target angle (× car response) and the most angle it allows (deg)
+    assist: { off: { spring: 0.35, cap: 85, over: 0.45 }, low: { spring: 0.7, cap: 65, over: 0.12 }, high: { spring: 1, cap: 55, over: 0 } },
+    spinAngle: 100,       // deg between body and travel: a spin
+  },
+
   // Drift scoring: points = slip angle (deg) × speed (km/h) × time × pointsK × multiplier
   drift: {
     minSlip: 0.14,          // rad (8°) of slip that counts as drifting…
@@ -958,11 +976,22 @@ const QUALITY_NAME = (() => {
 const QUALITY = CONFIG.quality[QUALITY_NAME];
 
 /* Player settings, remembered in localStorage (graphics quality has its own key above). */
+// Motorfest default layout. Controller: standard-mapping button indices (✕0 ○1 □2 △3 L1 4 R1 5 L2 6 R2 7 Create 8 Options 9
+// L3 10 R3 11 d-pad 12-15 PS 16) or the analog triggers 'l2' / 'r2'. Keyboard: KeyboardEvent.code lists.
+const DEFAULT_BINDINGS = {
+  pad: { throttle: 'r2', brake: 'l2', handbrake: 2, nitro: 0, camera: 3, reset: 8, pause: 9, mute: null },
+  key: { throttle: ['KeyW', 'ArrowUp'], brake: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
+         handbrake: ['Space'], nitro: ['ShiftLeft', 'ShiftRight'], camera: ['KeyC'], reset: ['KeyR'], pause: ['Escape', 'KeyP'], mute: ['KeyM'] },
+};
+const copyBindings = (b) => JSON.parse(JSON.stringify(b));
+
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal' },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', handling: 'motorfest', assist: 'high' },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem('islaRush.settings') || '{}')); } catch (e) { /* storage blocked / corrupt */ }
     if (!CONFIG.cars[this.data.car]) this.data.car = 'brisaGT';
+    const b = this.data.bindings || {}, d = copyBindings(DEFAULT_BINDINGS);            // fill in anything missing (new actions, old saves)
+    this.data.bindings = { pad: Object.assign(d.pad, b.pad || {}), key: Object.assign(d.key, b.key || {}) };
     return this;
   },
   save() { try { localStorage.setItem('islaRush.settings', JSON.stringify(this.data)); } catch (e) { /* storage blocked */ } },
@@ -2361,6 +2390,7 @@ class Car {
       idx: 0, lateral: 0, s: 0, section: 0,
       offroad: 0, surfaceShake: 0, drifting: false, handbrake: false, braking: false,
       gear: 1, shiftTimer: 0, impact: 0, wall: false, boosting: false, boostOver: 0,
+      dAmt: 0, dDir: 0, dAngle: 0, brkHeld: 0, spins: 0, spinning: false,
       spinF: 0, spinR: 0,
       prev: { x: 0, y: 0, z: 0, h: 0, pitch: 0 },
     };
@@ -2378,6 +2408,7 @@ class Car {
     s.vx = s.vz = s.vF = s.vS = s.yawRate = 0;
     s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
     s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
+    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.brkHeld = 0; s.spinning = false;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
@@ -2425,6 +2456,8 @@ class Car {
   }
 }
 
+const DEFAULT_HANDLING = { style: 'motorfest', assist: 'high' };   // per car: car.handling (player: from Settings)
+
 /* =====================================================================
  * PHYSICS
  * Arcade single-body model:
@@ -2446,6 +2479,8 @@ const Physics = {
     s.idx = q.index;
 
     let fx = Math.sin(s.h), fz = Math.cos(s.h), rx = -fz, rz = fx;
+    const h0 = s.h, vx0 = s.vx, vz0 = s.vz, H = CONFIG.handling;
+    const stick = ctrl.stick !== undefined ? ctrl.stick : ctrl.steer;   // raw stick position (−1…1), before the grip-aware scaling
 
     // ---- surface under each wheel ----
     const sec = track.sectionOf(q.index), offSurf = SURF[sec.surface], road = SURF.road;
@@ -2490,6 +2525,7 @@ const Physics = {
         let a = c.acceleration * (c.throttleGamma ? Math.pow(thr, c.throttleGamma) : thr) * Math.max(0, 1 - Math.pow(r, c.powerCurve));
         if (s.shiftTimer > 0) a *= 0.35;
         if (handbrake) a *= 0.4;                                     // rear wheels locked
+        if (s.dAmt > 0) a *= 1 - H.drift.drive * s.dAmt;            // drifting: some drive goes into wheelspin
         ax += a;
       }
     }
@@ -2500,6 +2536,9 @@ const Physics = {
     if (handbrake) ax -= Math.sign(vF) * c.handbrakeDecel * Math.min(1, speedAbs / 3);
     ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag * Math.min(1, speedAbs / 2);
     if (vF > 0 && !nitro) ax -= c.engineBraking * ratio * (1 - Math.min(1, thr * 4));     // lifting (or barely on it) engine-brakes
+    // lift-off turn-in: lifting while turning scrubs speed fast and tucks the nose in (the Motorfest way to slow for a corner)
+    const liftK = vF > 11 && !nitro ? clamp((Math.abs(stick) - 0.25) / 0.5, 0, 1) * (1 - Math.min(1, thr / 0.15)) : 0;
+    if (liftK > 0) ax -= H.lift.decel * liftK;
     if (nitro) ax += N.accel * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
     ax -= Math.sign(vF) * Math.min(Math.abs(s.latAccel), 20) * CONFIG.physics.corneringDrag;   // tyres scrub speed in corners
     ax -= Math.sign(vF) * sDrag * Math.min(1, speedAbs / 4);
@@ -2507,6 +2546,7 @@ const Physics = {
     const parked = thr === 0 && brk === 0 && speedAbs < 0.4;
     if (!parked) ax -= G * s.grade * c.slopeEffect;
     const vF0 = vF;
+    s.axLong = ax;                                                   // the drift layer reuses it (engine/brakes along the nose)
     vF += ax * dt;
     if (parked) vF = 0;
     else if ((vF0 > 0 && vF < 0 && !(brk > 0 && vF0 <= 0.5)) || (vF0 < 0 && vF > 0 && !(thr > 0 && vF0 >= -0.5))) vF = 0;
@@ -2523,10 +2563,11 @@ const Physics = {
     const hb = handbrake && speedAbs > 4;
     const powerSlide = !hb && s.drifting && thr >= 0.6 && slip > 0.15 && speedAbs > 12;   // part throttle never slides
     let targetYaw = -vF * Math.tan(s.steerAngle) / c.wheelbase;     // steer right (+) → yaw clockwise (−)
-    // weight transfer: braking loads the front (full gain), throttle unloads it (a third of the effect)
-    const wLoad = 1 + c.weightTransfer * (s.load >= 0 ? s.load : s.load / 3);
-    const fade = c.gripFade ? lerp(1, c.gripFade[2], smoothstep(c.gripFade[0], c.gripFade[1], speedAbs * 3.6)) : 1;   // hypercar: grip fades at very high speed
-    const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad * fade;
+    // throttle unloads the front a little; braking hard while turning understeers (Motorfest); lifting tucks the nose in
+    const wLoad = 1 + c.weightTransfer * Math.min(0, s.load) / 3;
+    const brakeUS = brk > 0.1 && vF > 10 ? 1 - H.brakeUndersteer * brk * Math.min(1, Math.abs(stick) * 1.5) : 1;
+    const fade = c.gripFade ? lerp(1, c.gripFade[2], smoothstep(c.gripFade[0], c.gripFade[1], speedAbs * 3.6)) : 1;
+    const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad * fade * (1 + H.lift.grip * liftK) * brakeUS;
     const sliding = hb || powerSlide;
     const aLatSlide = sliding ? c.grip * CONFIG.physics.slideGripAccel * sGrip * wLoad : aLatMax;   // drifts keep step-2 looseness
     let yawLimit = aLatSlide / Math.max(speedAbs, 2) * (nitro ? 1 - N.understeer : 1);   // boosting never adds grip
@@ -2572,6 +2613,10 @@ const Physics = {
       vF = wx * fx + wz * fz; vS = wx * rx + wz * rz;
     }
     s.vx = fx * vF + rx * vS; s.vz = fz * vF + rz * vS;
+    // ---- Motorfest drift: steer-to-drift, L2-tap and handbrake drifts (blended over the grip model) ----
+    this.driftStep(car, stick, thr, brk, hb, nitro, sGrip, h0, vx0, vz0, dt);
+    fx = Math.sin(s.h); fz = Math.cos(s.h); rx = -fz; rz = fx;
+    vF = s.vx * fx + s.vz * fz; vS = s.vx * rx + s.vz * rz;
     s.vF = vF; s.vS = vS;
     s.drifting = Math.abs(vS) > 2.5 && speedAbs > 8;
     s.latAccel = s.yawRate * vF;
@@ -2600,6 +2645,52 @@ const Physics = {
     if (!hb) s.spinR = (s.spinR + vF / c.wheelRadius * dt) % (Math.PI * 2);
     this.gearbox(car, dt);
     s.impact = Math.max(0, s.impact - dt * 3);
+  },
+
+  /**
+   * Arcade drift layer. A drift starts from the stick (past ~85% above 80 km/h with throttle), a quick L2 tap while
+   * turning, or the handbrake. While it lasts, the direction of travel turns on the car's "drift grip" (more stick
+   * and lifting = tighter) and the body angle to it follows stick and throttle; the assist springs the angle towards
+   * that target and caps it, so the car never spins unless the assist is off and it is overdone. Centring or
+   * countersteering lets the drift fade and the grip model take back over: no snap.
+   */
+  driftStep(car, stick, thr, brk, hb, nitro, sGrip, h0, vx0, vz0, dt) {
+    const c = car.cfg, s = car.state, H = CONFIG.handling, D = c.drift, HS = car.handling || DEFAULT_HANDLING;
+    if (!D) return;
+    const mf = HS.style !== 'grip', A = H.assist[HS.assist] || H.assist.high;
+    const V0 = Math.hypot(vx0, vz0), kmh = V0 * 3.6;
+    let tap = false;                                                 // L2 tap: pressed and released quickly
+    if (brk > 0.3) s.brkHeld += dt; else { if (s.brkHeld > 0 && s.brkHeld < H.drift.tapTime) tap = true; s.brkHeld = 0; }
+    let want = false;
+    if (s.spinning) {                                                // a spin: no new drift until the car is pointing along its travel again
+      if (V0 < 4 || Math.abs(wrapAngle(h0 - Math.atan2(vx0, vz0))) < 0.35) s.spinning = false;
+    } else if (s.dAmt <= 0.02) {
+      if (mf && kmh > (D.minKmh || H.drift.minKmh) && Math.abs(stick) > (D.stickOn || H.drift.stickOn) && thr > H.drift.thrOn) { want = true; s.dDir = Math.sign(stick); }
+      else if (mf && tap && Math.abs(stick) > 0.5 && kmh > H.drift.tapKmh) { want = true; s.dDir = Math.sign(stick); s.dAmt = 0.45; }
+      else if (mf && hb && Math.abs(stick) > 0.3 && V0 > 6) { want = true; s.dDir = Math.sign(stick); }
+    } else want = (stick * s.dDir > H.drift.stickHold || hb) && V0 > 9;
+    s.dAmt = want ? Math.min(1, s.dAmt + D.inRate * dt) : Math.max(0, s.dAmt - D.outRate * dt);
+    if (s.dAmt <= 0 || V0 < 3) { s.dAngle = 0; return; }
+    const w = s.dAmt * s.dAmt * (3 - 2 * s.dAmt);
+    const into = clamp(stick * s.dDir, 0, 1), lift = 1 - clamp(thr / 0.5, 0, 1);
+    // direction of travel turns into the corner on drift grip
+    const aPath = D.grip * sGrip * (0.35 + 0.65 * into) * (1 + 0.3 * lift) * (nitro ? 0.85 : 1);
+    const phi0 = Math.atan2(vx0, vz0), phiD = phi0 - s.dDir * aPath / Math.max(V0, 5) * dt;
+    // body angle to the travel direction (signed into the turn)
+    const cap = Math.min(D.angle * (1 + A.over), A.cap) * Math.PI / 180;
+    const target = -s.dDir * cap * clamp((into - 0.3) / 0.7, 0, 1) * (0.55 + 0.45 * thr) * (1 + A.over * thr);
+    const a0 = wrapAngle(h0 - phi0), aD = a0 + (target - a0) * (1 - Math.exp(-D.resp * A.spring * dt));
+    // blend over the grip model's result by drift amount
+    const V1 = Math.hypot(s.vx, s.vz), phi1 = Math.atan2(s.vx, s.vz);
+    const phi = phi1 + wrapAngle(phiD - phi1) * w, h = s.h + wrapAngle(phiD + aD - s.h) * w;
+    // speed in a drift: engine / brakes along the nose, minus a drift scrub (no sideways-grip losses: drifts carry speed)
+    const Vd = Math.max(0, V0 + (s.axLong * Math.cos(a0) - D.scrub * Math.abs(Math.sin(aD)) * CONFIG.physics.gravity) * dt);
+    const V = lerp(V1, Vd, w);
+    s.vx = Math.sin(phi) * V; s.vz = Math.cos(phi) * V;
+    s.yawRate = wrapAngle(h - h0) / dt;
+    s.h = wrapAngle(h);
+    s.dAngle = Math.abs(wrapAngle(s.h - phi));
+    if (s.dAngle > H.spinAngle * Math.PI / 180) { s.spins++; s.spinning = true; s.dAmt = 0; }   // overdone with the assist off: a spin
   },
 
   collideWalls(car, q, fx, fz, rx, rz) {
@@ -2746,35 +2837,35 @@ class CameraRig {
 // Raw buttons in HID order: □ ✕ ○ △ L1 R1 L2 R2 Create Options L3 R3 PS Touchpad (Mute).
 const PAD_PROFILES = {
   standard: {
-    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0 }, triggerAxes: false, dpad: [12, 13, 14, 15],
   },
   // Firefox 123-150 on Linux (incl. ESR 140) reports "standard" but leaves the analog
   // triggers on extra axes 4 (L2) and 5 (R2); buttons 6/7 are digital only there.
   standardFxLinux: {
-    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, dpad: [12, 13, 14, 15],
   },
   // Windows HID (10 axes; also Linux joydev on hid-generic, 8 axes / 15 buttons):
   // axes X(LX) Y(LY) Z(RX) Rx(L2) Ry(R2) Rz(RY)
   dualsenseHid: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 3, r2: 4 }, triggerAxes: true, hat: 9,
   },
   // macOS IOHID, USB (7 axes, 15 buttons): LX LY RX RY L2 R2 hat
   dualsenseMacUsb: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, hat: 6,
   },
   // macOS IOHID, Bluetooth simple report (7 axes, 14 buttons): LX LY RX RY hat L2 R2
   dualsenseMacBt: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 5, r2: 6 }, triggerAxes: true, hat: 4,
   },
   // Linux joydev with the hid-playstation driver (8 axes, 13 buttons):
   // ✕ ○ △ □ L1 R1 L2 R2 Create Options PS L3 R3; axes X Y Z(L2) Rx Ry Rz(R2) hatX hatY
   dualsenseLinux: {
-    buttons: { nitro: 4, handbrake: 0, camera: 2, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 }, std: [0, 1, 3, 2, 4, 5, 6, 7, 8, 9, 11, 12, null, null, null, null, 10],
     axes: { lx: 0, l2: 2, r2: 5 }, triggerAxes: true, hatX: 6, hatY: 7,
   },
 };
@@ -2787,6 +2878,7 @@ class GamepadInput {
     this.state = { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, nitro: false, active: false, fresh: false,
                    nav: { up: false, down: false, left: false, right: false, confirm: false, back: false, start: false } };
     this.edges = [];
+    this.bindings = copyBindings(DEFAULT_BINDINGS).pad;
     this.onConnect = null; this.onDisconnect = null;
     window.addEventListener('gamepadconnected', (e) => this.offer(e.gamepad));
     window.addEventListener('gamepaddisconnected', (e) => {
@@ -2882,7 +2974,7 @@ class GamepadInput {
     this.triggerArmed = [false, false];
     const P = this.profile;
     this.prevButtons = {};
-    for (const name of ['camera', 'reset', 'pause']) { const b = pad.buttons[P.buttons[name]]; this.prevButtons[name] = wake && !!b && (b.pressed || b.value > 0.5); }
+    for (const name of ['camera', 'reset', 'pause', 'mute']) { const b = pad.buttons[this.raw(this.bindings[name])]; this.prevButtons[name] = wake && !!b && (b.pressed || b.value > 0.5); }
     this.state.connected = true;
     this.idleTime = 0;
     if (wake ? this.onConnect : this.onSwitch) (wake ? this.onConnect : this.onSwitch)(this.info);
@@ -2931,13 +3023,14 @@ class GamepadInput {
     const curve = clamp(G.steerCurve / this.sensitivity, 0.7, 2.4);  // higher sensitivity = more response near centre
     x = ax <= G.deadzone ? 0 : Math.sign(x) * Math.pow(Math.min(1, (ax - G.deadzone) / (1 - G.deadzone)), curve);
     st.steer = x;
-    st.throttle = this.trigger(pad, 1);
-    st.brake = this.trigger(pad, 0);
-    st.handbrake = pressed(P.buttons.handbrake);
-    st.nitro = pressed(P.buttons.nitro);
+    const B = this.bindings;
+    st.throttle = this.value(pad, B.throttle);
+    st.brake = this.value(pad, B.brake);
+    st.handbrake = this.value(pad, B.handbrake) > 0.5;
+    st.nitro = this.value(pad, B.nitro) > 0.5;
     this.readNav(pad, pressed);
-    for (const name of ['camera', 'reset', 'pause']) {             // rising edges → actions
-      const now = pressed(P.buttons[name]);
+    for (const name of ['camera', 'reset', 'pause', 'mute']) {     // rising edges → actions
+      const now = this.value(pad, B[name]) > 0.5;
       if (now && !this.prevButtons[name]) this.edges.push(name);
       this.prevButtons[name] = now;
     }
@@ -2963,7 +3056,22 @@ class GamepadInput {
     if (P.hatX != null) { const hx = pad.axes[P.hatX] || 0, hy = pad.axes[P.hatY] || 0; left = left || hx < -0.5; right = right || hx > 0.5; up = up || hy < -0.5; down = down || hy > 0.5; }
     const lx = pad.axes[0] || 0, ly = pad.axes[1] || 0;
     n.up = up || ly < -0.6; n.down = down || ly > 0.6; n.left = left || lx < -0.6; n.right = right || lx > 0.6;
-    n.confirm = pressed(P.buttons.confirm); n.back = pressed(P.buttons.back); n.start = pressed(P.buttons.pause);
+    n.confirm = pressed(P.buttons.confirm); n.back = pressed(P.buttons.back); n.start = pressed(this.raw(this.bindings.pause));
+  }
+
+  /** Standard-mapping button index → this pad's raw index (raw DualSense layouts differ). */
+  raw(std) { if (std == null || typeof std !== 'number') return null; const m = this.profile && this.profile.std; return m ? m[std] : std; }
+  /** Raw button → standard index (for remapping), triggers as 'l2' / 'r2'. */
+  stdOf(raw) {
+    const m = this.profile && this.profile.std, i = m ? m.indexOf(raw) : raw;
+    return i === 6 ? 'l2' : i === 7 ? 'r2' : (i >= 0 ? i : null);
+  }
+  /** A bound control's value 0..1: analog trigger or button (pressure if it has one). */
+  value(pad, bind) {
+    if (bind === 'r2') return this.trigger(pad, 1);
+    if (bind === 'l2') return this.trigger(pad, 0);
+    const b = pad.buttons[this.raw(bind)];
+    return b ? (b.value > 0 ? b.value : (b.pressed ? 1 : 0)) : 0;
   }
 
   /** Analog trigger 0..1. k = 0: brake (LT/L2), 1: throttle (RT/R2). */
@@ -3076,20 +3184,23 @@ class Input {
     this.touch = { left: false, right: false, gas: false, brake: false, hand: false, nitro: false };
     this.actions = [];
     this.steer = 0; this.hold = 0; this.lastTarget = 0; this.fromSteer = false;
-    this.ctrl = { throttle: 0, brake: 0, steer: 0, handbrake: false, nitroWant: false, nitro: false };
+    this.ctrl = { throttle: 0, brake: 0, steer: 0, stick: 0, handbrake: false, nitroWant: false, nitro: false };
     this.touchEnabled = false;
     this.device = IS_TOUCH ? 'touch' : 'keyboard';
     this.onDevice = null;
     this.gamepad = new GamepadInput();
 
-    const actionKeys = { KeyR: 'reset', KeyC: 'camera', KeyG: 'quality', Escape: 'pause', KeyP: 'pause' };
-    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG', 'KeyP', 'ShiftLeft', 'ShiftRight']);
+    this.keyBind = copyBindings(DEFAULT_BINDINGS).key;                // remappable (Settings → Controls)
     this.menuActive = false;      // while a menu is open, keys/pad buttons drive the menu, not the race
+    this.captureKeys = false;     // the remap screen is listening for a key
     this.sensitivity = 1;
     window.addEventListener('keydown', (e) => {
-      if (gameKeys.has(e.code)) e.preventDefault();
-      if (!e.repeat && actionKeys[e.code] && !this.menuActive) this.actions.push(actionKeys[e.code]);
-      if (!e.repeat && e.code === 'KeyM') this.actions.push('mute');                 // works in menus too
+      if (this.captureKeys) return;
+      const act = this.keyAction(e.code);
+      if (act || e.code === 'KeyG') e.preventDefault();
+      if (!e.repeat && !this.menuActive && (act === 'reset' || act === 'camera' || act === 'pause')) this.actions.push(act);
+      if (!e.repeat && !this.menuActive && e.code === 'KeyG') this.actions.push('quality');
+      if (!e.repeat && act === 'mute') this.actions.push('mute');                    // works in menus too
       this.keys.add(e.code);
       this.setDevice('keyboard');
     });
@@ -3140,6 +3251,8 @@ class Input {
   }
 
   popAction() { return this.actions.shift(); }
+  keyAction(code) { for (const a in this.keyBind) if (this.keyBind[a].includes(code)) return a; return null; }
+  held(action) { const ks = this.keyBind[action] || []; for (const k of ks) if (this.keys.has(k)) return true; return false; }
 
   /**
    * Steering lock (0..1 of the car's speed-dependent maximum) that just exceeds
@@ -3157,13 +3270,13 @@ class Input {
   update(dt, car) {
     const k = this.keys, t = this.touch, s = car.state, c = car.cfg, D = CONFIG.input.digital;
     const pad = this.gamepad.poll(dt), gp = this.gamepad.state;
-    while (this.gamepad.edges.length) { const a = this.gamepad.edges.shift(); if (!this.menuActive) this.actions.push(a); }
+    while (this.gamepad.edges.length) { const a = this.gamepad.edges.shift(); if (!this.menuActive || a === 'mute') this.actions.push(a); }
     if (pad && gp.fresh) this.setDevice('gamepad');
 
-    const left = k.has('KeyA') || k.has('ArrowLeft') || t.left;
-    const right = k.has('KeyD') || k.has('ArrowRight') || t.right;
+    const left = this.held('left') || t.left;
+    const right = this.held('right') || t.right;
     const target = (right ? 1 : 0) - (left ? 1 : 0);
-    const handbrake = k.has('Space') || t.hand || gp.handbrake;
+    const handbrake = this.held('handbrake') || t.hand || gp.handbrake;
     const lock = this.usefulLock(car, handbrake);
 
     if (target !== 0 && this.lastTarget !== target) { this.hold = 0; this.fromSteer = Math.abs(this.steer) > 0.1 * lock; }
@@ -3190,10 +3303,12 @@ class Input {
       this.steer = moveTowards(this.steer, 0, Math.max(lock, Math.abs(this.steer)) / D.returnTime * dt);
     }
     this.ctrl.steer = this.steer;
-    this.ctrl.throttle = Math.max((k.has('KeyW') || k.has('ArrowUp') || t.gas) ? 1 : 0, gp.throttle);
-    this.ctrl.brake = Math.max((k.has('KeyS') || k.has('ArrowDown') || t.brake) ? 1 : 0, gp.brake);
+    // raw stick position for steer-to-drift: the analog stick itself, or how far the digital ramp has gone
+    this.ctrl.stick = (target === 0 && gp.steer !== 0) ? gp.steer : clamp(this.steer / Math.max(lock, 1e-3), -1, 1);
+    this.ctrl.throttle = Math.max((this.held('throttle') || t.gas) ? 1 : 0, gp.throttle);
+    this.ctrl.brake = Math.max((this.held('brake') || t.brake) ? 1 : 0, gp.brake);
     this.ctrl.handbrake = handbrake;
-    this.ctrl.nitroWant = k.has('ShiftLeft') || k.has('ShiftRight') || t.nitro || gp.nitro;
+    this.ctrl.nitroWant = this.held('nitro') || t.nitro || gp.nitro;
     return this.ctrl;
   }
 }
@@ -3215,7 +3330,7 @@ class DriftScore {
   /** Advance by dt; returns the nitro earned this frame. */
   update(dt, car) {
     const D = CONFIG.drift, N = CONFIG.nitro, s = car.state;
-    const kmh = Math.abs(s.vF) * 3.6, slip = Math.atan2(Math.abs(s.vS), Math.max(Math.abs(s.vF), 0.1));
+    const kmh = Math.hypot(s.vx, s.vz) * 3.6, slip = Math.atan2(Math.abs(s.vS), Math.max(Math.abs(s.vF), 0.1));   // true speed: big angles count fully
     const sliding = s.vF > 0 && kmh >= D.minKmh && slip >= D.minSlip;
     const hit = s.impact > this.lastImpact + 0.04;
     this.lastImpact = s.impact;
@@ -3594,6 +3709,30 @@ class Sound {
  * ===================================================================== */
 const fmtPts = (x) => Math.round(x).toLocaleString('en-US');
 
+/* ---------- control names (hints, controls screen) ---------- */
+const PAD_NAMES = {
+  ps: ['\u2715', '\u25CB', '\u25A1', '\u25B3', 'L1', 'R1', 'L2', 'R2', 'CREATE', 'OPTIONS', 'L3', 'R3', 'D-PAD \u2191', 'D-PAD \u2193', 'D-PAD \u2190', 'D-PAD \u2192', 'PS'],
+  xb: ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'VIEW', 'MENU', 'LS', 'RS', 'D-PAD \u2191', 'D-PAD \u2193', 'D-PAD \u2190', 'D-PAD \u2192', 'GUIDE'],
+};
+const PS_CLASS = { '\u2715': 'ps-x', '\u25CB': 'ps-o', '\u25A1': 'ps-s', '\u25B3': 'ps-t' };
+function padName(b, kind = 'ps') {
+  if (b === 'r2') return kind === 'ps' ? 'R2' : 'RT';
+  if (b === 'l2') return kind === 'ps' ? 'L2' : 'LT';
+  return b == null ? '\u2014' : (PAD_NAMES[kind][b] || 'B' + b);
+}
+function keyName(code) {
+  const arrows = { ArrowUp: '\u2191', ArrowDown: '\u2193', ArrowLeft: '\u2190', ArrowRight: '\u2192' };
+  if (arrows[code]) return arrows[code];
+  if (/^Shift/.test(code)) return 'Shift';
+  if (/^Control/.test(code)) return 'Ctrl';
+  if (/^Alt/.test(code)) return 'Alt';
+  if (code === 'Escape') return 'Esc';
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
+}
+const keysName = (list) => [...new Set((list || []).map(keyName))].join(' / ') || '\u2014';
+const REMAP_ACTIONS = [['throttle', 'Throttle'], ['brake', 'Brake / reverse'], ['left', 'Steer left'], ['right', 'Steer right'], ['handbrake', 'Handbrake'],
+                       ['nitro', 'Nitro'], ['camera', 'Camera'], ['reset', 'Reset car'], ['pause', 'Pause'], ['mute', 'Mute']];
+
 class Hud {
   constructor(qualityName, onQuality) {
     const $ = (id) => document.getElementById(id);
@@ -3636,6 +3775,21 @@ class Hud {
     this.toastTimer = seconds;
   }
 
+  /** Rebuild the bottom hint bar from the current bindings (keyboard / PlayStation / Xbox). */
+  renderHints(B) {
+    const help = this.el.help, sp = (cls) => help.querySelector(cls);
+    const chip = (txt, kbd) => { const e = document.createElement(kbd ? 'kbd' : 'span'); if (!kbd) e.className = 'chip ' + (PS_CLASS[txt] || ''); e.textContent = txt; return e; };
+    const fill = (el, items) => { el.innerHTML = ''; for (const [label, ...parts] of items) { for (const p of parts) el.append(p); el.append(' ' + label + '  \u00a0'); } };
+    const K = B.key, kb = (a) => (K[a] || []).slice(0, 1).map(c => chip(keyName(c), true));
+    fill(sp('.hint-kb'), [['gas', ...kb('throttle')], ['brake', ...kb('brake')], ['steer', ...kb('left'), ...kb('right')], ['handbrake', ...kb('handbrake')],
+      ['nitro', ...kb('nitro')], ['reset', ...kb('reset')], ['camera', ...kb('camera')], ['pause', ...kb('pause')], ['mute', ...kb('mute')], ['graphics', chip('G', true)]]);
+    for (const kind of ['ps', 'xb']) {
+      const P = B.pad, c = (a) => P[a] == null ? [] : [chip(padName(P[a], kind))];
+      fill(sp('.hint-' + kind), [['steer', chip(kind === 'ps' ? 'L' : 'LS')], ['gas', ...c('throttle')], ['brake', ...c('brake')], ['handbrake', ...c('handbrake')],
+        ['nitro (hold)', ...c('nitro')], ['camera', ...c('camera')], ['reset', ...c('reset')], ['pause', ...c('pause')]]);
+    }
+  }
+
   /** Show the hints for the device in use (keyboard / PlayStation / Xbox pad); touch has its own buttons. */
   setDevice(device, padInfo) {
     const b = document.body.classList;
@@ -3647,7 +3801,7 @@ class Hud {
 
   update(dt, game) {
     const car = game.car, laps = game.laps;
-    this.set('speed', String(Math.round(Math.abs(car.state.vF) * 3.6)));
+    this.set('speed', String(Math.round(Math.hypot(car.state.vx, car.state.vz) * 3.6)));   // true speed (a drift points the nose away from it)
     this.set('gear', car.gearLabel());
     this.set('lapNum', 'LAP ' + Math.max(1, laps.lap));
     this.set('lapTime', formatTime(laps.time));
@@ -3939,6 +4093,12 @@ class Menu {
     // keyboard (menus only)
     window.addEventListener('keydown', (e) => {
       if (!this.name) return;
+      if (this.capture && this.capture.col === 'key') {             // remapping: this key is the new binding (Esc cancels)
+        e.preventDefault();
+        if (e.code === 'Escape') this.cancelCapture(); else this.bind(this.capture.action, 'key', e.code);
+        return;
+      }
+      if (this.capture) { if (e.code === 'Escape') { e.preventDefault(); this.cancelCapture(); } return; }
       const k = e.code;
       if (['ArrowUp', 'KeyW'].includes(k)) this.move(-1);
       else if (['ArrowDown', 'KeyS'].includes(k)) this.move(1);
@@ -3952,6 +4112,8 @@ class Menu {
     });
     // touch / mouse
     this.root.addEventListener('click', (e) => {
+      const cell = e.target.closest('.cell');
+      if (cell && !cell.classList.contains('fixed')) { const r = cell.closest('.brow'); this.setFocus(this.rows().indexOf(r)); this.bindCol = cell.dataset.col; this.startCapture(r.dataset.action, cell.dataset.col); return; }
       const step = e.target.closest('[data-step]'), row = e.target.closest('[data-nav]'), sw = e.target.closest('.sw');
       if (row) this.setFocus(this.rows().indexOf(row));
       if (sw) { this.setColor(+sw.dataset.i); return; }
@@ -3980,6 +4142,7 @@ class Menu {
     if (name === 'settings') this.refreshSettings();
     if (name === 'select') this.refreshSelect();
     if (name === 'mode') this.refreshMode();
+    if (name === 'controls') this.buildControls();
     const rows = this.rows();
     this.setFocus(focus !== null ? focus : (name === 'select' || name === 'mode') ? rows.length - 1 : 0);
   }
@@ -3996,6 +4159,7 @@ class Menu {
     if (!rows.length) return;
     this.focus = clamp(i, 0, rows.length - 1);
     rows.forEach((r, k) => r.classList.toggle('focus', k === this.focus));
+    if (this.name === 'controls') this.markBindCol();
   }
 
   move(d) { const n = this.rows().length; if (n) { this.setFocus((this.focus + d + n) % n); this.g.sound.ui('move'); } }
@@ -4005,6 +4169,7 @@ class Menu {
     const row = this.current(); if (!row) return;
     const kind = row.dataset.kind;
     if (kind && kind !== 'toggle') this.g.sound.ui('move');
+    if (kind === 'bind') { this.bindCol = d < 0 ? 'key' : 'pad'; this.markBindCol(); return; }
     if (kind === 'car') this.browse(d);
     else if (kind === 'color') this.setColor((Settings.colorIndex(this.selCar) + d + 4) % 4);
     else if (kind === 'range') {
@@ -4013,7 +4178,8 @@ class Menu {
     } else if (kind === 'choice' && row.dataset.key !== 'quality') {
       const vals = row.dataset.values.split(','), k = row.dataset.key, cur = String(Settings.data[k]);
       const v = vals[(vals.indexOf(cur) + d + vals.length) % vals.length];
-      Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.refreshMode();
+      Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.g.applySettings();
+      if (this.name === 'mode') this.refreshMode(); else this.refreshSettings();
     } else if (kind === 'choice') {
       const i = QUALITY_KEYS.indexOf(this.pendingQuality);
       this.pendingQuality = QUALITY_KEYS[clamp(i + d, 0, QUALITY_KEYS.length - 1)]; this.refreshSettings();
@@ -4025,6 +4191,7 @@ class Menu {
     const row = this.current(); if (!row) return;
     this.g.sound.ui(row.dataset.act === 'back' ? 'back' : 'select');
     const kind = row.dataset.kind, act = row.dataset.act;
+    if (kind === 'bind') { this.startCapture(row.dataset.action, this.bindCol || 'key'); return; }
     if (kind === 'toggle') { const k = row.dataset.key; Settings.data[k] = !Settings.data[k]; Settings.save(); this.g.applySettings(); this.refreshSettings(); return; }
     if (kind === 'car' || kind === 'color') { this.go('race'); return; }
     if (kind === 'choice') { this.adjust(1); return; }
@@ -4049,6 +4216,7 @@ class Menu {
         break;
       }
       case 'again': this.close(); g.restartRace(); break;
+      case 'defaults': this.cancelCapture(); Settings.data.bindings = copyBindings(DEFAULT_BINDINGS); Settings.save(); g.applySettings(); this.buildControls(); break;
       case 'change': g.toCarSelect(); break;
       case 'resume': g.setPaused(false); break;
       case 'restart': g.setPaused(false); g.restartRace(); break;
@@ -4113,6 +4281,76 @@ class Menu {
     this.refreshSelect();
   }
 
+  /* ---------- controls: remap keyboard + controller ---------- */
+  buildControls() {
+    const box = document.getElementById('remap'), B = Settings.data.bindings, ps = !document.body.classList.contains('pad') || document.body.classList.contains('ps');
+    const kind = ps ? 'ps' : 'xb';
+    document.getElementById('rhead-pad').textContent = ps ? 'Controller (PS)' : 'Controller (Xbox)';
+    const keep = this.name === 'controls' ? this.focus : 0;
+    box.innerHTML = '';
+    for (const [a, label] of REMAP_ACTIONS) {
+      const row = document.createElement('div'); row.className = 'brow'; row.dataset.nav = ''; row.dataset.kind = 'bind'; row.dataset.action = a;
+      const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label;
+      const k = document.createElement('span'); k.className = 'cell'; k.dataset.col = 'key'; k.textContent = keysName(B.key[a]);
+      const p = document.createElement('span'); p.className = 'cell'; p.dataset.col = 'pad';
+      if (a === 'left' || a === 'right') { p.textContent = ps ? 'Left stick' : 'Left stick'; p.classList.add('fixed'); }
+      else p.textContent = padName(B.pad[a], kind);
+      row.append(l, k, p); box.append(row);
+    }
+    document.getElementById('remap-note').textContent = 'Pick a box and press \u2715 / Enter, then the new key or button (it swaps with whatever had it). Menus always use \u2715 / \u25CB.';
+    this.bindCol = this.bindCol || 'key';
+    this.setFocus(keep);
+  }
+
+  markBindCol() {
+    for (const r of this.el('controls').querySelectorAll('.brow')) for (const c of r.querySelectorAll('.cell')) c.classList.toggle('sel', c.dataset.col === this.bindCol);
+  }
+
+  startCapture(action, col) {
+    if (col === 'pad' && (action === 'left' || action === 'right')) return;
+    this.cancelCapture();
+    const row = this.el('controls').querySelector('.brow[data-action="' + action + '"]'), cell = row.querySelector('.cell[data-col="' + col + '"]');
+    cell.textContent = col === 'key' ? 'Press a key\u2026' : 'Press a button\u2026'; cell.classList.add('wait');
+    this.capture = { action, col, t: 6, prev: null };
+    this.g.input.captureKeys = col === 'key';
+  }
+
+  cancelCapture() {
+    if (!this.capture) return;
+    this.capture = null; this.g.input.captureKeys = false;
+    if (this.name === 'controls') this.buildControls();
+  }
+
+  /** Store a new binding; whatever action had it gets this action's old one (nothing is ever left unbound). */
+  bind(action, col, value) {
+    const B = Settings.data.bindings;
+    if (col === 'key') {
+      const old = B.key[action];
+      for (const a in B.key) if (a !== action && B.key[a].includes(value)) B.key[a] = old.filter(c => c !== value).length ? old.filter(c => c !== value) : old;
+      B.key[action] = [value];
+    } else {
+      const old = B.pad[action];
+      for (const a in B.pad) if (a !== action && B.pad[a] === value) B.pad[a] = old;
+      B.pad[action] = value;
+    }
+    Settings.save(); this.g.applySettings();
+    this.capture = null; this.g.input.captureKeys = false;
+    this.g.sound.ui('select');
+    this.buildControls();
+  }
+
+  /** While capturing a controller button: the first new press (or a trigger pulled past halfway). */
+  pollCapture(dt) {
+    const c = this.capture, gp = this.g.input.gamepad;
+    if ((c.t -= dt) <= 0) { this.cancelCapture(); return; }
+    if (c.col !== 'pad' || !gp.pad) return;
+    const pad = gp.pad, now = pad.buttons.map(b => !!b && (b.pressed || b.value > 0.5));
+    if (!c.prev) { c.prev = now; c.trig = [gp.trigger(pad, 0), gp.trigger(pad, 1)]; return; }
+    for (let i = 0; i < now.length; i++) if (now[i] && !c.prev[i]) { const std = gp.stdOf(i); if (std !== null) { this.bind(c.action, 'pad', std); return; } }
+    for (const k of [0, 1]) if (gp.trigger(pad, k) > 0.6 && c.trig[k] < 0.3) { this.bind(c.action, 'pad', k ? 'r2' : 'l2'); return; }
+    c.prev = now;
+  }
+
   /* ---------- race setup ---------- */
   refreshMode() {
     const scr = this.el('mode'), d = Settings.data;
@@ -4134,9 +4372,12 @@ class Menu {
       if (row.dataset.kind === 'range') {
         const v = Settings.data[k], f = (v - row.dataset.min) / (row.dataset.max - row.dataset.min);
         val.textContent = v + row.dataset.unit; row.querySelector('.bar i').style.width = (f * 100) + '%';
-      } else if (row.dataset.kind === 'choice') val.textContent = this.pendingQuality.toUpperCase();
+      } else if (row.dataset.kind === 'choice' && k === 'quality') val.textContent = this.pendingQuality.toUpperCase();
+      else if (row.dataset.kind === 'choice') { const vals = row.dataset.values.split(','), labels = row.dataset.labels.split(','); val.textContent = labels[Math.max(0, vals.indexOf(String(Settings.data[k])))]; }
       else if (row.dataset.kind === 'toggle') val.textContent = Settings.data[k] ? 'ON' : 'OFF';
     }
+    document.getElementById('handling-note').textContent = Settings.data.handling === 'grip' ? 'Pure grip: no steer-to-drift (handbrake still drifts)' : 'Full stick at speed drifts, like Motorfest';
+    document.getElementById('assist-note').textContent = { off: 'No help: overdo it and you spin', low: 'Light countersteer help, up to ~65°', high: 'Auto countersteer, max ~55°' }[Settings.data.assist] || '';
     document.getElementById('q-note').textContent = (this.pendingQuality === 'ultra' ? 'Ultra: for powerful PCs. May lag on tablets and phones. ' : '') +
       (this.pendingQuality !== QUALITY_NAME ? 'Applies when you leave (reloads)' : (IS_TOUCH ? 'Low is recommended on phones' : ''));
     document.getElementById('q-note').classList.toggle('warn', this.pendingQuality === 'ultra');
@@ -4150,6 +4391,7 @@ class Menu {
   update(dt) {
     const n = this.g.input.gamepad.state.nav, prev = this.prevNav;
     const edge = (k) => n[k] && !prev[k];
+    if (this.capture) { this.pollCapture(dt); Object.assign(prev, n); return; }
     if (this.name) {
       const dir = n.up ? 'up' : n.down ? 'down' : n.left ? 'left' : n.right ? 'right' : null;
       if (dir && dir !== this.repeat.dir) { this.repeat = { dir, t: 0.38 }; this.nav(dir); }
@@ -4336,9 +4578,9 @@ class RacingLine {
 
   /** Target speed per sample for a car at a given skill (grip use + braking, incl. braking zones). */
   profile(cfg, sk) {
-    const key = cfg.name + '|' + sk.gripUse + '|' + sk.brakeUse;
+    const key = cfg.name + '|' + sk.gripUse + '|' + sk.brakeUse + '|' + (sk.drift === false ? 'g' : 'd');
     if (this.cache[key]) return this.cache[key];
-    const T = this.T, n = T.n, v = new Float32Array(n), P = CONFIG.physics, vMax = cfg.topSpeed / 3.6;
+    const T = this.T, n = T.n, v = new Float32Array(n), P = CONFIG.physics, vMax = cfg.topSpeed / 3.6, driftAt = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
       let vi = vMax;
       for (let k = 0; k < 3; k++) {
@@ -4347,8 +4589,14 @@ class RacingLine {
         const a = cfg.grip * P.lateralGripAccel * fade * (1 - cfg.understeer * ratio * ratio) * sk.gripUse;
         vi = Math.min(vMax, Math.sqrt(a * this.R[i]));
       }
+      // tight corners: Motorfest drivers drift them, on the car's drift grip
+      if (cfg.drift && sk.drift !== false && this.R[i] < 160) {
+        const vd = Math.min(vMax, Math.sqrt(cfg.drift.grip * sk.gripUse * this.R[i]));
+        if (vd > vi * 1.03) { vi = vd; driftAt[i] = 1; }
+      }
       v[i] = vi;
     }
+    v.driftAt = driftAt;
     const dec = cfg.braking * sk.brakeUse, ds = T.cfg.sampleSpacing;
     for (let pass = 0; pass < 2; pass++) for (let i = n - 1; i >= 0; i--) { const j = (i + 1) % n; v[i] = Math.min(v[i], Math.sqrt(v[j] * v[j] + 2 * dec * ds)); }
     return (this.cache[key] = v);
@@ -4369,14 +4617,14 @@ class AIDriver {
     this.stuckT = 0; this.reverseT = 0; this.revSteer = 0; this.tries = 0; this.okT = 0; this.wrongT = 0; this.offT = 0;
     this.resets = 0; this.reverses = 0; this.nitroUses = 0; this.drifts = 0;
     this.nitro = new Nitro(); this.nitroWant = false;
-    this.ctrl = { throttle: 0, brake: 0, steer: 0, handbrake: false, nitro: false };
+    this.ctrl = { throttle: 0, brake: 0, steer: 0, stick: 0, handbrake: false, nitro: false };
     this.vt = 0; this.followV = Infinity; this.autopilot = !!opts.autopilot;
   }
 
   /** Controls for this frame. raceTime: seconds since GO; pace: rubber-band factor; traffic set by the race. */
   update(dt, raceTime, pace) {
     const c = this.ctrl, car = this.car, s = car.state, T = this.line.T, n = T.n, line = this.line;
-    const v = Math.abs(s.vF), i = s.idx;
+    const v = Math.hypot(s.vx, s.vz), i = s.idx;                    // true speed (a drift points the nose away from it)
     c.handbrake = false; c.nitro = false;
     if (raceTime < this.launchDelay) { c.throttle = 0; c.brake = 0; c.steer = 0; return c; }
     // ---- recovery: back out of walls / spins, reset only as a last resort ----
@@ -4410,15 +4658,39 @@ class AIDriver {
     const look = 7 + v * 0.42, j = (i + Math.round(look / 2.5)) % n;
     const hw = T.HW[j] - 1.1;
     const o = clamp(line.off[j] + this.bias * 0.5 + this.laneOff + jitter, -hw, hw);
-    const tx = T.X[j] + T.RX[j] * o - s.x, tz = T.Z[j] + T.RZ[j] * o - s.z, fx = Math.sin(s.h), fz = Math.cos(s.h);
+    // aim from the direction of travel (not the nose): in a drift the nose points into the corner
+    const sp = Math.hypot(s.vx, s.vz), tx = T.X[j] + T.RX[j] * o - s.x, tz = T.Z[j] + T.RZ[j] * o - s.z;
+    const dw = sp > 6 ? s.dAmt : 0;                                  // grip: aim from the nose (stable); drifting: from the travel direction
+    let fx = lerp(Math.sin(s.h), s.vx / Math.max(sp, 1e-3), dw), fz = lerp(Math.cos(s.h), s.vz / Math.max(sp, 1e-3), dw);
+    const fl = Math.hypot(fx, fz) || 1; fx /= fl; fz /= fl;
     c.steer = clamp(Math.atan2(fx * tz - fz * tx, fx * tx + fz * tz) * 2.8, -1, 1);
+    // steer-to-drift on purpose only: commit full stick into corners planned as drifts, otherwise stay under the trigger
+    let plan = -1;
+    const reach = 3 + Math.round(v * 0.5 / T.cfg.sampleSpacing);     // commit about half a second before the corner
+    for (let k = 1; k <= reach; k++) if (this.profile.driftAt[(i + k) % n]) { plan = (i + k) % n; break; }
+    if (plan < 0 && s.dAmt > 0.1 && line.R[i] < 220) plan = i;
+    if (plan >= 0 && v * 3.6 > 80) {
+      // which way the corner turns: the road's own bend (tangent at the corner vs further in), steering sign convention
+      let m = plan; for (let k = 0, j2 = plan; k < 40 && this.profile.driftAt[j2]; k++, j2 = (j2 + 1) % n) if (line.R[j2] < line.R[m]) m = j2;   // tightest point
+      const A = (m - 6 + n) % n, B = (m + 6) % n, ax = T.RZ[A], az = -T.RX[A], bx = T.RZ[B], bz = -T.RX[B];
+      const dir = Math.sign(ax * bz - az * bx) || 1;
+      // path turn the line asks for (pure-pursuit curvature × v²), as a fraction of this car's drift range
+      const Ld = Math.max(5, Math.hypot(tx, tz)), al = Math.atan2(fx * tz - fz * tx, fx * tx + fz * tz);
+      const need = v * v * 2 * Math.sin(al) / Ld * dir;
+      const into = (need / (this.car.cfg.drift.grip * (1 + 0.3 * (1 - clamp(this.lastThr / 0.5, 0, 1)))) - 0.35) / 0.65;
+      if (s.dAmt < 0.3) c.stick = into > 0.45 ? dir : clamp(c.steer, -0.7, 0.7);              // break loose once the corner asks for it
+      else c.stick = into < 0.3 ? clamp(c.steer, -0.7, 0.7) : dir * clamp(into, 0.36, 1);   // dial in the drift; too gentle: back to grip
+      this.drifting = s.dAmt < 0.3 && into > 0.45;
+    } else { c.stick = clamp(c.steer, -0.7, 0.7); this.drifting = false; }
     // ---- speed: racing-line profile, following slower traffic ----
     let vt = this.profile[(i + 3) % n] * this.pace * pace;
     if (this.followV < vt) vt = this.followV;
     this.vt = vt;
     const dv = vt - v;
-    if (dv > 1.5) { c.throttle = 1; c.brake = 0; }
+    if (this.drifting && s.dAmt < 0.3 && dv > -6) { c.throttle = Math.max(0.35, c.throttle || 0); c.brake = 0; }   // throttle on to break it loose
+    else if (dv > 1.5) { c.throttle = 1; c.brake = 0; }
     else if (dv > -1) { c.throttle = clamp(0.35 + dv * 0.3, 0.05, 1); c.brake = 0; }
+    else if (dv > -6) { c.throttle = 0; c.brake = 0; }                  // a little too fast: lift (lift-off turn-in does the rest)
     else { c.throttle = 0; c.brake = clamp(-dv * 0.12, 0.1, 1); }
     this.lastThr = c.throttle;
     // ---- nitro on straights ----
@@ -4927,6 +5199,9 @@ class Game {
     this.rumble.enabled = d.rumble;
     this.rumble.hid = d.rumble ? this.hid : null;
     this.sound.applyVolume(d);
+    if (this.car) this.car.handling = { style: d.handling, assist: d.assist };
+    this.input.keyBind = d.bindings.key; this.input.gamepad.bindings = d.bindings.pad;
+    this.hud.renderHints(d.bindings);   // the AI always drives Motorfest with the high assist
   }
 
   /** Swap in the chosen car and put it on the grid (Race: with 5 AI; Free Drive: solo). */
@@ -4938,6 +5213,7 @@ class Game {
     this.carKey = key;
     this.car = new Car(cfg, this.scene, this.world.envMap, this.Q, cfg.colors[colorIndex]);
     if (this.reflect) this.reflect.attach(this.car);
+    this.car.handling = { style: Settings.data.handling, assist: Settings.data.assist };
     this.state = 'race'; this.paused = false;
     document.body.classList.remove('paused');
     this.menu.close();
