@@ -38,7 +38,22 @@
   #speed { font-size: 58px; font-weight: 800; line-height: .9; font-variant-numeric: tabular-nums; }
   #kmh { font-size: 13px; font-weight: 700; opacity: .8; letter-spacing: .1em; }
   #gearBox { text-align: center; border-left: 2px solid rgba(255,255,255,.35); padding-left: 12px; }
-  #gear { font-size: 40px; font-weight: 800; line-height: .95; color: #ffb36b; }
+  #gear { font-size: 52px; font-weight: 900; line-height: .9; color: #ffb36b; min-width: 34px; transition: color .1s; }
+  #gear.blocked { color: #ff3b30; animation: gearno .45s ease-out; }
+  @keyframes gearno { 0%, 40% { transform: translateX(-3px); } 20%, 60% { transform: translateX(3px); } 100% { transform: none; } }
+  #gearBox .grow { display: flex; align-items: flex-start; gap: 4px; }
+  #gearMode { font-size: 12px; font-weight: 900; padding: 1px 5px; border-radius: 5px; background: rgba(255,255,255,.2); margin-top: 4px; }
+  body.manual #gearMode { background: #ffb36b; color: #1a1206; }
+  #tach { width: 112px; height: 112px; align-self: center; }
+  #tachBox { display: flex; flex-direction: column; align-items: center; align-self: center; gap: 2px; }
+  #shiftLights { display: none; gap: 7px; padding: 2px 0; }
+  body.manual #shiftLights { display: flex; }
+  #shiftLights i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,.14); }
+  #shiftLights i.on:nth-child(1) { background: #3ee06a; box-shadow: 0 0 8px #3ee06a; }
+  #shiftLights i.on:nth-child(2) { background: #ffd23a; box-shadow: 0 0 8px #ffd23a; }
+  #shiftLights i.on:nth-child(3) { background: #ff3b30; box-shadow: 0 0 8px #ff3b30; }
+  #shiftLights.go i { background: #6fc8ff; box-shadow: 0 0 12px #6fc8ff; animation: blink .16s steps(2) infinite; }
+  #dpop.perfect { color: #6fe39a; text-shadow: 0 0 14px rgba(80,230,140,.6), 0 1px 3px rgba(0,0,0,.6); }
   #gearLbl { font-size: 11px; font-weight: 700; opacity: .75; letter-spacing: .14em; }
   #banner {
     position: absolute; top: 30%; left: 50%; transform: translateX(-50%);
@@ -143,6 +158,8 @@
   #menu .screen { position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center;
     padding: calc(20px + env(safe-area-inset-top)) 16px calc(56px + env(safe-area-inset-bottom)); box-sizing: border-box; }
   #menu .screen.on { display: flex; }
+  #scr-controls { justify-content: flex-start; overflow-y: auto; }
+  #scr-controls > :first-child { margin-top: auto; } #scr-controls > :last-child { margin-bottom: auto; }
   #menu .shade { background: radial-gradient(ellipse at 50% 40%, rgba(10,16,28,.25), rgba(10,16,28,.72)); }
   .logo { margin: 0; font: italic 900 clamp(48px, 11vw, 112px)/1 system-ui, sans-serif; letter-spacing: .04em;
     background: linear-gradient(180deg, #ffd27a 10%, #ff7a1a 55%, #e2442a 90%); -webkit-background-clip: text; background-clip: text; color: transparent;
@@ -191,6 +208,16 @@
   .sw { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.3); cursor: pointer; box-shadow: inset 0 -6px 10px rgba(0,0,0,.25); }
   .sw.sel { border-color: #fff; transform: scale(1.12); }
   /* controls */
+  .rhead, .brow { display: grid; grid-template-columns: 1.3fr 1fr 1fr; gap: 8px; align-items: center; }
+  .rhead { font-size: 10px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; opacity: .65; padding: 0 12px 4px; }
+  .brow { padding: 3px 12px; margin: 1px 0; }
+  .brow .lbl { font-size: 13px; }
+  .cell { display: inline-block; text-align: center; padding: 4px 6px; border-radius: 8px; border: 2px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06);
+    font-size: 12px; font-weight: 700; cursor: pointer; min-height: 18px; }
+  .cell.fixed { opacity: .5; cursor: default; }
+  .brow.focus .cell.sel { border-color: #ffb36b; background: rgba(255,140,40,.22); }
+  .cell.wait { border-color: #8fe3ff; color: #8fe3ff; animation: blink .8s steps(2) infinite; }
+  .chip.ps-s { color: #ff8fd0; }
   .ctable { display: grid; grid-template-columns: auto auto auto auto; gap: 7px 14px; font-size: 13px; align-items: center; }
   .ctable .h { font-weight: 800; letter-spacing: .14em; font-size: 11px; opacity: .7; text-transform: uppercase; }
   .ctable kbd { display: inline-block; padding: 0 6px; border-radius: 4px; background: rgba(255,255,255,.18); border: 1px solid rgba(255,255,255,.35); font: 600 11px/18px inherit; }
@@ -206,8 +233,16 @@
   body.touch #speedo {
     bottom: auto; top: calc(12px + env(safe-area-inset-top)); right: calc(12px + env(safe-area-inset-right));
   }
-  body.touch #speed { font-size: 44px; }
-  body.touch #gear { font-size: 32px; }
+
+  body.touch #tach { width: 58px; height: 58px; }
+  body.touch #speedo { gap: 8px; padding: 6px 10px; }
+  body.touch #speed { font-size: 34px; }
+  body.touch #gear { font-size: 30px; min-width: 22px; }
+  body.touch #gearBox { padding-left: 8px; }
+  body.touch #gearLbl, body.touch #kmh { font-size: 10px; }
+  body.touch #shiftLights i { width: 11px; height: 11px; }
+  body.touch #tachBox { flex-direction: column-reverse; }
+  @media (max-width: 640px) { #t-pause { left: auto; transform: none; right: calc(170px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); height: 46px; } }
 
   /* ---------- TOUCH CONTROLS ---------- */
   #touch { position: fixed; inset: 0; display: none; pointer-events: none; }
@@ -227,6 +262,10 @@
   #t-hand  { right: calc(118px + env(safe-area-inset-right)); bottom: calc(114px + env(safe-area-inset-bottom)); width: 84px; height: 64px; font-size: 12px; }
   #t-nitro { right: calc(14px + env(safe-area-inset-right)); bottom: calc(166px + env(safe-area-inset-bottom)); width: 92px; height: 64px; font-size: 12px;
              background: rgba(47,125,255,.3); border-color: rgba(143,227,255,.6); }
+  .gearbtn { display: none; }
+  body.manual .gearbtn { display: flex; }
+  #t-gup { left: calc(14px + env(safe-area-inset-left)); bottom: calc(176px + env(safe-area-inset-bottom)); width: 92px; height: 50px; font-size: 12px; }
+  #t-gdn { left: calc(14px + env(safe-area-inset-left)); bottom: calc(120px + env(safe-area-inset-bottom)); width: 92px; height: 50px; font-size: 12px; }
   #t-reset { right: calc(12px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
   #t-cam   { right: calc(92px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
 
@@ -248,12 +287,13 @@
   </div>
   <div id="gfx" class="panel" title="Graphics quality (G)">GFX</div>
   <div id="speedo" class="panel">
+    <div id="tachBox"><div id="shiftLights"><i></i><i></i><i></i></div><canvas id="tach" width="112" height="112"></canvas></div>
     <div>
       <div id="speed">0</div>
       <div id="kmh">KM/H</div>
     </div>
     <div id="gearBox">
-      <div id="gear">N</div>
+      <div class="grow"><div id="gear">N</div><div id="gearMode">A</div></div>
       <div id="gearLbl">GEAR</div>
     </div>
   </div>
@@ -267,14 +307,7 @@
   <div id="tags"></div>
   <div id="banner"></div>
   <div id="toast" class="panel"></div>
-  <div id="help" class="panel">
-    <span class="hint-kb"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows drive &nbsp;
-      <kbd>Space</kbd> handbrake &nbsp; <kbd>Shift</kbd> nitro &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics &nbsp; <kbd>Esc</kbd> pause &nbsp;&middot;&nbsp; controller: press any button</span>
-    <span class="hint-ps"><span class="chip">L</span> steer &nbsp; <span class="chip">R2</span> throttle &nbsp; <span class="chip">L2</span> brake / reverse &nbsp;
-      <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip">L1</span> nitro &nbsp; <span class="chip ps-t">&#x25B3;</span> camera &nbsp; <span class="chip">CREATE</span> reset &nbsp; <span class="chip">OPTIONS</span> pause</span>
-    <span class="hint-xb"><span class="chip">LS</span> steer &nbsp; <span class="chip">RT</span> throttle &nbsp; <span class="chip">LT</span> brake / reverse &nbsp;
-      <span class="chip">A</span> handbrake &nbsp; <span class="chip">LB</span> nitro &nbsp; <span class="chip">Y</span> camera &nbsp; <span class="chip">VIEW</span> reset &nbsp; <span class="chip">MENU</span> pause</span>
-  </div>
+  <div id="help" class="panel"><span class="hint-kb"></span><span class="hint-ps"></span><span class="hint-xb"></span>  </div>
 </div>
 
 <div id="touch">
@@ -287,6 +320,8 @@
   <div class="tbtn" id="t-reset" data-ctl="reset">RESET</div>
   <div class="tbtn" id="t-cam"   data-ctl="cam">CAM</div>
   <div class="tbtn" id="t-pause" data-ctl="pause">&#10073;&#10073;</div>
+  <div class="tbtn gearbtn" id="t-gup" data-ctl="gearUp">GEAR +</div>
+  <div class="tbtn gearbtn" id="t-gdn" data-ctl="gearDown">GEAR &minus;</div>
 </div>
 
 <div id="menu">
@@ -309,6 +344,8 @@
     <div class="sel-bottom">
       <div class="swatches" data-nav data-kind="color" id="car-colors"></div>
       <div class="stats" id="car-stats"></div>
+      <div class="opt trans-row" data-nav data-kind="choice" data-key="transmission" data-values="auto,manual" data-labels="Automatic,Manual"><span class="lbl">Transmission</span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="mbtns row">
         <button class="mbtn" data-nav data-act="back">Back</button>
         <button class="mbtn" data-nav data-act="race">Race &#9654;</button>
@@ -320,6 +357,8 @@
     <h2 class="mtitle">Settings</h2>
     <div class="panelx">
       <div class="opt" data-nav data-kind="choice" data-key="quality"><span class="lbl">Graphics quality<br><span class="note" id="q-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt" data-nav data-kind="choice" data-key="transmission" data-values="auto,manual" data-labels="Automatic,Manual"><span class="lbl">Transmission<br><span class="note" id="trans-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="sensitivity" data-min="50" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Steering sensitivity</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
@@ -362,20 +401,9 @@
 
   <div class="screen shade" id="scr-controls" data-back="back">
     <h2 class="mtitle">Controls</h2>
-    <div class="panelx"><div class="ctable">
-      <span class="h">Action</span><span class="h">Keyboard</span><span class="h">PlayStation</span><span class="h">Xbox</span>
-      <span>Steer</span><span><kbd>A</kbd><kbd>D</kbd> / <kbd>&larr;</kbd><kbd>&rarr;</kbd></span><span>Left stick</span><span>Left stick</span>
-      <span>Throttle</span><span><kbd>W</kbd> / <kbd>&uarr;</kbd></span><span><span class="chip">R2</span></span><span>RT</span>
-      <span>Brake / reverse</span><span><kbd>S</kbd> / <kbd>&darr;</kbd></span><span><span class="chip">L2</span></span><span>LT</span>
-      <span>Handbrake</span><span><kbd>Space</kbd></span><span><span class="chip ps-x">&#x2715;</span></span><span>A</span>
-      <span>Nitro</span><span><kbd>Shift</kbd></span><span><span class="chip">L1</span></span><span>LB</span>
-      <span>Camera</span><span><kbd>C</kbd></span><span><span class="chip ps-t">&#x25B3;</span></span><span>Y</span>
-      <span>Reset car</span><span><kbd>R</kbd></span><span><span class="chip">CREATE</span></span><span>View</span>
-      <span>Pause</span><span><kbd>Esc</kbd> / <kbd>P</kbd></span><span><span class="chip">OPTIONS</span></span><span>Menu</span>
-      <span>Mute</span><span><kbd>M</kbd></span><span>&ndash;</span><span>&ndash;</span>
-      <span>Menus</span><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> <kbd>Enter</kbd> <kbd>Esc</kbd></span><span>D-pad, <span class="chip ps-x">&#x2715;</span> <span class="chip ps-o">&#x25CB;</span></span><span>D-pad, A B</span>
-    </div><p class="note" style="margin:12px 0 0;opacity:.75;font-size:12px">Touch: on-screen pedals, steering and NITRO appear automatically; &#10073;&#10073; pauses. Drift (hold the angle) to fill the nitro bar.</p></div>
-    <div class="mbtns row" style="margin-top:14px"><button class="mbtn" data-nav data-act="back">Back</button></div>
+    <div class="panelx"><div class="rhead"><span>Action</span><span>Keyboard</span><span id="rhead-pad">Controller</span></div><div id="remap"></div>
+      <p class="note" id="remap-note" style="margin:10px 0 0;opacity:.8;font-size:12px"></p></div>
+    <div class="mbtns row" style="margin-top:12px"><button class="mbtn" data-nav data-act="defaults">Reset to default</button><button class="mbtn" data-nav data-act="back">Back</button></div>
   </div>
 
   <div class="screen shade" id="scr-pause" data-back="resume">
@@ -384,6 +412,7 @@
       <button class="mbtn" data-nav data-act="resume">Resume</button>
       <button class="mbtn" data-nav data-act="restart">Restart</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
+      <button class="mbtn" data-nav data-act="controls">Controls</button>
       <button class="mbtn" data-nav data-act="quit">Quit to menu</button>
     </div>
   </div>
@@ -505,7 +534,9 @@ const CONFIG = {
       slopeEffect: 0.6,       // how strongly hills slow / speed you up
       wheelbase: 2.6, trackWidth: 1.64, length: 4.5, width: 1.9,
       wheelRadius: 0.34, wheelWidth: 0.26, frontAxle: 1.35,
-      gearShiftUp: [52, 88, 124, 162, 202], // km/h
+      gearShiftUp: [52, 88, 124, 162, 202], // km/h (automatic)
+      gearRatios: [3.88, 2.3, 1.63, 1.25, 1.0, 0.75],   // manual + rev counter: 6 speeds
+      finalKmh: 217,          // km/h at the redline in a 1.00 gear (so 1st tops out at 217 / 3.88 = 56 km/h)
       shiftTime: 0.14,
       visualPitch: 0.05,
       rollMax: 0.035,         // rad of body roll (≈2°), reached at the car's max cornering g
@@ -563,6 +594,8 @@ const CONFIG = {
       wheelbase: 2.8, trackWidth: 1.68, length: 4.85, width: 1.98,
       wheelRadius: 0.36, wheelWidth: 0.3, frontAxle: 1.5,
       gearShiftUp: [60, 100, 140, 180, 222],
+      gearRatios: [3.7, 2.22, 1.59, 1.23, 1.0, 0.76],   // 6 speeds, long gearing
+      finalKmh: 239,
       shiftTime: 0.16,
       visualPitch: 0.07, rollMax: 0.042,
       hoodCam: [0, 1.32, 0.15],
@@ -619,6 +652,8 @@ const CONFIG = {
       wheelbase: 2.45, trackWidth: 1.56, length: 4.15, width: 1.78,
       wheelRadius: 0.32, wheelWidth: 0.24, frontAxle: 1.28,
       gearShiftUp: [48, 82, 116, 152, 188],
+      gearRatios: [3.92, 2.29, 1.62, 1.24, 1.0, 0.77],  // 6 speeds, short and close
+      finalKmh: 202,
       shiftTime: 0.1,
       visualPitch: 0.045, rollMax: 0.024,
       hoodCam: [0, 1.17, 0.2],
@@ -675,7 +710,9 @@ const CONFIG = {
       slopeEffect: 0.55,
       wheelbase: 2.65, trackWidth: 1.74, length: 4.45, width: 1.98,
       wheelRadius: 0.42, wheelWidth: 0.32, frontAxle: 1.38,
-      gearShiftUp: [45, 76, 110, 146, 182],
+      gearShiftUp: [50, 88, 130, 176],
+      gearRatios: [3.52, 2.0, 1.35, 1.0, 0.73],         // 5 speeds, wide spread
+      finalKmh: 189,
       shiftTime: 0.14,
       visualPitch: 0.075, rollMax: 0.061,   // soft, long-travel suspension
       hoodCam: [0, 1.66, 0.55],
@@ -738,6 +775,8 @@ const CONFIG = {
       wheelbase: 2.75, trackWidth: 1.74, length: 4.76, width: 2.06,
       wheelRadius: 0.35, wheelWidth: 0.33, frontAxle: 1.42,
       gearShiftUp: [78, 128, 178, 226, 272, 310],
+      gearRatios: [3.97, 2.42, 1.74, 1.37, 1.14, 1.0, 0.84],   // 7 speeds
+      finalKmh: 333,
       shiftTime: 0.07,
       visualPitch: 0.035, rollMax: 0.03,
       hoodCam: [0, 1.0, 0.45],
@@ -800,6 +839,18 @@ const CONFIG = {
     rumble: [0.6, 0.5, 220],
   },
 
+  // Gearbox. Manual: R1 / L1 (E / Q). Engine pull in gear = the car's normal pull × torque(rpm), so a gear
+  // revved out (or short-shifted) pulls less, and the rev limiter cuts the power. Automatic is unchanged.
+  gearbox: {
+    torque: [[0, 0.15], [0.2, 0.35], [0.4, 0.7], [0.6, 0.95], [0.75, 1.04], [0.85, 1.06], [0.93, 1.03], [1.0, 0.96]],   // rpm/redline → pull
+    clutchRpm: [0.62, 0.32, 0.15],   // revs floor per gear when pulling away (1st, 2nd, higher)
+    shiftTime: [0.1, 0.15], // s of power cut per shift (the car's shiftTime, kept in this range)
+    limiterCut: 0.07,       // s the limiter cuts the power each time it bites (≈ 10 Hz stutter)
+    engineBraking: 1.6,     // × the car's engineBraking, at the redline in a 1.00 gear (more in lower gears)
+    blockFlash: 0.45,       // s of red gear display after a blocked downshift
+    idealMax: 0.97,         // the shift light never asks for more than this share of the redline
+  },
+
   // Race mode
   race: {
     introTime: 3.4,         // s of camera sweep over the grid before the countdown
@@ -808,7 +859,10 @@ const CONFIG = {
     contactRestitution: 0.25,
     slipstream: { range: 28, minRange: 3, width: 2.2, accel: 2.2, minSpeed: 25 },   // m, m, m, m/s² at the closest, m/s
     nearMiss: { gap: 1.3, minRel: 5, nitro: 0.08 },                              // m of air, m/s faster, bar
-    launch: { window: 0.4, late: 0.3, boost: 3, spinTime: 1.2, spinMul: 0.22 },   // s before GO, s after GO, m/s, s, throttle
+    // Start: hold the gas from the "2" through to GO = perfect start (kick + extra pull); anything else = a bad start:
+    // the automatic gearbox sticks in 1st for badLock s (manual drivers can still shift up themselves)
+    launch: { kick: 4, boost: 4, boostTime: 1.6, badLock: 2.4, rumble: [0.9, 0.7, 260] },   // m/s, m/s², s, s
+    aiStart: { easy: [0.08, 0.35], normal: [0.15, 0.25], hard: [0.3, 0.08] },              // AI chance of [perfect, bad] start
     difficultyNames: { easy: 'Easy', normal: 'Normal', hard: 'Hard' },
     // how close to the grip limit, how hard on the brakes, line wobble (m), rubber band, nitro eagerness, launch reaction (s), defending
     difficulty: {
@@ -958,11 +1012,22 @@ const QUALITY_NAME = (() => {
 const QUALITY = CONFIG.quality[QUALITY_NAME];
 
 /* Player settings, remembered in localStorage (graphics quality has its own key above). */
+// Motorfest default layout. Controller: standard-mapping button indices (✕0 ○1 □2 △3 L1 4 R1 5 L2 6 R2 7 Create 8 Options 9
+// L3 10 R3 11 d-pad 12-15 PS 16) or the analog triggers 'l2' / 'r2'. Keyboard: KeyboardEvent.code lists.
+const DEFAULT_BINDINGS = {
+  pad: { throttle: 'r2', brake: 'l2', handbrake: 2, nitro: 0, gearUp: 5, gearDown: 4, camera: 3, reset: 8, pause: 9, mute: null },
+  key: { throttle: ['KeyW', 'ArrowUp'], brake: ['KeyS', 'ArrowDown'], left: ['KeyA', 'ArrowLeft'], right: ['KeyD', 'ArrowRight'],
+         handbrake: ['Space'], nitro: ['ShiftLeft', 'ShiftRight'], gearUp: ['KeyE'], gearDown: ['KeyQ'], camera: ['KeyC'], reset: ['KeyR'], pause: ['Escape', 'KeyP'], mute: ['KeyM'] },
+};
+const copyBindings = (b) => JSON.parse(JSON.stringify(b));
+
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal' },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto' },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem('islaRush.settings') || '{}')); } catch (e) { /* storage blocked / corrupt */ }
     if (!CONFIG.cars[this.data.car]) this.data.car = 'brisaGT';
+    const b = this.data.bindings || {}, d = copyBindings(DEFAULT_BINDINGS);            // fill in anything missing (new actions, old saves)
+    this.data.bindings = { pad: Object.assign(d.pad, b.pad || {}), key: Object.assign(d.key, b.key || {}) };
     return this;
   },
   save() { try { localStorage.setItem('islaRush.settings', JSON.stringify(this.data)); } catch (e) { /* storage blocked */ } },
@@ -2361,6 +2426,7 @@ class Car {
       idx: 0, lateral: 0, s: 0, section: 0,
       offroad: 0, surfaceShake: 0, drifting: false, handbrake: false, braking: false,
       gear: 1, shiftTimer: 0, impact: 0, wall: false, boosting: false, boostOver: 0,
+      rpm: 0, limT: 0, limiter: false, blockT: 0, shifts: 0, gearLock: 0, launchT: 0,   // engine + gearbox (manual / start)
       spinF: 0, spinR: 0,
       prev: { x: 0, y: 0, z: 0, h: 0, pitch: 0 },
     };
@@ -2378,9 +2444,24 @@ class Car {
     s.vx = s.vz = s.vF = s.vS = s.yawRate = 0;
     s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
     s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
+    s.rpm = this.cfg.sound.idle; s.limT = 0; s.limiter = false; s.blockT = 0; s.gearLock = 0; s.launchT = 0;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
+  }
+
+  /** Manual shift (R1 / L1, E / Q). A downshift that would over-rev is refused (the gear display flashes red). */
+  shift(dir) {
+    const s = this.state, n = this.cfg.gearRatios.length, GB = CONFIG.gearbox;
+    if (s.gear < 1 || s.shiftTimer > 0) return false;
+    if (dir > 0) { if (s.gear >= n) return false; }
+    else {
+      if (s.gear <= 1) return false;
+      if (Math.abs(s.vF) > Physics.gears(this.cfg).V[s.gear - 2] * 0.995) { s.blockT = GB.blockFlash; s.blocked = (s.blocked || 0) + 1; return false; }
+    }
+    s.gear += dir; s.shifts++; s.shiftDir = dir;
+    s.shiftTimer = clamp(this.cfg.shiftTime, GB.shiftTime[0], GB.shiftTime[1]);
+    return true;
   }
 
   savePrev() { const s = this.state, p = s.prev; p.x = s.x; p.y = s.y; p.z = s.z; p.h = s.h; p.pitch = s.pitch; }
@@ -2388,7 +2469,7 @@ class Car {
   gearLabel() {
     const s = this.state;
     if (s.gear < 0) return 'R';
-    if (Math.abs(s.vF) < 0.5 && !this.throttleOn) return 'N';
+    if (Math.abs(s.vF) < 0.5 && !this.throttleOn && !this.manual) return 'N';
     return String(s.gear);
   }
 
@@ -2481,6 +2562,7 @@ const Physics = {
     const handbrake = ctrl.handbrake;
 
     // ---- longitudinal ----
+    const manualDrive = (car.manual || s.gearLock > 0) && s.gear >= 1;   // manual box, or an automatic stuck in 1st after a bad start
     let ax = 0;
     if (thr > 0) {
       if (vF < -0.5) ax += c.braking * thr;                          // throttle while rolling back = brake
@@ -2488,7 +2570,8 @@ const Physics = {
         // part throttle = less power: the pull fades out at a lower speed, so every pedal position has a cruise speed
         const r = Math.max(0, vF) / (cap * 1.02 * Math.pow(thr, c.throttleCurve));
         let a = c.acceleration * (c.throttleGamma ? Math.pow(thr, c.throttleGamma) : thr) * Math.max(0, 1 - Math.pow(r, c.powerCurve));
-        if (s.shiftTimer > 0) a *= 0.35;
+        if (manualDrive) a *= this.pull(car, thr, vF);              // gear, rev limiter, shift cut
+        else if (s.shiftTimer > 0) a *= 0.35;
         if (handbrake) a *= 0.4;                                     // rear wheels locked
         ax += a;
       }
@@ -2499,8 +2582,9 @@ const Physics = {
     }
     if (handbrake) ax -= Math.sign(vF) * c.handbrakeDecel * Math.min(1, speedAbs / 3);
     ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag * Math.min(1, speedAbs / 2);
-    if (vF > 0 && !nitro) ax -= c.engineBraking * ratio * (1 - Math.min(1, thr * 4));     // lifting (or barely on it) engine-brakes
-    if (nitro) ax += N.accel * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
+    if (vF > 0 && !nitro) ax -= (manualDrive ? this.engineBrake(car, vF) : c.engineBraking * ratio) * (1 - Math.min(1, thr * 4));   // lifting (or barely on it) engine-brakes
+    if (s.launchT > 0 && thr > 0.5 && vF >= 0) ax += CONFIG.race.launch.boost * Math.min(1, s.launchT / 0.5);   // perfect start: extra pull, fading
+    if (nitro && !(manualDrive && s.limT > 0)) ax += N.accel * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
     ax -= Math.sign(vF) * Math.min(Math.abs(s.latAccel), 20) * CONFIG.physics.corneringDrag;   // tyres scrub speed in corners
     ax -= Math.sign(vF) * sDrag * Math.min(1, speedAbs / 4);
     if (speedAbs > cap) ax -= Math.sign(vF) * (speedAbs - cap) * 0.9;  // scrub off speed on rough ground
@@ -2599,7 +2683,61 @@ const Physics = {
     s.spinF = (s.spinF + vF / c.wheelRadius * dt) % (Math.PI * 2);
     if (!hb) s.spinR = (s.spinR + vF / c.wheelRadius * dt) % (Math.PI * 2);
     this.gearbox(car, dt);
+    this.engineRpm(car, thr, vF, dt);
     s.impact = Math.max(0, s.impact - dt * 3);
+  },
+
+  /** Gear top speeds (m/s at the redline) and the ideal upshift point of each gear (share of the redline). */
+  gears(c) {
+    if (c._gears) return c._gears;
+    const GB = CONFIG.gearbox, V = c.gearRatios.map(r => c.finalKmh / r / 3.6), ideal = [];
+    for (let g = 0; g < V.length - 1; g++) {                 // first rpm where the next gear pulls harder
+      let best = GB.idealMax;
+      for (let x = 0.6; x <= GB.idealMax; x += 0.005) if (this.torque(x * V[g] / V[g + 1]) >= this.torque(x)) { best = x; break; }
+      ideal.push(best);
+    }
+    return (c._gears = { V, ideal });
+  },
+
+  torque(r) {
+    const T = CONFIG.gearbox.torque;
+    if (r <= T[0][0]) return T[0][1];
+    for (let k = 1; k < T.length; k++) if (r <= T[k][0]) return lerp(T[k - 1][1], T[k][1], (r - T[k - 1][0]) / (T[k][0] - T[k - 1][0]));
+    return T[T.length - 1][1];
+  },
+
+  /** Share of the car's normal pull in the current gear: 0 while shifting or on the rev limiter. */
+  pull(car, thr, vF) {
+    const s = car.state, GB = CONFIG.gearbox, G = this.gears(car.cfg), g = clamp(s.gear, 1, G.V.length);
+    if (s.shiftTimer > 0 || s.limT > 0) return 0;
+    const r = Math.max(0, vF) / G.V[g - 1];
+    if (r >= 1) { s.limT = GB.limiterCut; return 0; }           // bounce off the limiter: no extra speed
+    return this.torque(Math.max(r, GB.clutchRpm[Math.min(g, 3) - 1] * thr));
+  },
+
+  /** Engine braking in gear: stronger at high revs and in the low gears (a downshift slows you). */
+  engineBrake(car, vF) {
+    const c = car.cfg, s = car.state, G = this.gears(c), g = clamp(s.gear, 1, G.V.length), r = vF / G.V[g - 1];
+    return Math.min(8, c.engineBraking * CONFIG.gearbox.engineBraking * (0.25 + r * r + Math.max(0, r - 1) * 12) * Math.pow(c.gearRatios[g - 1], 0.6));
+  },
+
+  /** Rev counter: road speed in gear (clutch slip pulling away), limiter bounce, free revs when held at the start. */
+  engineRpm(car, thr, vF, dt, held = false) {
+    const s = car.state, c = car.cfg, E = c.sound, GB = CONFIG.gearbox, G = this.gears(c), idle = E.idle / E.redline;
+    let r;
+    if (held) {
+      s.limT = Math.max(0, s.limT - dt);
+      if (s.limT <= 0 && thr > 0.05 && s.rpm >= E.redline * 0.995) s.limT = GB.limiterCut;
+      r = s.limT > 0 ? 0.9 : idle + thr * (1.04 - idle);
+    } else {
+      const g = s.gear < 0 ? 1 : clamp(s.gear, 1, G.V.length);
+      r = Math.max(idle, Math.abs(vF) / G.V[g - 1], s.gear > 0 ? GB.clutchRpm[Math.min(g, 3) - 1] * thr * (s.gear === 1 || car.manual ? 1 : 0.6) : 0);
+      if (s.limT > 0 && thr > 0) r = 0.95;
+      r = Math.min(r, 1.02);
+    }
+    s.limiter = s.limT > 0 && thr > 0.05;
+    const target = r * E.redline;
+    s.rpm = damp(s.rpm || E.idle, target, held ? (target > s.rpm ? 8 : 5) : (s.shiftTimer > 0 ? 30 : 16), dt);
   },
 
   collideWalls(car, q, fx, fz, rx, rz) {
@@ -2637,8 +2775,12 @@ const Physics = {
   gearbox(car, dt) {
     const s = car.state, up = car.cfg.gearShiftUp, kmh = s.vF * 3.6;
     s.shiftTimer = Math.max(0, s.shiftTimer - dt);
+    s.limT = Math.max(0, s.limT - dt); s.blockT = Math.max(0, s.blockT - dt); s.launchT = Math.max(0, s.launchT - dt);
+    if (s.gearLock > 0) s.gearLock -= dt;
     if (kmh < -1) { s.gear = -1; return; }
     if (s.gear < 1) s.gear = 1;
+    if (car.manual) return;                                         // the driver shifts (Car.shift)
+    if (s.gearLock > 0) { s.gear = 1; return; }                     // bad start: stuck in 1st
     if (s.gear <= up.length && kmh > up[s.gear - 1]) { s.gear++; s.shiftTimer = car.cfg.shiftTime; }
     else if (s.gear > 1 && kmh < up[s.gear - 2] - 14) s.gear--;
   },
@@ -2746,35 +2888,35 @@ class CameraRig {
 // Raw buttons in HID order: □ ✕ ○ △ L1 R1 L2 R2 Create Options L3 R3 PS Touchpad (Mute).
 const PAD_PROFILES = {
   standard: {
-    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0 }, triggerAxes: false, dpad: [12, 13, 14, 15],
   },
   // Firefox 123-150 on Linux (incl. ESR 140) reports "standard" but leaves the analog
   // triggers on extra axes 4 (L2) and 5 (R2); buttons 6/7 are digital only there.
   standardFxLinux: {
-    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, dpad: [12, 13, 14, 15],
   },
   // Windows HID (10 axes; also Linux joydev on hid-generic, 8 axes / 15 buttons):
   // axes X(LX) Y(LY) Z(RX) Rx(L2) Ry(R2) Rz(RY)
   dualsenseHid: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 3, r2: 4 }, triggerAxes: true, hat: 9,
   },
   // macOS IOHID, USB (7 axes, 15 buttons): LX LY RX RY L2 R2 hat
   dualsenseMacUsb: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, hat: 6,
   },
   // macOS IOHID, Bluetooth simple report (7 axes, 14 buttons): LX LY RX RY hat L2 R2
   dualsenseMacBt: {
-    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { l2: 6, r2: 7, confirm: 1, back: 2 }, std: [1, 2, 0, 3, 4, 5, 6, 7, 8, 9, 10, 11, null, null, null, null, 12],
     axes: { lx: 0, l2: 5, r2: 6 }, triggerAxes: true, hat: 4,
   },
   // Linux joydev with the hid-playstation driver (8 axes, 13 buttons):
   // ✕ ○ △ □ L1 R1 L2 R2 Create Options PS L3 R3; axes X Y Z(L2) Rx Ry Rz(R2) hatX hatY
   dualsenseLinux: {
-    buttons: { nitro: 4, handbrake: 0, camera: 2, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { l2: 6, r2: 7, confirm: 0, back: 1 }, std: [0, 1, 3, 2, 4, 5, 6, 7, 8, 9, 11, 12, null, null, null, null, 10],
     axes: { lx: 0, l2: 2, r2: 5 }, triggerAxes: true, hatX: 6, hatY: 7,
   },
 };
@@ -2787,6 +2929,7 @@ class GamepadInput {
     this.state = { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, nitro: false, active: false, fresh: false,
                    nav: { up: false, down: false, left: false, right: false, confirm: false, back: false, start: false } };
     this.edges = [];
+    this.bindings = copyBindings(DEFAULT_BINDINGS).pad;
     this.onConnect = null; this.onDisconnect = null;
     window.addEventListener('gamepadconnected', (e) => this.offer(e.gamepad));
     window.addEventListener('gamepaddisconnected', (e) => {
@@ -2882,7 +3025,7 @@ class GamepadInput {
     this.triggerArmed = [false, false];
     const P = this.profile;
     this.prevButtons = {};
-    for (const name of ['camera', 'reset', 'pause']) { const b = pad.buttons[P.buttons[name]]; this.prevButtons[name] = wake && !!b && (b.pressed || b.value > 0.5); }
+    for (const name of ['camera', 'reset', 'pause', 'mute', 'gearUp', 'gearDown']) { const b = pad.buttons[this.raw(this.bindings[name])]; this.prevButtons[name] = wake && !!b && (b.pressed || b.value > 0.5); }
     this.state.connected = true;
     this.idleTime = 0;
     if (wake ? this.onConnect : this.onSwitch) (wake ? this.onConnect : this.onSwitch)(this.info);
@@ -2931,13 +3074,14 @@ class GamepadInput {
     const curve = clamp(G.steerCurve / this.sensitivity, 0.7, 2.4);  // higher sensitivity = more response near centre
     x = ax <= G.deadzone ? 0 : Math.sign(x) * Math.pow(Math.min(1, (ax - G.deadzone) / (1 - G.deadzone)), curve);
     st.steer = x;
-    st.throttle = this.trigger(pad, 1);
-    st.brake = this.trigger(pad, 0);
-    st.handbrake = pressed(P.buttons.handbrake);
-    st.nitro = pressed(P.buttons.nitro);
+    const B = this.bindings;
+    st.throttle = this.value(pad, B.throttle);
+    st.brake = this.value(pad, B.brake);
+    st.handbrake = this.value(pad, B.handbrake) > 0.5;
+    st.nitro = this.value(pad, B.nitro) > 0.5;
     this.readNav(pad, pressed);
-    for (const name of ['camera', 'reset', 'pause']) {             // rising edges → actions
-      const now = pressed(P.buttons[name]);
+    for (const name of ['camera', 'reset', 'pause', 'mute', 'gearUp', 'gearDown']) {     // rising edges → actions
+      const now = this.value(pad, B[name]) > 0.5;
       if (now && !this.prevButtons[name]) this.edges.push(name);
       this.prevButtons[name] = now;
     }
@@ -2963,7 +3107,22 @@ class GamepadInput {
     if (P.hatX != null) { const hx = pad.axes[P.hatX] || 0, hy = pad.axes[P.hatY] || 0; left = left || hx < -0.5; right = right || hx > 0.5; up = up || hy < -0.5; down = down || hy > 0.5; }
     const lx = pad.axes[0] || 0, ly = pad.axes[1] || 0;
     n.up = up || ly < -0.6; n.down = down || ly > 0.6; n.left = left || lx < -0.6; n.right = right || lx > 0.6;
-    n.confirm = pressed(P.buttons.confirm); n.back = pressed(P.buttons.back); n.start = pressed(P.buttons.pause);
+    n.confirm = pressed(P.buttons.confirm); n.back = pressed(P.buttons.back); n.start = pressed(this.raw(this.bindings.pause));
+  }
+
+  /** Standard-mapping button index → this pad's raw index (raw DualSense layouts differ). */
+  raw(std) { if (std == null || typeof std !== 'number') return null; const m = this.profile && this.profile.std; return m ? m[std] : std; }
+  /** Raw button → standard index (for remapping), triggers as 'l2' / 'r2'. */
+  stdOf(raw) {
+    const m = this.profile && this.profile.std, i = m ? m.indexOf(raw) : raw;
+    return i === 6 ? 'l2' : i === 7 ? 'r2' : (i >= 0 ? i : null);
+  }
+  /** A bound control's value 0..1: analog trigger or button (pressure if it has one). */
+  value(pad, bind) {
+    if (bind === 'r2') return this.trigger(pad, 1);
+    if (bind === 'l2') return this.trigger(pad, 0);
+    const b = pad.buttons[this.raw(bind)];
+    return b ? (b.value > 0 ? b.value : (b.pressed ? 1 : 0)) : 0;
   }
 
   /** Analog trigger 0..1. k = 0: brake (LT/L2), 1: throttle (RT/R2). */
@@ -3082,14 +3241,17 @@ class Input {
     this.onDevice = null;
     this.gamepad = new GamepadInput();
 
-    const actionKeys = { KeyR: 'reset', KeyC: 'camera', KeyG: 'quality', Escape: 'pause', KeyP: 'pause' };
-    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG', 'KeyP', 'ShiftLeft', 'ShiftRight']);
+    this.keyBind = copyBindings(DEFAULT_BINDINGS).key;                // remappable (Settings → Controls)
     this.menuActive = false;      // while a menu is open, keys/pad buttons drive the menu, not the race
+    this.captureKeys = false;     // the remap screen is listening for a key
     this.sensitivity = 1;
     window.addEventListener('keydown', (e) => {
-      if (gameKeys.has(e.code)) e.preventDefault();
-      if (!e.repeat && actionKeys[e.code] && !this.menuActive) this.actions.push(actionKeys[e.code]);
-      if (!e.repeat && e.code === 'KeyM') this.actions.push('mute');                 // works in menus too
+      if (this.captureKeys) return;
+      const act = this.keyAction(e.code);
+      if (act || e.code === 'KeyG') e.preventDefault();
+      if (!e.repeat && !this.menuActive && (act === 'reset' || act === 'camera' || act === 'pause' || act === 'gearUp' || act === 'gearDown')) this.actions.push(act);
+      if (!e.repeat && !this.menuActive && e.code === 'KeyG') this.actions.push('quality');
+      if (!e.repeat && act === 'mute') this.actions.push('mute');                    // works in menus too
       this.keys.add(e.code);
       this.setDevice('keyboard');
     });
@@ -3129,6 +3291,7 @@ class Input {
         if (ctl === 'reset') this.actions.push('reset');
         if (ctl === 'cam') this.actions.push('camera');
         if (ctl === 'pause') this.actions.push('pause');
+        if (ctl === 'gearUp' || ctl === 'gearDown') this.actions.push(ctl);
       }
       held.clear(); for (const c of now) held.add(c);
       for (const k in this.touch) this.touch[k] = now.has(k);
@@ -3140,6 +3303,8 @@ class Input {
   }
 
   popAction() { return this.actions.shift(); }
+  keyAction(code) { for (const a in this.keyBind) if (this.keyBind[a].includes(code)) return a; return null; }
+  held(action) { const ks = this.keyBind[action] || []; for (const k of ks) if (this.keys.has(k)) return true; return false; }
 
   /**
    * Steering lock (0..1 of the car's speed-dependent maximum) that just exceeds
@@ -3157,13 +3322,13 @@ class Input {
   update(dt, car) {
     const k = this.keys, t = this.touch, s = car.state, c = car.cfg, D = CONFIG.input.digital;
     const pad = this.gamepad.poll(dt), gp = this.gamepad.state;
-    while (this.gamepad.edges.length) { const a = this.gamepad.edges.shift(); if (!this.menuActive) this.actions.push(a); }
+    while (this.gamepad.edges.length) { const a = this.gamepad.edges.shift(); if (!this.menuActive || a === 'mute') this.actions.push(a); }
     if (pad && gp.fresh) this.setDevice('gamepad');
 
-    const left = k.has('KeyA') || k.has('ArrowLeft') || t.left;
-    const right = k.has('KeyD') || k.has('ArrowRight') || t.right;
+    const left = this.held('left') || t.left;
+    const right = this.held('right') || t.right;
     const target = (right ? 1 : 0) - (left ? 1 : 0);
-    const handbrake = k.has('Space') || t.hand || gp.handbrake;
+    const handbrake = this.held('handbrake') || t.hand || gp.handbrake;
     const lock = this.usefulLock(car, handbrake);
 
     if (target !== 0 && this.lastTarget !== target) { this.hold = 0; this.fromSteer = Math.abs(this.steer) > 0.1 * lock; }
@@ -3190,10 +3355,10 @@ class Input {
       this.steer = moveTowards(this.steer, 0, Math.max(lock, Math.abs(this.steer)) / D.returnTime * dt);
     }
     this.ctrl.steer = this.steer;
-    this.ctrl.throttle = Math.max((k.has('KeyW') || k.has('ArrowUp') || t.gas) ? 1 : 0, gp.throttle);
-    this.ctrl.brake = Math.max((k.has('KeyS') || k.has('ArrowDown') || t.brake) ? 1 : 0, gp.brake);
+    this.ctrl.throttle = Math.max((this.held('throttle') || t.gas) ? 1 : 0, gp.throttle);
+    this.ctrl.brake = Math.max((this.held('brake') || t.brake) ? 1 : 0, gp.brake);
     this.ctrl.handbrake = handbrake;
-    this.ctrl.nitroWant = k.has('ShiftLeft') || k.has('ShiftRight') || t.nitro || gp.nitro;
+    this.ctrl.nitroWant = this.held('nitro') || t.nitro || gp.nitro;
     return this.ctrl;
   }
 }
@@ -3440,15 +3605,21 @@ class Sound {
       L.upX.setValueAtTime(0, now); L.upY.setValueAtTime(1, now); L.upZ.setValueAtTime(0, now);
     } else L.setOrientation(d.x, d.y, d.z, 0, 1, 0);
     for (const v of this.voices) {
-      const car = v.r.car, s = car.state, cfg = car.cfg, E = cfg.sound, up = cfg.gearShiftUp, gear = Math.max(1, s.gear);
-      const hi = gear <= up.length ? up[gear - 1] : cfg.topSpeed * 0.98, kmh = Math.abs(s.vF) * 3.6, thr = v.r.ai.ctrl.throttle;
-      v.rpm = damp(v.rpm, clamp(E.redline * kmh / hi, E.idle, E.redline), 12, dt);
+      const car = v.r.car, s = car.state, cfg = car.cfg, E = cfg.sound, thr = v.r.ai.ctrl.throttle;
+      v.rpm = damp(v.rpm, clamp(s.rpm || E.idle, E.idle, E.redline), 12, dt);
       const f = v.rpm / 60 * E.cyl / 2;
       v.o1.frequency.setTargetAtTime(f * 0.5, now, 0.02); v.o2.frequency.setTargetAtTime(f, now, 0.02);
       v.f.frequency.setTargetAtTime(500 + 2600 * thr * (0.4 + 0.6 * v.rpm / E.redline), now, 0.04);
-      v.g.gain.setTargetAtTime((0.18 + 0.3 * thr) * (s.shiftTimer > 0 ? 0.5 : 1), now, 0.04);
+      v.g.gain.setTargetAtTime((0.18 + 0.3 * thr) * (s.shiftTimer > 0 || s.limiter ? 0.5 : 1), now, 0.04);
       Sound.place(v.p, s.x, s.y + 0.6, s.z, now);
     }
+  }
+
+  /** Gear change: a short mechanical clunk (+ a blip of revs on a downshift). */
+  shiftClunk(dir) {
+    if (!this.running) return;
+    this.burst(0.07, 'lowpass', 900, 200, 0.8, 0.35, this.engineMix);
+    this.tone('triangle', dir > 0 ? 140 : 110, dir > 0 ? 90 : 160, 0.09, 0.12, this.engineMix);
   }
 
   /* ---------- one-shots ---------- */
@@ -3527,23 +3698,23 @@ class Sound {
     if (!racing) { this.lastImpact = s.impact; this.wasBoost = false; return; }
     this.voicesFrame(dt, g, now);
 
-    // ---- engine: rpm from road speed in the current gear (shifts drop it), free revs when (nearly) stopped ----
+    // ---- engine: the car's rev counter (gear, clutch, limiter, free revs on the grid), a little flare when drifting ----
     if (this.carKey !== g.carKey || !this.eng) this.setCar(g.carKey);
-    const n = this.eng, kmh = Math.abs(s.vF) * 3.6, up = cfg.gearShiftUp, gear = Math.max(1, s.gear);
-    const hi = gear <= up.length ? up[gear - 1] : cfg.topSpeed * 0.98;
+    const n = this.eng;
     const thr = Math.max(g.input.ctrl.throttle, s.boosting ? 1 : 0);
     this.thr = damp(this.thr, thr, 10, dt);
-    let rpm = E.redline * kmh / hi * (1 + (s.drifting ? 0.08 * this.thr : 0));
-    rpm = Math.max(rpm, lerp(E.idle + (E.redline - E.idle) * 0.7 * this.thr, E.idle, smoothstep(0, 25, kmh)));
-    rpm = clamp(rpm, E.idle, E.redline * 1.02);
-    this.rpm = damp(this.rpm || E.idle, rpm, s.shiftTimer > 0 ? 30 : 14, dt);
+    const rpm = clamp((s.rpm || E.idle) * (1 + (s.drifting ? 0.08 * this.thr : 0)), E.idle, E.redline * 1.02);
+    this.rpm = damp(this.rpm || E.idle, rpm, 40, dt);
+    if (s.shifts !== this.shifts) { if (this.shifts !== undefined && s.shifts > this.shifts) this.shiftClunk(s.shiftDir); this.shifts = s.shifts; }
+    if (s.blocked !== this.blocked) { if (this.blocked !== undefined && s.blocked) this.tone('square', 220, 160, 0.12, 0.08, this.sfxBus); this.blocked = s.blocked; }
     const f = this.rpm / 60 * E.cyl / 2, r01 = clamp((this.rpm - E.idle) / (E.redline - E.idle), 0, 1);
     set(n.low.frequency, f * 0.5, 0.012); set(n.mid.frequency, f, 0.012); set(n.high.frequency, f * E.highMul, 0.012);
     if (n.lfo) set(n.lfo.frequency, this.rpm / 120, 0.02);
     if (n.rasp) set(n.rasp.frequency, Math.min(4000, f * 2), 0.02);
     set(n.tone.frequency, lerp(E.tone[0], E.tone[1], clamp(0.3 * r01 + 0.7 * this.thr * (0.35 + 0.65 * r01), 0, 1)), 0.03);
-    const vol = (0.3 + 0.4 * this.thr + 0.15 * r01) * (s.shiftTimer > 0 ? 0.4 : 1);    // audible dip on every shift
-    set(n.out.gain, vol, s.shiftTimer > 0 ? 0.012 : 0.04);
+    const cut = s.limiter ? 0.18 : s.shiftTimer > 0 ? 0.4 : 1;     // audible dip on every shift, stutter on the limiter
+    const vol = (0.3 + 0.4 * this.thr + 0.15 * r01) * cut;
+    set(n.out.gain, vol, cut < 1 ? 0.006 : 0.03);
     if (n.turbo) {                           // spool with throttle × revs, blow-off valve on a sharp lift
       const target = this.thr * r01;
       if (this.boostLvl > 0.45 && thr < 0.15) { this.burst(0.4, 'bandpass', 2800, 900, 1.3, 0.28 * E.turbo, this.engineMix); this.boostLvl = 0.1; }
@@ -3594,6 +3765,30 @@ class Sound {
  * ===================================================================== */
 const fmtPts = (x) => Math.round(x).toLocaleString('en-US');
 
+/* ---------- control names (hints, controls screen) ---------- */
+const PAD_NAMES = {
+  ps: ['\u2715', '\u25CB', '\u25A1', '\u25B3', 'L1', 'R1', 'L2', 'R2', 'CREATE', 'OPTIONS', 'L3', 'R3', 'D-PAD \u2191', 'D-PAD \u2193', 'D-PAD \u2190', 'D-PAD \u2192', 'PS'],
+  xb: ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT', 'VIEW', 'MENU', 'LS', 'RS', 'D-PAD \u2191', 'D-PAD \u2193', 'D-PAD \u2190', 'D-PAD \u2192', 'GUIDE'],
+};
+const PS_CLASS = { '\u2715': 'ps-x', '\u25CB': 'ps-o', '\u25A1': 'ps-s', '\u25B3': 'ps-t' };
+function padName(b, kind = 'ps') {
+  if (b === 'r2') return kind === 'ps' ? 'R2' : 'RT';
+  if (b === 'l2') return kind === 'ps' ? 'L2' : 'LT';
+  return b == null ? '\u2014' : (PAD_NAMES[kind][b] || 'B' + b);
+}
+function keyName(code) {
+  const arrows = { ArrowUp: '\u2191', ArrowDown: '\u2193', ArrowLeft: '\u2190', ArrowRight: '\u2192' };
+  if (arrows[code]) return arrows[code];
+  if (/^Shift/.test(code)) return 'Shift';
+  if (/^Control/.test(code)) return 'Ctrl';
+  if (/^Alt/.test(code)) return 'Alt';
+  if (code === 'Escape') return 'Esc';
+  return code.replace(/^Key/, '').replace(/^Digit/, '').replace(/^Numpad/, 'Num ');
+}
+const keysName = (list) => [...new Set((list || []).map(keyName))].join(' / ') || '\u2014';
+const REMAP_ACTIONS = [['throttle', 'Throttle'], ['brake', 'Brake / reverse'], ['left', 'Steer left'], ['right', 'Steer right'], ['handbrake', 'Handbrake'],
+                       ['nitro', 'Nitro'], ['gearUp', 'Gear up (manual)'], ['gearDown', 'Gear down (manual)'], ['camera', 'Camera'], ['reset', 'Reset car'], ['pause', 'Pause'], ['mute', 'Mute']];
+
 class Hud {
   constructor(qualityName, onQuality) {
     const $ = (id) => document.getElementById(id);
@@ -3601,7 +3796,9 @@ class Hud {
                 banner: $('banner'), help: $('help'), gfx: $('gfx'), toast: $('toast'),
                 driftLap: $('driftLap'), drift: $('drift'), driftPts: $('driftPts'), driftMult: $('driftMult'), driftBar: $('driftBar').firstChild,
                 dpop: $('dpop'), nitroBox: $('nitroBox'), nitroBar: $('nitroBar').firstChild, nitroPct: $('nitroPct'),
-                racePos: $('racePos'), gapA: $('gapA'), gapB: $('gapB') };
+                racePos: $('racePos'), gapA: $('gapA'), gapB: $('gapB'), gearMode: $('gearMode'), tach: $('tach'),
+                lights: Array.from($('shiftLights').children), lightBox: $('shiftLights') };
+    this.tachCtx = this.el.tach.getContext('2d'); this.tachKey = null;
     this.cache = {};
     this.bannerTimer = 0; this.toastTimer = 0; this.helpTimer = 12;
     this.el.gfx.textContent = 'GFX: ' + qualityName.toUpperCase();
@@ -3636,6 +3833,62 @@ class Hud {
     this.toastTimer = seconds;
   }
 
+  /** Rev counter (redline zone in red), shift lights (manual: fill up, flash at the ideal shift point), M / A, blocked downshift. */
+  engine(car) {
+    const s = car.state, E = car.cfg.sound, el = this.el, manual = !!car.manual;
+    this.set('gearMode', manual ? 'M' : 'A');
+    const blocked = s.blockT > 0;
+    if (blocked !== this.cache.blocked) { this.cache.blocked = blocked; el.gear.classList.toggle('blocked', blocked); }
+    // shift lights
+    let lit = 0, go = false;
+    const G = Physics.gears(car.cfg);
+    if (manual && s.gear >= 1 && s.gear < G.V.length && s.vF > 1) {    // road speed in gear (not free revs on the grid)
+      const ideal = G.ideal[s.gear - 1], r = s.limiter ? 1 : Math.min(s.rpm / E.redline, s.vF / G.V[s.gear - 1] + 0.02);
+      lit = r >= ideal - 0.03 ? 3 : r >= ideal - 0.07 ? 2 : r >= ideal - 0.12 ? 1 : 0;
+      go = r >= ideal;
+    }
+    const key = lit + (go ? 'g' : '');
+    if (key !== this.cache.lights) { this.cache.lights = key; el.lights.forEach((l, k) => l.classList.toggle('on', k < lit)); el.lightBox.classList.toggle('go', go); }
+    // tachometer (redrawn only when the needle moves a visible amount)
+    const rpm = Math.round(s.rpm / 25) * 25;
+    if (this.tachKey === car.cfg.name + rpm) return;
+    this.tachKey = car.cfg.name + rpm;
+    const c = this.tachCtx, W = 112, cx = 56, cy = 58, R = 48, max = Math.ceil(E.redline / 1000 + 0.5) * 1000;
+    const ang = (v) => Math.PI * 0.75 + Math.PI * 1.5 * clamp(v / max, 0, 1);
+    c.clearRect(0, 0, W, W);
+    c.lineCap = 'butt';
+    c.lineWidth = 7; c.strokeStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.arc(cx, cy, R, ang(0), ang(max)); c.stroke();
+    c.strokeStyle = '#ff3b30'; c.beginPath(); c.arc(cx, cy, R, ang(E.redline * 0.9), ang(max)); c.stroke();
+    c.lineWidth = 7; c.strokeStyle = s.limiter ? '#ff3b30' : '#ffb36b'; c.beginPath(); c.arc(cx, cy, R, ang(0), ang(s.rpm)); c.stroke();
+    c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '700 10px system-ui, sans-serif'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (let k = 0; k <= max / 1000; k++) {
+      const a = ang(k * 1000), big = k % 2 === 0 || max <= 8000;
+      c.strokeStyle = k * 1000 >= E.redline * 0.9 ? '#ff6b5e' : 'rgba(255,255,255,.7)'; c.lineWidth = 2;
+      c.beginPath(); c.moveTo(cx + Math.cos(a) * (R - 6), cy + Math.sin(a) * (R - 6)); c.lineTo(cx + Math.cos(a) * (R - 12), cy + Math.sin(a) * (R - 12)); c.stroke();
+      if (big) c.fillText(String(k), cx + Math.cos(a) * (R - 21), cy + Math.sin(a) * (R - 21));
+    }
+    const a = ang(s.rpm);
+    c.strokeStyle = '#fff'; c.lineWidth = 3; c.lineCap = 'round';
+    c.beginPath(); c.moveTo(cx - Math.cos(a) * 6, cy - Math.sin(a) * 6); c.lineTo(cx + Math.cos(a) * (R - 4), cy + Math.sin(a) * (R - 4)); c.stroke();
+    c.fillStyle = '#ffb36b'; c.beginPath(); c.arc(cx, cy, 4, 0, Math.PI * 2); c.fill();
+    c.fillStyle = 'rgba(255,255,255,.6)'; c.font = '700 8px system-ui, sans-serif'; c.fillText('RPM \u00d71000', cx, cy + 26);
+  }
+
+  /** Rebuild the bottom hint bar from the current bindings (keyboard / PlayStation / Xbox). */
+  renderHints(B, manual) {
+    const help = this.el.help, sp = (cls) => help.querySelector(cls);
+    const chip = (txt, kbd) => { const e = document.createElement(kbd ? 'kbd' : 'span'); if (!kbd) e.className = 'chip ' + (PS_CLASS[txt] || ''); e.textContent = txt; return e; };
+    const fill = (el, items) => { el.innerHTML = ''; for (const [label, ...parts] of items) { for (const p of parts) el.append(p); el.append(' ' + label + '  \u00a0'); } };
+    const K = B.key, kb = (a) => (K[a] || []).slice(0, 1).map(c => chip(keyName(c), true));
+    fill(sp('.hint-kb'), [['gas', ...kb('throttle')], ['brake', ...kb('brake')], ['steer', ...kb('left'), ...kb('right')], ['handbrake', ...kb('handbrake')],
+      ['nitro', ...kb('nitro')], ...(manual ? [['gear \u25B2/\u25BC', ...kb('gearUp'), ...kb('gearDown')]] : []), ['reset', ...kb('reset')], ['camera', ...kb('camera')], ['pause', ...kb('pause')], ['mute', ...kb('mute')], ['graphics', chip('G', true)]]);
+    for (const kind of ['ps', 'xb']) {
+      const P = B.pad, c = (a) => P[a] == null ? [] : [chip(padName(P[a], kind))];
+      fill(sp('.hint-' + kind), [['steer', chip(kind === 'ps' ? 'L' : 'LS')], ['gas', ...c('throttle')], ['brake', ...c('brake')], ['handbrake', ...c('handbrake')],
+        ['nitro (hold)', ...c('nitro')], ...(manual ? [['gear \u25B2/\u25BC', ...c('gearUp'), ...c('gearDown')]] : []), ['camera', ...c('camera')], ['reset', ...c('reset')], ['pause', ...c('pause')]]);
+    }
+  }
+
   /** Show the hints for the device in use (keyboard / PlayStation / Xbox pad); touch has its own buttons. */
   setDevice(device, padInfo) {
     const b = document.body.classList;
@@ -3649,6 +3902,7 @@ class Hud {
     const car = game.car, laps = game.laps;
     this.set('speed', String(Math.round(Math.abs(car.state.vF) * 3.6)));
     this.set('gear', car.gearLabel());
+    this.engine(car);
     this.set('lapNum', 'LAP ' + Math.max(1, laps.lap));
     this.set('lapTime', formatTime(laps.time));
     this.set('last', formatTime(laps.last));
@@ -3939,6 +4193,12 @@ class Menu {
     // keyboard (menus only)
     window.addEventListener('keydown', (e) => {
       if (!this.name) return;
+      if (this.capture && this.capture.col === 'key') {             // remapping: this key is the new binding (Esc cancels)
+        e.preventDefault();
+        if (e.code === 'Escape') this.cancelCapture(); else this.bind(this.capture.action, 'key', e.code);
+        return;
+      }
+      if (this.capture) { if (e.code === 'Escape') { e.preventDefault(); this.cancelCapture(); } return; }
       const k = e.code;
       if (['ArrowUp', 'KeyW'].includes(k)) this.move(-1);
       else if (['ArrowDown', 'KeyS'].includes(k)) this.move(1);
@@ -3952,6 +4212,8 @@ class Menu {
     });
     // touch / mouse
     this.root.addEventListener('click', (e) => {
+      const cell = e.target.closest('.cell');
+      if (cell && !cell.classList.contains('fixed')) { const r = cell.closest('.brow'); this.setFocus(this.rows().indexOf(r)); this.bindCol = cell.dataset.col; this.startCapture(r.dataset.action, cell.dataset.col); return; }
       const step = e.target.closest('[data-step]'), row = e.target.closest('[data-nav]'), sw = e.target.closest('.sw');
       if (row) this.setFocus(this.rows().indexOf(row));
       if (sw) { this.setColor(+sw.dataset.i); return; }
@@ -3980,6 +4242,7 @@ class Menu {
     if (name === 'settings') this.refreshSettings();
     if (name === 'select') this.refreshSelect();
     if (name === 'mode') this.refreshMode();
+    if (name === 'controls') this.buildControls();
     const rows = this.rows();
     this.setFocus(focus !== null ? focus : (name === 'select' || name === 'mode') ? rows.length - 1 : 0);
   }
@@ -3996,6 +4259,7 @@ class Menu {
     if (!rows.length) return;
     this.focus = clamp(i, 0, rows.length - 1);
     rows.forEach((r, k) => r.classList.toggle('focus', k === this.focus));
+    if (this.name === 'controls') { this.markBindCol(); if (rows[this.focus].scrollIntoView) rows[this.focus].scrollIntoView({ block: 'nearest' }); }
   }
 
   move(d) { const n = this.rows().length; if (n) { this.setFocus((this.focus + d + n) % n); this.g.sound.ui('move'); } }
@@ -4005,6 +4269,7 @@ class Menu {
     const row = this.current(); if (!row) return;
     const kind = row.dataset.kind;
     if (kind && kind !== 'toggle') this.g.sound.ui('move');
+    if (kind === 'bind') { this.bindCol = d < 0 ? 'key' : 'pad'; this.markBindCol(); return; }
     if (kind === 'car') this.browse(d);
     else if (kind === 'color') this.setColor((Settings.colorIndex(this.selCar) + d + 4) % 4);
     else if (kind === 'range') {
@@ -4013,7 +4278,8 @@ class Menu {
     } else if (kind === 'choice' && row.dataset.key !== 'quality') {
       const vals = row.dataset.values.split(','), k = row.dataset.key, cur = String(Settings.data[k]);
       const v = vals[(vals.indexOf(cur) + d + vals.length) % vals.length];
-      Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.refreshMode();
+      Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.g.applySettings();
+      if (this.name === 'mode') this.refreshMode(); else if (this.name === 'select') this.refreshChoices(this.el('select')); else this.refreshSettings();
     } else if (kind === 'choice') {
       const i = QUALITY_KEYS.indexOf(this.pendingQuality);
       this.pendingQuality = QUALITY_KEYS[clamp(i + d, 0, QUALITY_KEYS.length - 1)]; this.refreshSettings();
@@ -4025,6 +4291,7 @@ class Menu {
     const row = this.current(); if (!row) return;
     this.g.sound.ui(row.dataset.act === 'back' ? 'back' : 'select');
     const kind = row.dataset.kind, act = row.dataset.act;
+    if (kind === 'bind') { this.startCapture(row.dataset.action, this.bindCol || 'key'); return; }
     if (kind === 'toggle') { const k = row.dataset.key; Settings.data[k] = !Settings.data[k]; Settings.save(); this.g.applySettings(); this.refreshSettings(); return; }
     if (kind === 'car' || kind === 'color') { this.go('race'); return; }
     if (kind === 'choice') { this.adjust(1); return; }
@@ -4049,6 +4316,7 @@ class Menu {
         break;
       }
       case 'again': this.close(); g.restartRace(); break;
+      case 'defaults': this.cancelCapture(); Settings.data.bindings = copyBindings(DEFAULT_BINDINGS); Settings.save(); g.applySettings(); this.buildControls(); break;
       case 'change': g.toCarSelect(); break;
       case 'resume': g.setPaused(false); break;
       case 'restart': g.setPaused(false); g.restartRace(); break;
@@ -4086,7 +4354,16 @@ class Menu {
     }
   }
 
+  /** Choice rows (‹ value ›) with data-values / data-labels: show the current setting. */
+  refreshChoices(scr) {
+    for (const row of scr.querySelectorAll('.opt[data-kind="choice"][data-labels]')) {
+      const vals = row.dataset.values.split(','), labels = row.dataset.labels.split(',');
+      row.querySelector('.val').textContent = labels[Math.max(0, vals.indexOf(String(Settings.data[row.dataset.key])))];
+    }
+  }
+
   refreshSelect() {
+    this.refreshChoices(this.el('select'));
     const key = this.selCar, cfg = CONFIG.cars[key], order = CONFIG.carOrder;
     document.getElementById('car-name').textContent = cfg.name;
     document.getElementById('car-tag').textContent = cfg.tagline;
@@ -4113,6 +4390,76 @@ class Menu {
     this.refreshSelect();
   }
 
+  /* ---------- controls: remap keyboard + controller ---------- */
+  buildControls() {
+    const box = document.getElementById('remap'), B = Settings.data.bindings, ps = !document.body.classList.contains('pad') || document.body.classList.contains('ps');
+    const kind = ps ? 'ps' : 'xb';
+    document.getElementById('rhead-pad').textContent = ps ? 'Controller (PS)' : 'Controller (Xbox)';
+    const keep = this.name === 'controls' ? this.focus : 0;
+    box.innerHTML = '';
+    for (const [a, label] of REMAP_ACTIONS) {
+      const row = document.createElement('div'); row.className = 'brow'; row.dataset.nav = ''; row.dataset.kind = 'bind'; row.dataset.action = a;
+      const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label;
+      const k = document.createElement('span'); k.className = 'cell'; k.dataset.col = 'key'; k.textContent = keysName(B.key[a]);
+      const p = document.createElement('span'); p.className = 'cell'; p.dataset.col = 'pad';
+      if (a === 'left' || a === 'right') { p.textContent = ps ? 'Left stick' : 'Left stick'; p.classList.add('fixed'); }
+      else p.textContent = padName(B.pad[a], kind);
+      row.append(l, k, p); box.append(row);
+    }
+    document.getElementById('remap-note').textContent = 'Pick a box and press \u2715 / Enter, then the new key or button (it swaps with whatever had it). Menus always use \u2715 / \u25CB.';
+    this.bindCol = this.bindCol || 'key';
+    this.setFocus(keep);
+  }
+
+  markBindCol() {
+    for (const r of this.el('controls').querySelectorAll('.brow')) for (const c of r.querySelectorAll('.cell')) c.classList.toggle('sel', c.dataset.col === this.bindCol);
+  }
+
+  startCapture(action, col) {
+    if (col === 'pad' && (action === 'left' || action === 'right')) return;
+    this.cancelCapture();
+    const row = this.el('controls').querySelector('.brow[data-action="' + action + '"]'), cell = row.querySelector('.cell[data-col="' + col + '"]');
+    cell.textContent = col === 'key' ? 'Press a key\u2026' : 'Press a button\u2026'; cell.classList.add('wait');
+    this.capture = { action, col, t: 6, prev: null };
+    this.g.input.captureKeys = col === 'key';
+  }
+
+  cancelCapture() {
+    if (!this.capture) return;
+    this.capture = null; this.g.input.captureKeys = false;
+    if (this.name === 'controls') this.buildControls();
+  }
+
+  /** Store a new binding; whatever action had it gets this action's old one (nothing is ever left unbound). */
+  bind(action, col, value) {
+    const B = Settings.data.bindings;
+    if (col === 'key') {
+      const old = B.key[action];
+      for (const a in B.key) if (a !== action && B.key[a].includes(value)) B.key[a] = old.filter(c => c !== value).length ? old.filter(c => c !== value) : old;
+      B.key[action] = [value];
+    } else {
+      const old = B.pad[action];
+      for (const a in B.pad) if (a !== action && B.pad[a] === value) B.pad[a] = old;
+      B.pad[action] = value;
+    }
+    Settings.save(); this.g.applySettings();
+    this.capture = null; this.g.input.captureKeys = false;
+    this.g.sound.ui('select');
+    this.buildControls();
+  }
+
+  /** While capturing a controller button: the first new press (or a trigger pulled past halfway). */
+  pollCapture(dt) {
+    const c = this.capture, gp = this.g.input.gamepad;
+    if ((c.t -= dt) <= 0) { this.cancelCapture(); return; }
+    if (c.col !== 'pad' || !gp.pad) return;
+    const pad = gp.pad, now = pad.buttons.map(b => !!b && (b.pressed || b.value > 0.5));
+    if (!c.prev) { c.prev = now; c.trig = [gp.trigger(pad, 0), gp.trigger(pad, 1)]; return; }
+    for (let i = 0; i < now.length; i++) if (now[i] && !c.prev[i]) { const std = gp.stdOf(i); if (std !== null) { this.bind(c.action, 'pad', std); return; } }
+    for (const k of [0, 1]) if (gp.trigger(pad, k) > 0.6 && c.trig[k] < 0.3) { this.bind(c.action, 'pad', k ? 'r2' : 'l2'); return; }
+    c.prev = now;
+  }
+
   /* ---------- race setup ---------- */
   refreshMode() {
     const scr = this.el('mode'), d = Settings.data;
@@ -4134,9 +4481,11 @@ class Menu {
       if (row.dataset.kind === 'range') {
         const v = Settings.data[k], f = (v - row.dataset.min) / (row.dataset.max - row.dataset.min);
         val.textContent = v + row.dataset.unit; row.querySelector('.bar i').style.width = (f * 100) + '%';
-      } else if (row.dataset.kind === 'choice') val.textContent = this.pendingQuality.toUpperCase();
+      } else if (row.dataset.kind === 'choice' && k === 'quality') val.textContent = this.pendingQuality.toUpperCase();
+      else if (row.dataset.kind === 'choice') { const vals = row.dataset.values.split(','), labels = row.dataset.labels.split(','); val.textContent = labels[Math.max(0, vals.indexOf(String(Settings.data[k])))]; }
       else if (row.dataset.kind === 'toggle') val.textContent = Settings.data[k] ? 'ON' : 'OFF';
     }
+    document.getElementById('trans-note').textContent = Settings.data.transmission === 'manual' ? 'Shift yourself: R1 / L1 (E / Q). Shift light shows the best moment' : 'The car shifts for you';
     document.getElementById('q-note').textContent = (this.pendingQuality === 'ultra' ? 'Ultra: for powerful PCs. May lag on tablets and phones. ' : '') +
       (this.pendingQuality !== QUALITY_NAME ? 'Applies when you leave (reloads)' : (IS_TOUCH ? 'Low is recommended on phones' : ''));
     document.getElementById('q-note').classList.toggle('warn', this.pendingQuality === 'ultra');
@@ -4150,6 +4499,7 @@ class Menu {
   update(dt) {
     const n = this.g.input.gamepad.state.nav, prev = this.prevNav;
     const edge = (k) => n[k] && !prev[k];
+    if (this.capture) { this.pollCapture(dt); Object.assign(prev, n); return; }
     if (this.name) {
       const dir = n.up ? 'up' : n.down ? 'down' : n.left ? 'left' : n.right ? 'right' : null;
       if (dir && dir !== this.repeat.dir) { this.repeat = { dir, t: 0.38 }; this.nav(dir); }
@@ -4503,6 +4853,18 @@ class Race {
 
   get player() { return this.racers[0]; }
 
+  /** On GO: each AI gets a perfect, normal or bad start (Hard: more perfect, fewer bad). */
+  aiStarts() {
+    const [pPerfect, pBad] = CONFIG.race.aiStart[this.opts.difficulty] || [0.15, 0.25];
+    for (const r of this.racers) {
+      if (!r.ai) continue;
+      const x = this.rnd();
+      r.start = x < pPerfect ? 'perfect' : x < pPerfect + pBad ? 'bad' : 'normal';
+      if (r.start === 'perfect') { r.ai.launchDelay = 0; Game.launch(r.car); }
+      else if (r.start === 'bad') r.car.state.gearLock = CONFIG.race.launch.badLock;
+    }
+  }
+
   /** Rubber band (Easy / Normal only, small): AI far ahead eases off, AI far behind pushes a touch. */
   pace(r) {
     const k = this.sk.rubber; if (!k) return 1;
@@ -4812,7 +5174,7 @@ class Game {
     this.countdown = 0; this.cdShown = 0; this.soundHint = false;
     this.line = new RacingLine(this.track);
     this.race = null; this.raceOpts = { mode: 'free' }; this.intro = 0; this.results = false; this.raceDrift = 0;
-    this.launchHeld = null; this.launchWatch = 0; this.spinT = 0; this.wrongT = 0; this.skipReq = false; this.resultsT = 0;
+    this.holdFrom = null; this.wasHeld = false; this.lockPending = 0; this.startResult = null; this.wrongT = 0; this.skipReq = false; this.resultsT = 0;
     this.minimap = new Minimap(document.getElementById('minimap'), this.track);
     this.tags = [];
     const skip = () => { if (this.race && this.race.playerDone && !this.results) this.skipReq = true; };
@@ -4901,6 +5263,7 @@ class Game {
       else if (this.paused) continue;                        // other actions wait until resumed
       else if (a === 'reset') this.resetCar();
       else if (a === 'camera') this.cameraRig.toggle();
+      else if (a === 'gearUp' || a === 'gearDown') { if (this.car.manual && this.intro <= 0 && this.countdown <= 0) this.car.shift(a === 'gearUp' ? 1 : -1); }
       else if (a === 'quality') this.cycleQuality();
     }
   }
@@ -4927,6 +5290,11 @@ class Game {
     this.rumble.enabled = d.rumble;
     this.rumble.hid = d.rumble ? this.hid : null;
     this.sound.applyVolume(d);
+    const manual = d.transmission === 'manual';
+    if (this.car && !(this.race && this.race.playerDone)) this.car.manual = manual;
+    document.body.classList.toggle('manual', manual);
+    this.input.keyBind = d.bindings.key; this.input.gamepad.bindings = d.bindings.pad;
+    this.hud.renderHints(d.bindings, manual);
   }
 
   /** Swap in the chosen car and put it on the grid (Race: with 5 AI; Free Drive: solo). */
@@ -4938,6 +5306,7 @@ class Game {
     this.carKey = key;
     this.car = new Car(cfg, this.scene, this.world.envMap, this.Q, cfg.colors[colorIndex]);
     if (this.reflect) this.reflect.attach(this.car);
+    this.car.manual = Settings.data.transmission === 'manual';
     this.state = 'race'; this.paused = false;
     document.body.classList.remove('paused');
     this.menu.close();
@@ -4951,7 +5320,8 @@ class Game {
     this.acc = 0; this.lastSection = -1;
     this.input.steer = 0;
     this.drift.reset(); this.nitro.reset(); this.raceDrift = 0;
-    this.launchHeld = null; this.launchWatch = 0; this.spinT = 0; this.wrongT = 0;
+    this.holdFrom = null; this.wasHeld = false; this.lockPending = 0; this.startResult = null; this.wrongT = 0;
+    this.car.manual = Settings.data.transmission === 'manual';
     this.results = false; this.finishDriver = null; this.skipReq = false; this.resultsT = 0;
     document.body.classList.remove('finished', 'wrongway');
     this.endRace();
@@ -4985,20 +5355,34 @@ class Game {
     this.hud.showBanner('3', this.car.cfg.name, 1.2, true); this.sound.ui('beep');
   }
 
-  /** On GO: holding the throttle from early = wheelspin; hitting it right on GO = a small launch boost. */
+  /**
+   * On GO. Perfect start = the gas went down during the "2" and stayed down until GO: a kick, extra pull and a rumble.
+   * Anything else (on the 3, on the 1, let go before GO, or only after GO) = a bad start: an automatic gearbox is
+   * stuck in 1st on the limiter for a moment (from when you hit the gas); a manual one can shift up and save it.
+   */
   judgeLaunch() {
-    const L = CONFIG.race.launch;
-    if (this.launchHeld !== null) {
-      if (this.launchHeld > L.window) { this.spinT = L.spinTime; this.hud.popup('WHEELSPIN', 'jumped the start', 'lost'); }
-      else this.greatLaunch();
-      this.launchWatch = 0;
-    } else this.launchWatch = L.late;
+    const L = CONFIG.race.launch, s = this.car.state, h = this.holdFrom;
+    const perfect = h !== null && h <= 2 && h > 1;
+    s.limT = 0;                                                     // free revs on the grid don't carry over
+    if (this.race) for (const r of this.race.racers) r.car.state.limT = 0;
+    this.startResult = perfect ? 'perfect' : h === null ? (this.wasHeld ? 'released' : 'late') : h > 2 ? 'early' : 'late1';
+    if (perfect) {
+      Game.launch(this.car);
+      this.hud.popup('PERFECT START', 'launch boost', 'perfect'); this.sound.ui('tier1');
+      if (this.input.device === 'gamepad' && Settings.data.rumble) { const R = L.rumble, rb = this.rumble; rb.send(this.input.gamepad.pad, R[0], R[1], R[2]); rb.next = rb.clock + R[2]; }
+    } else {
+      const why = { early: 'gas on the 3: too early', late1: 'gas on the 1: too late', released: 'let go before GO', late: 'gas after GO: too late' }[this.startResult];
+      this.hud.popup('BAD START', why + (this.car.manual ? ' \u00b7 shift up to save it' : ' \u00b7 stuck in 1st'), 'lost'); this.sound.ui('lost');
+      if (!this.car.manual) { if (h !== null) s.gearLock = L.badLock; else this.lockPending = 3; }
+    }
+    if (this.race) this.race.aiStarts();
   }
 
-  greatLaunch() {
-    const s = this.car.state, b = CONFIG.race.launch.boost;
-    s.vx += Math.sin(s.h) * b; s.vz += Math.cos(s.h) * b; s.vF += b;
-    this.hud.popup('GREAT LAUNCH', '', 't1'); this.sound.ui('mult');
+  /** Perfect start: a kick off the line and extra pull for a moment (player and AI). */
+  static launch(car) {
+    const s = car.state, L = CONFIG.race.launch;
+    s.vx += Math.sin(s.h) * L.kick; s.vz += Math.cos(s.h) * L.kick; s.vF += L.kick;
+    s.launchT = L.boostTime;
   }
 
   makeTags() {
@@ -5060,6 +5444,7 @@ class Game {
     for (const e of race.events) {
       if (e.type === 'finish' && e.racer.isPlayer) {
         race.playerDone = true;
+        this.car.manual = false; this.car.state.gearLock = 0;      // the autopilot drives an automatic
         this.finishDriver = new AIDriver(this.car, this.line, CONFIG.race.difficulty.normal, mulberry32(7), { autopilot: true });
         this.finishDriver.launchDelay = 0;
         const p = e.racer;
@@ -5105,7 +5490,8 @@ class Game {
   updateCountdown(dt, ctrl) {
     if (this.countdown <= 0) return false;
     this.countdown -= dt;
-    if (ctrl.throttle > 0.5) { if (this.launchHeld === null) this.launchHeld = this.countdown; } else this.launchHeld = null;
+    if (ctrl.throttle > 0.5) { if (this.holdFrom === null) this.holdFrom = this.countdown; this.wasHeld = true; } else this.holdFrom = null;
+    if (this.race) for (const r of this.race.racers) if (r.ai) Physics.engineRpm(r.car, this.countdown < 2 ? 0.35 : 0, 0, dt, true);
     const k = Math.max(0, Math.ceil(this.countdown));
     if (k !== this.cdShown) {
       this.cdShown = k;
@@ -5138,13 +5524,16 @@ class Game {
     this.handleActions();
     if (this.paused || this.state !== 'race' || this.results) return;
     this.car.throttleOn = ctrl.throttle > 0;
-    if (this.intro > 0) { this.intro -= dt; if (this.intro <= 0) this.startCountdown(); ctrl.nitro = false; return; }
+    if (this.intro > 0) { this.intro -= dt; Physics.engineRpm(this.car, ctrl.throttle, 0, dt, true); if (this.intro <= 0) this.startCountdown(); ctrl.nitro = false; return; }
+    if (this.intro > 0 || this.countdown > 0) Physics.engineRpm(this.car, ctrl.throttle, 0, dt, true);   // held on the grid: free revs
     if (this.updateCountdown(dt, ctrl)) { ctrl.nitro = false; return; }
     const race = this.race;
     if (race && race.playerDone) ctrl = this.finishDriver.update(dt, race.time, 1);   // the AI brings your car home
     else {
-      if (this.launchWatch > 0) { this.launchWatch -= dt; if (ctrl.throttle > 0.5) { this.launchWatch = 0; this.greatLaunch(); } }
-      if (this.spinT > 0) { this.spinT -= dt; ctrl.throttle *= CONFIG.race.launch.spinMul; }
+      if (this.lockPending > 0) {                                   // bad start, late on the gas: stuck in 1st once you go
+        this.lockPending -= dt;
+        if (ctrl.throttle > 0.5) { this.lockPending = 0; if (!this.car.manual) this.car.state.gearLock = CONFIG.race.launch.badLock; }
+      }
       // nitro: fires on press with enough in the bar, burns while held
       ctrl.nitro = this.nitro.update(dt, ctrl.nitroWant, this.car);
       if (this.nitro.fired && this.input.device === 'gamepad' && Settings.data.rumble) {
