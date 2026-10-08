@@ -23,13 +23,13 @@
   }
   #gfx {
     position: absolute; pointer-events: auto; cursor: pointer;
-    top: calc(124px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
+    top: calc(142px + env(safe-area-inset-top)); left: calc(12px + env(safe-area-inset-left));
     font-size: 11px; font-weight: 700; letter-spacing: .12em; padding: 6px 10px;
   }
   #lapNum { font-size: 13px; font-weight: 700; letter-spacing: .14em; opacity: .9; }
   #lapTime { font-size: 28px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
   .sub { font-size: 12px; opacity: .88; font-variant-numeric: tabular-nums; letter-spacing: .04em; }
-  .sub b { display: inline-block; width: 38px; font-weight: 600; opacity: .75; }
+  .sub b { display: inline-block; width: 46px; font-weight: 600; opacity: .75; }
   #speedo {
     position: absolute; text-align: right;
     right: calc(16px + env(safe-area-inset-right)); bottom: calc(16px + env(safe-area-inset-bottom));
@@ -46,6 +46,35 @@
     opacity: 0; transition: opacity .45s;
   }
   #banner.show { opacity: 1; }
+  #banner.big { font-size: 72px; top: 24%; }
+  /* drift counter, combo popups, nitro bar */
+  #drift { position: absolute; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom)); transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .2s; }
+  #drift.on { opacity: 1; }
+  #driftLbl { font-size: 11px; font-weight: 800; letter-spacing: .32em; opacity: .85; }
+  #driftPts { font-size: 40px; font-weight: 900; font-style: italic; color: #ffd27a; font-variant-numeric: tabular-nums; }
+  #driftMult { font-size: 22px; font-weight: 900; margin-left: 8px; color: #fff; }
+  #driftBar { width: 150px; height: 4px; margin: 4px auto 0; border-radius: 2px; background: rgba(255,255,255,.22); overflow: hidden; }
+  #driftBar i { display: block; height: 100%; width: 0; background: #ffb36b; }
+  #dpop { position: absolute; left: 50%; bottom: calc(176px + env(safe-area-inset-bottom)); transform: translateX(-50%); text-align: center;
+    font-size: 32px; font-weight: 900; font-style: italic; letter-spacing: .08em; white-space: nowrap; opacity: 0;
+    text-shadow: 0 0 2px #000, 0 2px 6px rgba(0,0,0,.85); }
+  #dpop small { display: block; font-size: 18px; font-style: normal; letter-spacing: .06em; }
+  #dpop.show { animation: dpop 1.7s ease-out forwards; }
+  #dpop.t0 { font-size: 18px; } #dpop.t1 { color: #ffe08a; } #dpop.t2 { color: #ffa53d; }
+  #dpop.t3 { color: #ff5ad1; text-shadow: 0 0 14px rgba(255,90,209,.65), 0 1px 3px rgba(0,0,0,.6); }
+  #dpop.lost { color: #ff5a4d; }
+  @keyframes dpop { 0% { opacity: 0; transform: translate(-50%, 14px) scale(.8); } 12% { opacity: 1; transform: translate(-50%, 0) scale(1.1); }
+    22% { transform: translate(-50%, 0) scale(1); } 75% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -20px); } }
+  #nitroBox { position: absolute; right: calc(16px + env(safe-area-inset-right)); bottom: calc(104px + env(safe-area-inset-bottom)); width: 180px; padding: 6px 12px; box-sizing: border-box; }
+  .nlbl { display: flex; justify-content: space-between; font-size: 11px; font-weight: 800; letter-spacing: .16em; }
+  #nitroBar { height: 8px; margin-top: 4px; border-radius: 4px; background: rgba(255,255,255,.18); overflow: hidden; }
+  #nitroBar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #2f7dff, #8fe3ff); }
+  #nitroBox.ready .nlbl span:first-child { color: #8fe3ff; }
+  #nitroBox.active { box-shadow: 0 0 18px rgba(80,170,255,.7); }
+  #nitroBox.active #nitroBar i { background: linear-gradient(90deg, #8fe3ff, #ffffff); }
+  body.touch #nitroBox { right: auto; bottom: auto; left: calc(12px + env(safe-area-inset-left)); top: calc(178px + env(safe-area-inset-top)); width: 150px; }
+  body.touch #drift { bottom: calc(210px + env(safe-area-inset-bottom)); }
+  body.touch #dpop { bottom: calc(280px + env(safe-area-inset-bottom)); }
   #banner small { display: block; text-align: center; font-size: 14px; letter-spacing: .12em; opacity: .85; }
   #help {
     position: absolute; left: calc(12px + env(safe-area-inset-left)); bottom: calc(12px + env(safe-area-inset-bottom));
@@ -163,6 +192,8 @@
   #t-gas   { right: calc(14px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); width: 92px; height: 140px; }
   #t-brake { right: calc(118px + env(safe-area-inset-right)); bottom: calc(18px + env(safe-area-inset-bottom)); width: 84px; height: 84px; }
   #t-hand  { right: calc(118px + env(safe-area-inset-right)); bottom: calc(114px + env(safe-area-inset-bottom)); width: 84px; height: 64px; font-size: 12px; }
+  #t-nitro { right: calc(14px + env(safe-area-inset-right)); bottom: calc(166px + env(safe-area-inset-bottom)); width: 92px; height: 64px; font-size: 12px;
+             background: rgba(47,125,255,.3); border-color: rgba(143,227,255,.6); }
   #t-reset { right: calc(12px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
   #t-cam   { right: calc(92px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
 
@@ -180,6 +211,7 @@
     <div id="lapTime">0:00.000</div>
     <div class="sub"><b>LAST</b><span id="lastLap">--:--.---</span></div>
     <div class="sub"><b>BEST</b><span id="bestLap">--:--.---</span></div>
+    <div class="sub"><b>DRIFT</b><span id="driftLap">0</span></div>
   </div>
   <div id="gfx" class="panel" title="Graphics quality (G)">GFX</div>
   <div id="speedo" class="panel">
@@ -192,15 +224,18 @@
       <div id="gearLbl">GEAR</div>
     </div>
   </div>
+  <div id="nitroBox" class="panel"><div class="nlbl"><span>NITRO</span><span id="nitroPct">0%</span></div><div id="nitroBar"><i></i></div></div>
+  <div id="drift"><div id="driftLbl">DRIFT</div><div><span id="driftPts">0</span><span id="driftMult">x1</span></div><div id="driftBar"><i></i></div></div>
+  <div id="dpop"></div>
   <div id="banner"></div>
   <div id="toast" class="panel"></div>
   <div id="help" class="panel">
     <span class="hint-kb"><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> / arrows drive &nbsp;
-      <kbd>Space</kbd> handbrake &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics &nbsp; <kbd>Esc</kbd> pause &nbsp;&middot;&nbsp; controller: press any button</span>
+      <kbd>Space</kbd> handbrake &nbsp; <kbd>Shift</kbd> nitro &nbsp; <kbd>M</kbd> mute &nbsp; <kbd>R</kbd> reset &nbsp; <kbd>C</kbd> camera &nbsp; <kbd>G</kbd> graphics &nbsp; <kbd>Esc</kbd> pause &nbsp;&middot;&nbsp; controller: press any button</span>
     <span class="hint-ps"><span class="chip">L</span> steer &nbsp; <span class="chip">R2</span> throttle &nbsp; <span class="chip">L2</span> brake / reverse &nbsp;
-      <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip ps-t">&#x25B3;</span> camera &nbsp; <span class="chip">CREATE</span> reset &nbsp; <span class="chip">OPTIONS</span> pause</span>
+      <span class="chip ps-x">&#x2715;</span> handbrake &nbsp; <span class="chip">L1</span> nitro &nbsp; <span class="chip ps-t">&#x25B3;</span> camera &nbsp; <span class="chip">CREATE</span> reset &nbsp; <span class="chip">OPTIONS</span> pause</span>
     <span class="hint-xb"><span class="chip">LS</span> steer &nbsp; <span class="chip">RT</span> throttle &nbsp; <span class="chip">LT</span> brake / reverse &nbsp;
-      <span class="chip">A</span> handbrake &nbsp; <span class="chip">Y</span> camera &nbsp; <span class="chip">VIEW</span> reset &nbsp; <span class="chip">MENU</span> pause</span>
+      <span class="chip">A</span> handbrake &nbsp; <span class="chip">LB</span> nitro &nbsp; <span class="chip">Y</span> camera &nbsp; <span class="chip">VIEW</span> reset &nbsp; <span class="chip">MENU</span> pause</span>
   </div>
 </div>
 
@@ -210,6 +245,7 @@
   <div class="tbtn" id="t-gas"   data-ctl="gas">GAS</div>
   <div class="tbtn" id="t-brake" data-ctl="brake">BRAKE</div>
   <div class="tbtn" id="t-hand"  data-ctl="hand">DRIFT</div>
+  <div class="tbtn" id="t-nitro" data-ctl="nitro">NITRO</div>
   <div class="tbtn" id="t-reset" data-ctl="reset">RESET</div>
   <div class="tbtn" id="t-cam"   data-ctl="cam">CAM</div>
   <div class="tbtn" id="t-pause" data-ctl="pause">&#10073;&#10073;</div>
@@ -251,7 +287,11 @@
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="speedFx" data-min="0" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Speed effects</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
-      <div class="opt" data-nav data-kind="range" data-key="volume" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Master volume<br><span class="note">Sound arrives in step 4</span></span>
+      <div class="opt" data-nav data-kind="range" data-key="volume" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Master volume<br><span class="note">M mutes</span></span>
+        <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt" data-nav data-kind="range" data-key="engineVolume" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Engine volume</span>
+        <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt" data-nav data-kind="range" data-key="sfxVolume" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Effects volume</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
       <div class="opt" data-nav data-kind="toggle" data-key="rumble"><span class="lbl">Controller rumble</span><span class="ctl"><span class="val"></span></span></div>
       <div class="opt" data-nav data-kind="button" data-act="hid" id="opt-hid"><span class="lbl">Enable controller rumble (Windows)<br><span class="note" id="hid-note">DualSense via WebHID &mdash; click or tap to allow</span></span><span class="ctl"><span class="val" id="hid-val">&#9658;</span></span></div>
@@ -267,11 +307,13 @@
       <span>Throttle</span><span><kbd>W</kbd> / <kbd>&uarr;</kbd></span><span><span class="chip">R2</span></span><span>RT</span>
       <span>Brake / reverse</span><span><kbd>S</kbd> / <kbd>&darr;</kbd></span><span><span class="chip">L2</span></span><span>LT</span>
       <span>Handbrake</span><span><kbd>Space</kbd></span><span><span class="chip ps-x">&#x2715;</span></span><span>A</span>
+      <span>Nitro</span><span><kbd>Shift</kbd></span><span><span class="chip">L1</span></span><span>LB</span>
       <span>Camera</span><span><kbd>C</kbd></span><span><span class="chip ps-t">&#x25B3;</span></span><span>Y</span>
       <span>Reset car</span><span><kbd>R</kbd></span><span><span class="chip">CREATE</span></span><span>View</span>
       <span>Pause</span><span><kbd>Esc</kbd> / <kbd>P</kbd></span><span><span class="chip">OPTIONS</span></span><span>Menu</span>
+      <span>Mute</span><span><kbd>M</kbd></span><span>&ndash;</span><span>&ndash;</span>
       <span>Menus</span><span><kbd>&uarr;</kbd><kbd>&darr;</kbd> <kbd>Enter</kbd> <kbd>Esc</kbd></span><span>D-pad, <span class="chip ps-x">&#x2715;</span> <span class="chip ps-o">&#x25CB;</span></span><span>D-pad, A B</span>
-    </div><p class="note" style="margin:12px 0 0;opacity:.75;font-size:12px">Touch: on-screen pedals and steering appear automatically; &#10073;&#10073; pauses.</p></div>
+    </div><p class="note" style="margin:12px 0 0;opacity:.75;font-size:12px">Touch: on-screen pedals, steering and NITRO appear automatically; &#10073;&#10073; pauses. Drift (hold the angle) to fill the nitro bar.</p></div>
     <div class="mbtns row" style="margin-top:14px"><button class="mbtn" data-nav data-act="back">Back</button></div>
   </div>
 
@@ -407,6 +449,7 @@ const CONFIG = {
       visualPitch: 0.05,
       rollMax: 0.035,         // rad of body roll (≈2°), reached at the car's max cornering g
       // --- presentation (no effect on handling) ---
+      sound: { cyl: 6, idle: 900, redline: 7400, low: 0.5, mid: 0.24, high: 0.1, highMul: 3, drive: 1.3, tone: [650, 2900], lump: 0, gruff: 0, crackle: 0.5 },   // smooth straight-six
       tagline: 'Balanced sports coupe',
       stats: { speed: 4, acceleration: 3.5, handling: 4, drift: 3, offroad: 2 },   // car-select bars (0..5)
       colors: [0xff7a1a, 0x1f6fd1, 0xf2f2ee, 0x1d6b45],
@@ -462,6 +505,7 @@ const CONFIG = {
       shiftTime: 0.16,
       visualPitch: 0.07, rollMax: 0.042,
       hoodCam: [0, 1.32, 0.15],
+      sound: { cyl: 8, idle: 720, redline: 6300, low: 0.9, mid: 0.3, high: 0.04, highMul: 2, drive: 3.2, tone: [420, 2300], lump: 0.5, gruff: 0.12, crackle: 1 },   // lumpy cross-plane V8
       tagline: 'Muscle car - all motor, loose rear',
       stats: { speed: 5, acceleration: 5, handling: 2, drift: 4, offroad: 2.5 },
       colors: [0xc4161c, 0x1c1c22, 0xf2c81b, 0x138a8a],
@@ -517,6 +561,7 @@ const CONFIG = {
       shiftTime: 0.1,
       visualPitch: 0.045, rollMax: 0.024,
       hoodCam: [0, 1.17, 0.2],
+      sound: { cyl: 4, idle: 1100, redline: 9800, low: 0.24, mid: 0.36, high: 0.34, highMul: 5, drive: 2.0, tone: [1300, 7500], lump: 0, gruff: 0, crackle: 0.7 },   // screaming four
       tagline: 'Light tuner - lives sideways',
       stats: { speed: 3, acceleration: 3, handling: 5, drift: 5, offroad: 1.5 },
       colors: [0xf4f4f4, 0x8fd12f, 0x6b3fc4, 0x1b2a6b],
@@ -573,6 +618,7 @@ const CONFIG = {
       shiftTime: 0.14,
       visualPitch: 0.075, rollMax: 0.061,   // soft, long-travel suspension
       hoodCam: [0, 1.66, 0.55],
+      sound: { cyl: 5, idle: 820, redline: 6200, low: 0.6, mid: 0.38, high: 0.06, highMul: 2.5, drive: 3.8, tone: [480, 2500], lump: 0.18, gruff: 0.55, crackle: 0.4 },   // gruff five
       tagline: 'Rally SUV - shortcuts welcome',
       stats: { speed: 3, acceleration: 3.5, handling: 3, drift: 2.5, offroad: 5 },
       colors: [0xc8a46a, 0x5d6b3a, 0xb83a26, 0x5a6470],
@@ -599,6 +645,36 @@ const CONFIG = {
       },
     },
   },
+  // Drift scoring: points = slip angle (deg) × speed (km/h) × time × pointsK × multiplier
+  drift: {
+    minSlip: 0.14,          // rad (8°) of slip that counts as drifting…
+    minKmh: 30,             // …above this speed
+    startTime: 0.25,        // s of sliding before a drift starts counting
+    endGrace: 0.45,         // s below minSlip before the drift is banked
+    pointsK: 0.06,
+    chainWindow: 3.0,       // s without drifting before the multiplier resets
+    multStep: 2.5,          // s of chained drifting per +1 multiplier
+    maxMult: 5,
+    tiers: [[600, 'NICE DRIFT'], [2500, 'GREAT DRIFT'], [6000, 'INSANE DRIFT']],
+    tierNitro: [0.05, 0.1, 0.2],   // bonus nitro on banking each tier
+  },
+
+  // Nitro: an extra push and a raised engine limit; grip is untouched (boosting into a corner pushes wide)
+  nitro: {
+    accel: 7.5,             // m/s² extra acceleration while boosting
+    topSpeedMul: 1.1,       // engine limit while boosting
+    overDecay: 0.04,        // per second: the raised limit falls back after a boost
+    understeer: 0.1,        // front grip given up while boosting (on the yaw limit only)
+    drain: 0.3,             // bar per second (full bar ≈ 3.3 s)
+    minStart: 0.08,         // bar needed to fire
+    start: 0.25,            // bar at the start of a race
+    driftFill: 0.11,        // bar per second of a 30°, 100 km/h drift
+    speedFill: 0.02,        // bar per second of clean driving well above speedFillFrom
+    speedFillFrom: 150,     // km/h
+    fov: 9, camPush: 1.6,   // chase cam: extra FOV (deg) and distance (m)
+    rumble: [0.6, 0.5, 220],
+  },
+
   playerCar: 'brisaGT',
   carOrder: ['brisaGT', 'toroV8', 'kazeRS', 'montanaX'],
 
@@ -736,7 +812,7 @@ const QUALITY = CONFIG.quality[QUALITY_NAME];
 
 /* Player settings, remembered in localStorage (graphics quality has its own key above). */
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, rumble: true, hidRumble: false },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false },
   load() {
     try { Object.assign(this.data, JSON.parse(localStorage.getItem('islaRush.settings') || '{}')); } catch (e) { /* storage blocked / corrupt */ }
     if (!CONFIG.cars[this.data.car]) this.data.car = 'brisaGT';
@@ -2043,7 +2119,31 @@ function buildCarModel(cfg, env, quality, color = cfg.color) {
   shadow.rotation.x = -Math.PI / 2; shadow.position.y = 0.06;
   root.add(shadow);
 
-  return { root, body, wheels, tailMat, glow, paint };
+  // Nitro exhaust flames: two additive blue cones out of the rear valance, hidden until boosting
+  const flames = new THREE.Group();
+  const rearZ = Math.min(...spec.profile.map(p => p[0])), fy = spec.bottom + 0.14;
+  const cone = (r, len) => { const g = new THREE.ConeGeometry(r, len, 10, 1, true); g.translate(0, len / 2, 0); g.rotateX(-Math.PI / 2); return g; };
+  const outerGeo = cone(0.16, 1.3), innerGeo = cone(0.08, 0.75);
+  const flameMat = new THREE.MeshBasicMaterial({ color: 0x2f7dff, transparent: true, opacity: 0.8, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  const coreMat = new THREE.MeshBasicMaterial({ color: 0xbfe6ff, transparent: true, opacity: 0.95, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide });
+  // camera-facing glow: the chase cam sees the cones end-on, so the bloom is what reads
+  const flameTex = canvasTexture(64, 64, (g, w, h) => {
+    const grd = g.createRadialGradient(w / 2, h / 2, 2, w / 2, h / 2, w / 2);
+    grd.addColorStop(0, 'rgba(225,245,255,1)'); grd.addColorStop(0.3, 'rgba(90,170,255,0.85)'); grd.addColorStop(1, 'rgba(40,110,255,0)');
+    g.fillStyle = grd; g.fillRect(0, 0, w, h);
+  });
+  const glowMat = new THREE.SpriteMaterial({ map: flameTex, color: 0xffffff, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false });
+  for (const x of [-0.38, 0.38]) {
+    const f = new THREE.Group(); f.position.set(x, fy, rearZ - 0.02);
+    f.add(new THREE.Mesh(outerGeo, flameMat), new THREE.Mesh(innerGeo, coreMat));
+    const glowS = new THREE.Sprite(glowMat); glowS.scale.set(0.9, 0.9, 1); glowS.position.z = -0.25;
+    f.add(glowS);
+    flames.add(f);
+  }
+  flames.visible = false;
+  body.add(flames);
+
+  return { root, body, wheels, tailMat, glow, paint, flames };
 }
 
 class Car {
@@ -2060,13 +2160,13 @@ class Car {
       grade: 0, pitch: 0,
       idx: 0, lateral: 0, s: 0, section: 0,
       offroad: 0, surfaceShake: 0, drifting: false, handbrake: false, braking: false,
-      gear: 1, shiftTimer: 0, impact: 0,
+      gear: 1, shiftTimer: 0, impact: 0, wall: false, boosting: false, boostOver: 0,
       spinF: 0, spinR: 0,
       prev: { x: 0, y: 0, z: 0, h: 0, pitch: 0 },
     };
     this.renderPos = new THREE.Vector3();
     this.renderH = 0;
-    this.visPitch = 0; this.visRoll = 0;
+    this.visPitch = 0; this.visRoll = 0; this.boostVis = 0;
   }
 
   /** Place on the centreline of sample i, facing the racing direction. */
@@ -2077,7 +2177,7 @@ class Car {
     s.h = Math.atan2(track.RZ[i], -track.RX[i]);        // forward = (rz, -rx)
     s.vx = s.vz = s.vF = s.vS = s.yawRate = 0;
     s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
-    s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false;
+    s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
@@ -2114,6 +2214,13 @@ class Car {
     }
     m.tailMat.color.setHex(s.braking ? 0xff2a2a : 0x8c1010);
     m.glow.visible = s.braking;
+    // nitro flames flicker (frozen while paused)
+    this.boostVis = dt > 0 ? damp(this.boostVis, s.boosting ? 1 : 0, 14, dt) : this.boostVis;
+    m.flames.visible = this.boostVis > 0.03;
+    if (m.flames.visible && dt > 0) for (const f of m.flames.children) {
+      const w = 0.8 + Math.random() * 0.35;
+      f.scale.set(w, w, this.boostVis * (0.7 + Math.random() * 0.6));
+    }
   }
 }
 
@@ -2163,7 +2270,11 @@ const Physics = {
     let vF = s.vx * fx + s.vz * fz;
     let vS = s.vx * rx + s.vz * rz;
     const speedAbs = Math.abs(vF);
-    const vTop = c.topSpeed / 3.6, cap = vTop * sTop;
+    // nitro raises the engine limit; afterwards the limit eases back (no wall of drag)
+    const N = CONFIG.nitro, nitro = !!ctrl.nitro && s.vF > -0.5;
+    s.boostOver = nitro ? N.topSpeedMul - 1 : Math.max(0, s.boostOver - N.overDecay * dt);
+    s.boosting = nitro;
+    const vTop = c.topSpeed / 3.6, cap = vTop * sTop * (1 + s.boostOver);
     const ratio = Math.min(1, speedAbs / vTop);
     const thr = ctrl.throttle, brk = ctrl.brake;
     const handbrake = ctrl.handbrake;
@@ -2187,7 +2298,8 @@ const Physics = {
     }
     if (handbrake) ax -= Math.sign(vF) * c.handbrakeDecel * Math.min(1, speedAbs / 3);
     ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag * Math.min(1, speedAbs / 2);
-    if (vF > 0) ax -= c.engineBraking * ratio * (1 - Math.min(1, thr * 4));     // lifting (or barely on it) engine-brakes
+    if (vF > 0 && !nitro) ax -= c.engineBraking * ratio * (1 - Math.min(1, thr * 4));     // lifting (or barely on it) engine-brakes
+    if (nitro) ax += N.accel * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
     ax -= Math.sign(vF) * Math.min(Math.abs(s.latAccel), 20) * CONFIG.physics.corneringDrag;   // tyres scrub speed in corners
     ax -= Math.sign(vF) * sDrag * Math.min(1, speedAbs / 4);
     if (speedAbs > cap) ax -= Math.sign(vF) * (speedAbs - cap) * 0.9;  // scrub off speed on rough ground
@@ -2215,7 +2327,7 @@ const Physics = {
     const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad;
     const sliding = hb || powerSlide;
     const aLatSlide = sliding ? c.grip * CONFIG.physics.slideGripAccel * sGrip * wLoad : aLatMax;   // drifts keep step-2 looseness
-    let yawLimit = aLatSlide / Math.max(speedAbs, 2);
+    let yawLimit = aLatSlide / Math.max(speedAbs, 2) * (nitro ? 1 - N.understeer : 1);   // boosting never adds grip
     if (hb) yawLimit *= 1 + c.driftFactor * 3.0;
     else if (powerSlide) yawLimit *= 1 + c.driftFactor * 0.9;
     targetYaw = clamp(targetYaw, -yawLimit, yawLimit) * (1 - c.understeer * ratio * ratio);
@@ -2287,6 +2399,7 @@ const Physics = {
   collideWalls(car, q, fx, fz, rx, rz) {
     const c = car.cfg, s = car.state, P = CONFIG.physics;
     const limit = q.halfWidth + q.offroad - 0.05;
+    s.wall = false;
     const hl = c.length / 2, hw = c.width / 2;
     const invM = 1 / c.mass, I = c.mass * (c.length * c.length + c.width * c.width) / 12;
     for (let k = 0; k < 4; k++) {
@@ -2295,6 +2408,7 @@ const Physics = {
       const wl = q.lateral + ox * q.rx + oz * q.rz;
       const pen = Math.abs(wl) - limit;
       if (pen <= 0) continue;
+      s.wall = true;
       const sg = Math.sign(wl), nx = -sg * q.rx, nz = -sg * q.rz;   // normal points back onto the track
       s.x += nx * pen; s.z += nz * pen; q.lateral -= sg * pen;
       // velocity of the corner (v + ω × r)
@@ -2344,6 +2458,7 @@ class CameraRig {
     this.fov = camera.fov;
     this.pull = 0; this.time = 0;
     this.fxScale = 1;             // settings: speed-effects intensity
+    this.boost = 0;               // nitro FOV kick / camera push (eased)
   }
 
   toggle() { this.mode = this.mode === 'chase' ? 'hood' : 'chase'; }
@@ -2355,7 +2470,8 @@ class CameraRig {
 
   update(dt, car) {
     const cam = this.camera, s = car.state, p = car.renderPos;
-    const ratio = clamp(Math.abs(s.vF) / (car.cfg.topSpeed / 3.6), 0, 1);
+    const ratio = clamp(Math.abs(s.vF) / (car.cfg.topSpeed / 3.6), 0, 1), N = CONFIG.nitro;
+    this.boost = damp(this.boost, s.boosting ? 1 : 0, s.boosting ? 6 : 2.5, dt);
     let targetFov;
     if (this.mode === 'chase') {
       const cc = CONFIG.camera.chase;
@@ -2363,7 +2479,7 @@ class CameraRig {
       // pull back while accelerating, close in while braking
       this.pull = damp(this.pull, clamp(s.longAccel / car.cfg.acceleration, -1, 1), 3, dt);
       const surge = (this.pull > 0 ? this.pull * cc.accelPull : this.pull * cc.brakePush) * this.fxScale;
-      const dist = (cc.distance + cc.distanceAtSpeed * ratio + surge) * (cam.aspect < 1 ? 1.3 : 1);  // pull back in portrait
+      const dist = (cc.distance + cc.distanceAtSpeed * ratio + surge + N.camPush * this.boost * this.fxScale) * (cam.aspect < 1 ? 1.3 : 1);  // pull back in portrait
       const sy = Math.sin(this.yaw), cy = Math.cos(this.yaw);
       this.tmp.set(-sy * dist, cc.height + cc.heightAtSpeed * ratio, -cy * dist);
       this.offset.x = damp(this.offset.x, this.tmp.x, cc.offsetLag, dt);
@@ -2385,7 +2501,7 @@ class CameraRig {
       }
       this.look.set(p.x + sy * cc.lookAhead, p.y + cc.lookHeight, p.z + cy * cc.lookAhead);
       cam.lookAt(this.look);
-      targetFov = cc.fov + cc.fovAtSpeed * this.fxScale * Math.pow(ratio, cc.fovCurve);
+      targetFov = cc.fov + (cc.fovAtSpeed * Math.pow(ratio, cc.fovCurve) + N.fov * this.boost) * this.fxScale;
     } else {
       const hc = CONFIG.camera.hood, root = car.model.root;
       root.updateMatrixWorld();
@@ -2394,7 +2510,7 @@ class CameraRig {
       this.look.set(hc.look[0], hc.look[1] + ho[1] - hc.offset[1], hc.look[2]).applyMatrix4(root.matrixWorld);
       cam.lookAt(this.look);
       this.snap(car);
-      targetFov = hc.fov + hc.fovAtSpeed * Math.pow(ratio, 1.5);
+      targetFov = hc.fov + hc.fovAtSpeed * Math.pow(ratio, 1.5) + N.fov * 0.6 * this.boost * this.fxScale;
     }
     this.fov = damp(this.fov, targetFov, 4, dt);
     if (Math.abs(cam.fov - this.fov) > 0.05) { cam.fov = this.fov; cam.updateProjectionMatrix(); }
@@ -2420,35 +2536,35 @@ class CameraRig {
 // Raw buttons in HID order: □ ✕ ○ △ L1 R1 L2 R2 Create Options L3 R3 PS Touchpad (Mute).
 const PAD_PROFILES = {
   standard: {
-    buttons: { handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0 }, triggerAxes: false, dpad: [12, 13, 14, 15],
   },
   // Firefox 123-150 on Linux (incl. ESR 140) reports "standard" but leaves the analog
   // triggers on extra axes 4 (L2) and 5 (R2); buttons 6/7 are digital only there.
   standardFxLinux: {
-    buttons: { handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { nitro: 4, handbrake: 0, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, dpad: [12, 13, 14, 15],
   },
   // Windows HID (10 axes; also Linux joydev on hid-generic, 8 axes / 15 buttons):
   // axes X(LX) Y(LY) Z(RX) Rx(L2) Ry(R2) Rz(RY)
   dualsenseHid: {
-    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
     axes: { lx: 0, l2: 3, r2: 4 }, triggerAxes: true, hat: 9,
   },
   // macOS IOHID, USB (7 axes, 15 buttons): LX LY RX RY L2 R2 hat
   dualsenseMacUsb: {
-    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
     axes: { lx: 0, l2: 4, r2: 5 }, triggerAxes: true, hat: 6,
   },
   // macOS IOHID, Bluetooth simple report (7 axes, 14 buttons): LX LY RX RY hat L2 R2
   dualsenseMacBt: {
-    buttons: { handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
+    buttons: { nitro: 4, handbrake: 1, camera: 3, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 1, back: 2 },
     axes: { lx: 0, l2: 5, r2: 6 }, triggerAxes: true, hat: 4,
   },
   // Linux joydev with the hid-playstation driver (8 axes, 13 buttons):
   // ✕ ○ △ □ L1 R1 L2 R2 Create Options PS L3 R3; axes X Y Z(L2) Rx Ry Rz(R2) hatX hatY
   dualsenseLinux: {
-    buttons: { handbrake: 0, camera: 2, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
+    buttons: { nitro: 4, handbrake: 0, camera: 2, reset: 8, pause: 9, l2: 6, r2: 7, confirm: 0, back: 1 },
     axes: { lx: 0, l2: 2, r2: 5 }, triggerAxes: true, hatX: 6, hatY: 7,
   },
 };
@@ -2458,7 +2574,7 @@ class GamepadInput {
     this.index = -1; this.pad = null; this.info = null; this.profile = null;
     this.prevButtons = {}; this.triggerArmed = [false, false];
     this.seen = new Map(); this.lastPads = null; this.idleTime = 0; this.onSwitch = null; this.frame = 0; this.sensitivity = 1;
-    this.state = { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, active: false, fresh: false,
+    this.state = { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, nitro: false, active: false, fresh: false,
                    nav: { up: false, down: false, left: false, right: false, confirm: false, back: false, start: false } };
     this.edges = [];
     this.onConnect = null; this.onDisconnect = null;
@@ -2565,7 +2681,7 @@ class GamepadInput {
   detach() {
     const info = this.info;
     this.index = -1; this.pad = null; this.info = null;
-    Object.assign(this.state, { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, active: false, fresh: false });
+    Object.assign(this.state, { connected: false, steer: 0, throttle: 0, brake: 0, handbrake: false, nitro: false, active: false, fresh: false });
     for (const k in this.state.nav) this.state.nav[k] = false;
     if (this.onDisconnect) this.onDisconnect(info);
   }
@@ -2608,6 +2724,7 @@ class GamepadInput {
     st.throttle = this.trigger(pad, 1);
     st.brake = this.trigger(pad, 0);
     st.handbrake = pressed(P.buttons.handbrake);
+    st.nitro = pressed(P.buttons.nitro);
     this.readNav(pad, pressed);
     for (const name of ['camera', 'reset', 'pause']) {             // rising edges → actions
       const now = pressed(P.buttons[name]);
@@ -2746,22 +2863,23 @@ class Rumble {
 class Input {
   constructor() {
     this.keys = new Set();
-    this.touch = { left: false, right: false, gas: false, brake: false, hand: false };
+    this.touch = { left: false, right: false, gas: false, brake: false, hand: false, nitro: false };
     this.actions = [];
     this.steer = 0; this.hold = 0; this.lastTarget = 0; this.fromSteer = false;
-    this.ctrl = { throttle: 0, brake: 0, steer: 0, handbrake: false };
+    this.ctrl = { throttle: 0, brake: 0, steer: 0, handbrake: false, nitroWant: false, nitro: false };
     this.touchEnabled = false;
     this.device = IS_TOUCH ? 'touch' : 'keyboard';
     this.onDevice = null;
     this.gamepad = new GamepadInput();
 
     const actionKeys = { KeyR: 'reset', KeyC: 'camera', KeyG: 'quality', Escape: 'pause', KeyP: 'pause' };
-    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG', 'KeyP']);
+    const gameKeys = new Set(['KeyW', 'KeyA', 'KeyS', 'KeyD', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'Space', 'KeyR', 'KeyC', 'KeyG', 'KeyP', 'ShiftLeft', 'ShiftRight']);
     this.menuActive = false;      // while a menu is open, keys/pad buttons drive the menu, not the race
     this.sensitivity = 1;
     window.addEventListener('keydown', (e) => {
       if (gameKeys.has(e.code)) e.preventDefault();
       if (!e.repeat && actionKeys[e.code] && !this.menuActive) this.actions.push(actionKeys[e.code]);
+      if (!e.repeat && e.code === 'KeyM') this.actions.push('mute');                 // works in menus too
       this.keys.add(e.code);
       this.setDevice('keyboard');
     });
@@ -2865,7 +2983,339 @@ class Input {
     this.ctrl.throttle = Math.max((k.has('KeyW') || k.has('ArrowUp') || t.gas) ? 1 : 0, gp.throttle);
     this.ctrl.brake = Math.max((k.has('KeyS') || k.has('ArrowDown') || t.brake) ? 1 : 0, gp.brake);
     this.ctrl.handbrake = handbrake;
+    this.ctrl.nitroWant = k.has('ShiftLeft') || k.has('ShiftRight') || t.nitro || gp.nitro;
     return this.ctrl;
+  }
+}
+
+/* =====================================================================
+ * SCORING
+ * Drift points + chain multiplier, and the nitro bar they (and clean, fast
+ * driving) fill. Both run once per rendered frame after the physics steps.
+ * ===================================================================== */
+class DriftScore {
+  constructor() { this.reset(); }
+
+  reset() {
+    this.active = false; this.points = 0; this.mult = 1; this.multProg = 0;
+    this.chainT = 1e9; this.candT = 0; this.graceT = 0; this.lastImpact = 0;
+    this.lap = 0; this.time = 0; this.events = [];
+  }
+
+  /** Advance by dt; returns the nitro earned this frame. */
+  update(dt, car) {
+    const D = CONFIG.drift, N = CONFIG.nitro, s = car.state;
+    const kmh = Math.abs(s.vF) * 3.6, slip = Math.atan2(Math.abs(s.vS), Math.max(Math.abs(s.vF), 0.1));
+    const sliding = s.vF > 0 && kmh >= D.minKmh && slip >= D.minSlip;
+    const hit = s.impact > this.lastImpact + 0.04;
+    this.lastImpact = s.impact;
+    const off = s.offroad >= 0.5;
+    let fill = 0;
+    if (this.active) {
+      if (hit || off) {                                   // a wall or the dirt ends it: points lost, chain broken
+        this.events.push({ type: 'lost', points: Math.round(this.points), why: hit ? 'wall' : 'offroad' });
+        this.active = false; this.points = 0; this.mult = 1; this.multProg = 0; this.chainT = 1e9;
+        return 0;
+      }
+      this.graceT = sliding ? 0 : this.graceT + dt;
+      if (this.graceT > D.endGrace) return this.bank();
+      if (sliding) {
+        const deg = slip * 180 / Math.PI;
+        this.points += deg * kmh * D.pointsK * dt * this.mult;
+        this.time += dt;
+        fill += N.driftFill * (deg / 30) * (kmh / 100) * dt;          // bigger, faster, longer drifts fill more
+        this.multProg += dt;
+        if (this.multProg >= D.multStep && this.mult < D.maxMult) { this.mult++; this.multProg = 0; this.events.push({ type: 'mult', mult: this.mult }); }
+      }
+    } else {
+      this.chainT += dt;
+      if (this.chainT > D.chainWindow && (this.mult > 1 || this.multProg > 0)) { this.mult = 1; this.multProg = 0; }
+      if (sliding && !off) {
+        this.candT += dt;
+        if (this.candT >= D.startTime) { this.active = true; this.points = 0; this.time = 0; this.graceT = 0; this.candT = 0; }
+      } else this.candT = 0;
+    }
+    return fill;
+  }
+
+  bank() {
+    const D = CONFIG.drift, pts = Math.round(this.points);
+    let tier = -1;
+    D.tiers.forEach(([min], i) => { if (pts >= min) tier = i; });
+    this.lap += pts;
+    this.events.push({ type: 'bank', points: pts, tier, time: this.time, mult: this.mult });
+    this.active = false; this.points = 0; this.chainT = 0;
+    return tier >= 0 ? D.tierNitro[tier] : 0;
+  }
+
+  /** Lap line crossed: hand back this lap's total and start the next. */
+  newLap() { const t = this.lap; this.lap = 0; return t; }
+}
+
+class Nitro {
+  constructor() { this.reset(); }
+  reset() { this.level = CONFIG.nitro.start; this.active = false; this.fired = false; this.clean = 0; }
+  add(x) { this.level = clamp(this.level + x, 0, 1); }
+
+  /** Decide whether the boost runs this frame (want = button held). */
+  update(dt, want, car) {
+    const N = CONFIG.nitro, s = car.state;
+    this.fired = false;
+    if (want && !this.active && this.level >= N.minStart) { this.active = true; this.fired = true; }
+    if (!want || this.level <= 0) this.active = false;
+    if (this.active) this.level = Math.max(0, this.level - N.drain * dt);
+    // clean, fast driving (no recent hit, on the road, not sliding) tops the bar up slowly
+    this.clean = (s.impact > 0.05 || s.offroad > 0 || s.drifting) ? 0 : this.clean + dt;
+    const kmh = s.vF * 3.6;
+    if (!this.active && this.clean > 1) this.add(N.speedFill * dt * smoothstep(N.speedFillFrom, N.speedFillFrom + 50, kmh));
+    return this.active;
+  }
+}
+
+/* =====================================================================
+ * AUDIO
+ * Procedural Web Audio only: a layered engine per car (sub rumble + mid tone
+ * + high whine through a drive stage), tyres, wind, nitro, impacts, wall
+ * scrapes, kerbs, district ambience and UI blips. Browsers only allow sound
+ * after a user gesture, so the context is created on the first key press,
+ * click or tap; a controller press can start it once the page has had one.
+ * ===================================================================== */
+class Sound {
+  constructor() {
+    this.ctx = null; this.eng = null; this.carKey = null;
+    this.rpm = 0; this.thr = 0; this.prevThr = 0; this.crackleT = 0; this.lastImpact = 0; this.wasBoost = false;
+    this.t = 0; this.birdT = 2; this.seaMix = 1; this.mtnMix = 0; this.vol = null; this.errors = 0;
+    const unlock = () => this.unlock();
+    for (const ev of ['keydown', 'pointerdown', 'mousedown', 'touchend']) window.addEventListener(ev, unlock, true);
+    document.addEventListener('visibilitychange', () => {
+      if (!this.ctx) return;
+      const p = document.hidden ? this.ctx.suspend() : this.ctx.resume();
+      if (p && p.catch) p.catch(() => {});
+    });
+  }
+
+  get running() { return !!this.ctx && this.ctx.state === 'running'; }
+
+  /** Create / resume the context, but only once the browser counts a user gesture (no autoplay warnings). */
+  unlock() {
+    const ua = navigator.userActivation;
+    if (ua && !ua.isActive && !ua.hasBeenActive) return false;
+    if (!this.ctx) {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return false;
+      try { this.ctx = new AC({ latencyHint: 'interactive' }); this.build(); }
+      catch (e) { this.ctx = null; this.errors++; return false; }
+    }
+    if (this.ctx.state === 'suspended' && !document.hidden) { const p = this.ctx.resume(); if (p && p.catch) p.catch(() => {}); }
+    return true;
+  }
+
+  build() {
+    const c = this.ctx;
+    this.master = c.createGain();
+    const comp = c.createDynamicsCompressor();
+    comp.threshold.value = -12; comp.knee.value = 10; comp.ratio.value = 4; comp.attack.value = 0.004; comp.release.value = 0.2;
+    this.master.connect(comp); comp.connect(c.destination);
+    this.engineBus = c.createGain(); this.engineBus.connect(this.master);
+    this.sfxBus = c.createGain(); this.sfxBus.connect(this.master);
+    this.raceBus = c.createGain(); this.raceBus.gain.value = 0; this.raceBus.connect(this.sfxBus);         // car noises: silent in menus / pause
+    this.engineMix = c.createGain(); this.engineMix.gain.value = 0; this.engineMix.connect(this.engineBus);
+    // 2 s of white noise shared by every hiss-like layer
+    const len = c.sampleRate * 2, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0), rnd = mulberry32(9);
+    for (let i = 0; i < len; i++) d[i] = rnd() * 2 - 1;
+    this.noiseBuf = buf;
+    const loop = (type, freq, q, out) => {
+      const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = buf; src.loop = true; f.type = type; f.frequency.value = freq; f.Q.value = q; g.gain.value = 0;
+      src.connect(f); f.connect(g); g.connect(out); src.start(0, Math.random() * 1.9);
+      return { src, f, g };
+    };
+    this.tyre = loop('bandpass', 1600, 1.6, this.raceBus);
+    this.wind = loop('lowpass', 400, 0.5, this.raceBus);
+    this.hiss = loop('highpass', 2600, 0.7, this.raceBus);
+    this.scrape = loop('bandpass', 2200, 5, this.raceBus);
+    this.gravel = loop('lowpass', 300, 0.7, this.raceBus);
+    this.waves = loop('lowpass', 500, 0.6, this.sfxBus);
+    this.gust = loop('bandpass', 650, 0.9, this.sfxBus);
+    // tonal squeal near the grip limit (with a little warble)
+    const sq = this.squeal = { o: c.createOscillator(), g: c.createGain(), lfo: c.createOscillator(), lg: c.createGain() };
+    sq.o.type = 'triangle'; sq.o.frequency.value = 980; sq.lfo.frequency.value = 7; sq.lg.gain.value = 28; sq.g.gain.value = 0;
+    sq.lfo.connect(sq.lg); sq.lg.connect(sq.o.frequency); sq.o.connect(sq.g); sq.g.connect(this.raceBus); sq.o.start(); sq.lfo.start();
+    // kerb rumble strip: a square wave at the stripe rate, low-passed
+    const kb = this.kerb = { o: c.createOscillator(), f: c.createBiquadFilter(), g: c.createGain() };
+    kb.o.type = 'square'; kb.o.frequency.value = 20; kb.f.type = 'lowpass'; kb.f.frequency.value = 420; kb.g.gain.value = 0;
+    kb.o.connect(kb.f); kb.f.connect(kb.g); kb.g.connect(this.raceBus); kb.o.start();
+    if (this.vol) this.applyVolume(this.vol);
+  }
+
+  applyVolume(d) {
+    this.vol = d;
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    this.master.gain.setTargetAtTime(d.muted ? 0 : Math.pow(d.volume / 100, 1.5), now, 0.03);
+    this.engineBus.gain.setTargetAtTime(Math.pow(d.engineVolume / 100, 1.5), now, 0.03);
+    this.sfxBus.gain.setTargetAtTime(Math.pow(d.sfxVolume / 100, 1.5), now, 0.03);
+  }
+
+  static curve(k) {
+    const n = 1024, a = new Float32Array(n), t = Math.tanh(k);
+    for (let i = 0; i < n; i++) { const x = i / (n - 1) * 2 - 1; a[i] = Math.tanh(k * x) / t; }
+    return a;
+  }
+
+  /** (Re)build the engine voice for a car. */
+  setCar(key) {
+    this.carKey = key;
+    if (!this.ctx) return;
+    if (this.eng) { for (const n of this.eng.stop) { try { n.stop(); } catch (e) { /* already stopped */ } } this.eng.out.disconnect(); }
+    const c = this.ctx, E = CONFIG.cars[key].sound, n = { stop: [] };
+    n.out = c.createGain(); n.out.gain.value = 0; n.out.connect(this.engineMix);
+    n.tone = c.createBiquadFilter(); n.tone.type = 'lowpass'; n.tone.frequency.value = E.tone[0]; n.tone.Q.value = 0.9;
+    n.lump = c.createGain(); n.lump.gain.value = 1 - E.lump * 0.5;
+    n.shaper = c.createWaveShaper(); n.shaper.curve = Sound.curve(E.drive); n.shaper.oversample = '2x';
+    n.pre = c.createGain(); n.pre.gain.value = 0.55;
+    n.pre.connect(n.shaper); n.shaper.connect(n.tone); n.tone.connect(n.lump); n.lump.connect(n.out);
+    const osc = (type, gain) => { const o = c.createOscillator(), g = c.createGain(); o.type = type; g.gain.value = gain; o.connect(g); g.connect(n.pre); o.start(); n.stop.push(o); return o; };
+    n.low = osc('sawtooth', E.low);          // sub rumble (half the firing rate)
+    n.mid = osc('square', E.mid * 0.6);      // firing tone
+    n.high = osc('triangle', E.high);        // whine
+    if (E.lump) {                            // uneven firing: amplitude lope at half the crank rate
+      n.lfo = c.createOscillator(); const lg = c.createGain(); lg.gain.value = E.lump * 0.5;
+      n.lfo.connect(lg); lg.connect(n.lump.gain); n.lfo.start(); n.stop.push(n.lfo);
+    }
+    if (E.gruff) {                           // gravelly rasp riding on the firing tone
+      const src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+      src.buffer = this.noiseBuf; src.loop = true; f.type = 'bandpass'; f.Q.value = 1.2; g.gain.value = E.gruff * 0.6;
+      src.connect(f); f.connect(g); g.connect(n.pre); src.start(0, Math.random()); n.stop.push(src); n.rasp = f;
+    }
+    this.eng = n; this.rpm = E.idle;
+  }
+
+  /* ---------- one-shots ---------- */
+  burst(dur, type, f0, f1, q, gain, out, delay = 0) {
+    const c = this.ctx, t = c.currentTime + delay, src = c.createBufferSource(), f = c.createBiquadFilter(), g = c.createGain();
+    src.buffer = this.noiseBuf; f.type = type; f.Q.value = q;
+    f.frequency.setValueAtTime(f0, t); f.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), t + Math.min(0.02, dur * 0.25));
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(f); f.connect(g); g.connect(out); src.start(t, Math.random() * 1.5); src.stop(t + dur + 0.05);
+  }
+
+  tone(type, f0, f1, dur, gain, out, delay = 0) {
+    const c = this.ctx, t = c.currentTime + delay, o = c.createOscillator(), g = c.createGain();
+    o.type = type; o.frequency.setValueAtTime(f0, t); if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dur);
+    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(Math.max(0.0002, gain), t + 0.008);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g); g.connect(out); o.start(t); o.stop(t + dur + 0.05);
+  }
+
+  pop(a) { this.burst(0.03 + Math.random() * 0.04, 'bandpass', 700 + Math.random() * 1800, 400, 1.1, a, this.engineMix); }
+  whoosh() { this.burst(0.75, 'bandpass', 300, 3400, 1.4, 0.55, this.raceBus); this.tone('sine', 140, 60, 0.35, 0.25, this.raceBus); }
+  thud(k) { this.tone('sine', 120, 38, 0.32, 0.85 * k, this.raceBus); this.burst(0.2, 'lowpass', 1100, 180, 0.7, 0.55 * k, this.raceBus); }
+  chirp(a) {
+    const n = 2 + (Math.random() * 3 | 0), base = 2600 + Math.random() * 1900;
+    for (let i = 0; i < n; i++) this.tone('sine', base * (0.95 + Math.random() * 0.15), base * (0.7 + Math.random() * 0.6), 0.06 + Math.random() * 0.05, 0.045 * a, this.sfxBus, i * (0.09 + Math.random() * 0.05));
+  }
+
+  /** Menu / race cues. */
+  ui(kind) {
+    if (!this.running) return;
+    const o = this.sfxBus;
+    switch (kind) {
+      case 'move': this.tone('triangle', 880, 880, 0.05, 0.12, o); break;
+      case 'select': this.tone('triangle', 660, 660, 0.07, 0.14, o); this.tone('triangle', 990, 990, 0.1, 0.14, o, 0.07); break;
+      case 'back': this.tone('triangle', 520, 520, 0.06, 0.12, o); this.tone('triangle', 370, 370, 0.09, 0.12, o, 0.06); break;
+      case 'beep': this.tone('square', 520, 520, 0.18, 0.09, o); break;
+      case 'go': this.tone('square', 1040, 1040, 0.5, 0.1, o); break;
+      case 'mult': this.tone('triangle', 1200, 1500, 0.08, 0.08, o); break;
+      case 'bank': this.tone('triangle', 780, 780, 0.08, 0.1, o); break;
+      case 'tier0': case 'tier1': case 'tier2': {
+        const n = +kind[4] + 2;
+        for (let i = 0; i < n; i++) this.tone('triangle', 660 * Math.pow(1.26, i), 660 * Math.pow(1.26, i), 0.12, 0.12, o, i * 0.07);
+        break;
+      }
+      case 'lost': this.tone('sawtooth', 330, 110, 0.45, 0.09, o); break;
+    }
+  }
+
+  /* ---------- per frame ---------- */
+  update(dt, g) {
+    if (!this.running) return;
+    try { this.frame(dt, g); } catch (e) { this.errors++; if (this.errors < 3) console.warn('audio', e); }
+  }
+
+  frame(dt, g) {
+    const c = this.ctx, now = c.currentTime, car = g.car, s = car.state, cfg = car.cfg, E = cfg.sound;
+    const set = (param, v, tau) => param.setTargetAtTime(v, now, tau);
+    this.t += dt;
+    const racing = g.state === 'race' && !g.paused;
+    set(this.raceBus.gain, racing ? 1 : 0, 0.06);
+    set(this.engineMix.gain, racing ? 1 : 0, 0.06);
+
+    // ambience: the district under the car (race) or under the flyover camera (menus)
+    const T = g.track, idx = g.state === 'race' ? s.idx : (g.flyover.idx | 0), key = T.sectionKeys[T.SEC[idx]];
+    const amb = g.state === 'race' ? (g.paused ? 0.5 : 1) : 0.9;
+    this.seaMix = damp(this.seaMix, key === 'mountain' ? 0 : 1, 0.6, dt);
+    this.mtnMix = damp(this.mtnMix, key === 'mountain' ? 1 : 0, 0.6, dt);
+    const sw = 0.5 + 0.5 * Math.sin(this.t * 2 * Math.PI / 7.5), sw2 = 0.5 + 0.5 * Math.sin(this.t * 2 * Math.PI / 11 + 1);
+    set(this.waves.g.gain, amb * this.seaMix * (0.07 + 0.28 * sw * sw), 0.3);
+    set(this.waves.f.frequency, 320 + 520 * sw, 0.3);
+    set(this.gust.g.gain, amb * this.mtnMix * (0.03 + 0.09 * sw2), 0.4);
+    set(this.gust.f.frequency, 480 + 420 * sw2, 0.4);
+    this.birdT -= dt;
+    if (this.birdT <= 0) { this.birdT = 1.2 + Math.random() * 3.5; if (this.mtnMix > 0.3) this.chirp(amb * this.mtnMix); }
+    if (!racing) { this.lastImpact = s.impact; this.wasBoost = false; return; }
+
+    // ---- engine: rpm from road speed in the current gear (shifts drop it), free revs when (nearly) stopped ----
+    if (this.carKey !== g.carKey || !this.eng) this.setCar(g.carKey);
+    const n = this.eng, kmh = Math.abs(s.vF) * 3.6, up = cfg.gearShiftUp, gear = Math.max(1, s.gear);
+    const hi = gear <= up.length ? up[gear - 1] : cfg.topSpeed * 0.98;
+    const thr = Math.max(g.input.ctrl.throttle, s.boosting ? 1 : 0);
+    this.thr = damp(this.thr, thr, 10, dt);
+    let rpm = E.redline * kmh / hi * (1 + (s.drifting ? 0.08 * this.thr : 0));
+    rpm = Math.max(rpm, lerp(E.idle + (E.redline - E.idle) * 0.7 * this.thr, E.idle, smoothstep(0, 25, kmh)));
+    rpm = clamp(rpm, E.idle, E.redline * 1.02);
+    this.rpm = damp(this.rpm || E.idle, rpm, s.shiftTimer > 0 ? 30 : 14, dt);
+    const f = this.rpm / 60 * E.cyl / 2, r01 = clamp((this.rpm - E.idle) / (E.redline - E.idle), 0, 1);
+    set(n.low.frequency, f * 0.5, 0.012); set(n.mid.frequency, f, 0.012); set(n.high.frequency, f * E.highMul, 0.012);
+    if (n.lfo) set(n.lfo.frequency, this.rpm / 120, 0.02);
+    if (n.rasp) set(n.rasp.frequency, Math.min(4000, f * 2), 0.02);
+    set(n.tone.frequency, lerp(E.tone[0], E.tone[1], clamp(0.3 * r01 + 0.7 * this.thr * (0.35 + 0.65 * r01), 0, 1)), 0.03);
+    const vol = (0.3 + 0.4 * this.thr + 0.15 * r01) * (s.shiftTimer > 0 ? 0.4 : 1);    // audible dip on every shift
+    set(n.out.gain, vol, s.shiftTimer > 0 ? 0.012 : 0.04);
+    // off-throttle crackle: pops for a moment after lifting at high revs
+    if (this.prevThr > 0.5 && thr < 0.15 && r01 > 0.4) this.crackleT = 0.8 + 0.7 * E.crackle;
+    this.prevThr = thr;
+    if (this.crackleT > 0) {
+      this.crackleT -= dt;
+      if (thr < 0.15 && Math.random() < dt * 14 * E.crackle) this.pop(0.2 + Math.random() * 0.5);
+    }
+
+    // ---- tyres: screech with slip angle, a quieter squeal near the grip limit ----
+    const v = Math.hypot(s.vF, s.vS), slip = Math.atan2(Math.abs(s.vS), Math.max(Math.abs(s.vF), 0.5));
+    const onRoad = 1 - s.offroad, sp = smoothstep(2, 12, v);
+    const screech = smoothstep(0.07, 0.45, slip) * sp * onRoad;
+    set(this.tyre.g.gain, screech * 0.5, 0.04);
+    set(this.tyre.f.frequency, 1300 + 1500 * Math.min(1, slip), 0.05);
+    const use = Math.abs(s.latAccel) / (cfg.grip * CONFIG.physics.lateralGripAccel);
+    set(this.squeal.g.gain, smoothstep(0.78, 1.0, use) * (1 - screech) * sp * onRoad * 0.045, 0.06);
+    set(this.gravel.g.gain, s.offroad * smoothstep(1, 15, v) * 0.35, 0.08);
+    // wind rises with speed
+    const w = Math.min(1, v / 70);
+    set(this.wind.g.gain, 0.3 * w * w, 0.1); set(this.wind.f.frequency, 250 + 1500 * w, 0.1);
+    // nitro: whoosh on activation, hiss while it burns
+    if (s.boosting && !this.wasBoost) this.whoosh();
+    this.wasBoost = s.boosting;
+    set(this.hiss.g.gain, s.boosting ? 0.16 : 0, s.boosting ? 0.05 : 0.15);
+    // impacts and wall scrapes
+    if (s.impact > this.lastImpact + 0.04) this.thud(clamp(0.25 + s.impact, 0, 1));
+    this.lastImpact = s.impact;
+    set(this.scrape.g.gain, s.wall && v > 3 ? Math.min(0.3, v / 60) : 0, 0.03);
+    set(this.scrape.f.frequency, 1500 + v * 25, 0.05);
+    // kerbs: rumble-strip buzz at the stripe rate
+    const kerb = v > 3 && g.rumble.onKerb(car, T);
+    set(this.kerb.g.gain, kerb ? 0.2 * Math.min(1, v / 25) : 0, 0.02);
+    set(this.kerb.o.frequency, Math.max(12, v / 1.2), 0.02);
   }
 }
 
@@ -2874,11 +3324,15 @@ class Input {
  * Lap / speed readouts, banners, toasts, input-device hints, and the
  * speed effects overlay (speed lines + edge vignette).
  * ===================================================================== */
+const fmtPts = (x) => Math.round(x).toLocaleString('en-US');
+
 class Hud {
   constructor(qualityName, onQuality) {
     const $ = (id) => document.getElementById(id);
     this.el = { lapNum: $('lapNum'), lapTime: $('lapTime'), last: $('lastLap'), best: $('bestLap'), speed: $('speed'), gear: $('gear'),
-                banner: $('banner'), help: $('help'), gfx: $('gfx'), toast: $('toast') };
+                banner: $('banner'), help: $('help'), gfx: $('gfx'), toast: $('toast'),
+                driftLap: $('driftLap'), drift: $('drift'), driftPts: $('driftPts'), driftMult: $('driftMult'), driftBar: $('driftBar').firstChild,
+                dpop: $('dpop'), nitroBox: $('nitroBox'), nitroBar: $('nitroBar').firstChild, nitroPct: $('nitroPct') };
     this.cache = {};
     this.bannerTimer = 0; this.toastTimer = 0; this.helpTimer = 12;
     this.el.gfx.textContent = 'GFX: ' + qualityName.toUpperCase();
@@ -2889,12 +3343,22 @@ class Hud {
     if (this.cache[key] !== value) { this.cache[key] = value; this.el[key].textContent = value; }
   }
 
-  showBanner(title, sub = '', seconds = 2.5) {
+  showBanner(title, sub = '', seconds = 2.5, big = false) {
     this.el.banner.innerHTML = '';
+    this.el.banner.classList.toggle('big', big);
     this.el.banner.append(title);
     if (sub) { const sm = document.createElement('small'); sm.textContent = sub; this.el.banner.append(sm); }
     this.el.banner.classList.add('show');
     this.bannerTimer = seconds;
+  }
+
+  /** Drift combo popup (restarts its animation every time). */
+  popup(title, sub, cls) {
+    const p = this.el.dpop;
+    p.className = ''; void p.offsetWidth;
+    p.textContent = title;
+    if (sub) { const sm = document.createElement('small'); sm.textContent = sub; p.append(sm); }
+    p.className = 'show ' + cls;
   }
 
   toast(text, seconds = 3) {
@@ -2920,6 +3384,23 @@ class Hud {
     this.set('lapTime', formatTime(laps.time));
     this.set('last', formatTime(laps.last));
     this.set('best', formatTime(laps.best));
+    const d = game.drift, n = game.nitro, el = this.el;
+    if (d) {
+      this.set('driftLap', fmtPts(d.lap + (d.active ? d.points : 0)));
+      if (this.cache.dOn !== d.active) { this.cache.dOn = d.active; el.drift.classList.toggle('on', d.active); }
+      if (d.active) {
+        this.set('driftPts', fmtPts(d.points));
+        this.set('driftMult', 'x' + d.mult);
+        const w = (d.mult >= CONFIG.drift.maxMult ? 100 : Math.round(d.multProg / CONFIG.drift.multStep * 100)) + '%';
+        if (this.cache.dBar !== w) { this.cache.dBar = w; el.driftBar.style.width = w; }
+      }
+    }
+    if (n) {
+      const pct = Math.round(n.level * 100);
+      if (this.cache.nPct !== pct) { this.cache.nPct = pct; el.nitroBar.style.width = pct + '%'; el.nitroPct.textContent = pct + '%'; }
+      const cls = n.active ? 'active' : n.level >= CONFIG.nitro.minStart ? 'ready' : '';
+      if (this.cache.nCls !== cls) { this.cache.nCls = cls; el.nitroBox.className = 'panel ' + cls; }
+    }
     if (this.bannerTimer > 0) {
       this.bannerTimer -= dt;
       if (this.bannerTimer <= 0) this.el.banner.classList.remove('show');
@@ -2967,18 +3448,20 @@ class SpeedFx {
     return p;
   }
 
-  update(dt, kmh, enabled) {
+  update(dt, kmh, enabled, boost = 0) {
     const F = CONFIG.camera.speedFx;
-    this.intensity = damp(this.intensity, enabled ? smoothstep(F.from, F.full, kmh) * this.scale : 0, 5, dt);
+    const target = Math.max(smoothstep(F.from, F.full, kmh), Math.min(1.5, smoothstep(F.from * 0.4, F.full, kmh) + 0.9 * boost));   // nitro: stronger lines
+    this.intensity = damp(this.intensity, enabled ? target * this.scale : 0, 5, dt);
+    this.boost = boost;
     const I = this.intensity;
-    const vo = Math.round(I * F.vignette * 100) / 100;
+    const vo = Math.round(Math.min(1, I) * F.vignette * 100) / 100;
     if (vo !== this.vigOpacity) { this.vigOpacity = vo; this.vig.style.opacity = vo; }
     const g = this.g, W = this.cv.width, H = this.cv.height;
     if (I < 0.01) { if (this.drawn) { g.clearRect(0, 0, W, H); this.drawn = false; } return; }
     g.clearRect(0, 0, W, H);
     this.drawn = true;
     const cx = W * 0.5, cy = H * 0.46, R = Math.hypot(W, H) * 0.5, sc = Math.max(1, W / 1280);
-    g.strokeStyle = '#fff6e8';
+    g.strokeStyle = this.boost > 0.3 ? '#bfe0ff' : '#fff6e8';   // nitro tints the lines blue
     g.lineCap = 'round';
     for (const p of this.parts) {
       p.d += dt * p.v * (0.7 + I * 1.8);
@@ -3141,6 +3624,7 @@ class Flyover {
     const T = this.T, n = T.n, d = ((dist % T.length) + T.length) % T.length;
     let lo = 0, hi = n; while (hi - lo > 1) { const m = (lo + hi) >> 1; if (T.DIST[m] <= d) lo = m; else hi = m; }
     const i = lo, j = (i + 1) % n, f = (d - T.DIST[i]) / Math.max(1e-6, T.DIST[i + 1] - T.DIST[i]);
+    this.idx = i;
     return out.set(lerp(T.X[i], T.X[j], f) + T.RX[i] * side, lerp(T.Y[i], T.Y[j], f) + up, lerp(T.Z[i], T.Z[j], f) + T.RZ[i] * side);
   }
   update(dt) {
@@ -3225,12 +3709,13 @@ class Menu {
     rows.forEach((r, k) => r.classList.toggle('focus', k === this.focus));
   }
 
-  move(d) { const n = this.rows().length; if (n) this.setFocus((this.focus + d + n) % n); }
+  move(d) { const n = this.rows().length; if (n) { this.setFocus((this.focus + d + n) % n); this.g.sound.ui('move'); } }
   current() { return this.rows()[this.focus]; }
 
   adjust(d) {
     const row = this.current(); if (!row) return;
     const kind = row.dataset.kind;
+    if (kind && kind !== 'toggle') this.g.sound.ui('move');
     if (kind === 'car') this.browse(d);
     else if (kind === 'color') this.setColor((Settings.colorIndex(this.selCar) + d + 4) % 4);
     else if (kind === 'range') {
@@ -3245,6 +3730,7 @@ class Menu {
 
   activate(gesture = false) {
     const row = this.current(); if (!row) return;
+    this.g.sound.ui(row.dataset.act === 'back' ? 'back' : 'select');
     const kind = row.dataset.kind, act = row.dataset.act;
     if (kind === 'toggle') { const k = row.dataset.key; Settings.data[k] = !Settings.data[k]; Settings.save(); this.g.applySettings(); this.refreshSettings(); return; }
     if (kind === 'car' || kind === 'color') { this.go('race'); return; }
@@ -3254,7 +3740,7 @@ class Menu {
 
   back() {
     const b = this.el(this.name).dataset.back;
-    if (b) this.go(b);
+    if (b) { this.g.sound.ui('back'); this.go(b); }
   }
 
   go(act, gesture = false) {
@@ -3454,6 +3940,10 @@ class Game {
     this.speedFx = new SpeedFx(Q);
     this.rumble = new Rumble();
     this.rumble.gamepad = this.input.gamepad;
+    this.sound = new Sound();
+    this.drift = new DriftScore();
+    this.nitro = new Nitro();
+    this.countdown = 0; this.cdShown = 0; this.soundHint = false;
     this.hid = new DualSenseHid();
     if (Settings.data.hidRumble) this.hid.restore();
     this.paused = false;
@@ -3519,6 +4009,7 @@ class Game {
   handleActions() {
     let a;
     while ((a = this.input.popAction())) {
+      if (a === 'mute') { this.toggleMute(); continue; }
       if (this.state !== 'race') continue;
       if (a === 'pause') this.setPaused(!this.paused);
       else if (this.paused) continue;                        // other actions wait until resumed
@@ -3537,6 +4028,11 @@ class Game {
     else this.menu.close();
   }
 
+  toggleMute() {
+    Settings.data.muted = !Settings.data.muted; Settings.save(); this.applySettings();
+    this.hud.toast(Settings.data.muted ? 'Sound off (M)' : 'Sound on', 1.5);
+  }
+
   /** Settings → live systems. */
   applySettings() {
     const d = Settings.data;
@@ -3544,6 +4040,7 @@ class Game {
     this.cameraRig.fxScale = this.speedFx.scale = d.speedFx / 100;
     this.rumble.enabled = d.rumble;
     this.rumble.hid = d.rumble ? this.hid : null;
+    this.sound.applyVolume(d);
   }
 
   /** Swap in the chosen car and put it on the grid. */
@@ -3556,7 +4053,6 @@ class Game {
     document.body.classList.remove('paused');
     this.menu.close();
     this.restartRace();
-    this.hud.showBanner(cfg.name, 'Cross the line to start the clock', 3);
   }
 
   restartRace() {
@@ -3565,8 +4061,24 @@ class Game {
     this.laps.sync(this.car.state.s);
     this.acc = 0; this.lastSection = -1;
     this.input.steer = 0;
+    this.drift.reset(); this.nitro.reset();
+    this.countdown = 3; this.cdShown = 4;                 // 3-2-1-GO (the clock starts at the line)
+    this.hud.showBanner('3', this.car.cfg.name, 1.2, true); this.cdShown = 3; this.sound.ui('beep');
     this.car.updateVisual(1, 0);
     this.cameraRig.snap(this.car);
+  }
+
+  /** 3-2-1-GO before each race: the car is held (the engine still revs). Returns true while counting. */
+  updateCountdown(dt) {
+    if (this.countdown <= 0) return false;
+    this.countdown -= dt;
+    const k = Math.max(0, Math.ceil(this.countdown));
+    if (k !== this.cdShown) {
+      this.cdShown = k;
+      if (k > 0) { this.hud.showBanner(String(k), this.car.cfg.name, 1.2, true); this.sound.ui('beep'); }
+      else { this.hud.showBanner('GO!', 'Cross the line to start the clock', 1.6, true); this.sound.ui('go'); }
+    }
+    return this.countdown > 0;
   }
 
   toMainMenu() {
@@ -3591,6 +4103,13 @@ class Game {
     this.handleActions();
     if (this.paused || this.state !== 'race') return;
     this.car.throttleOn = ctrl.throttle > 0;
+    if (this.updateCountdown(dt)) { ctrl.nitro = false; return; }
+    // nitro: fires on press with enough in the bar, burns while held
+    ctrl.nitro = this.nitro.update(dt, ctrl.nitroWant, this.car);
+    if (this.nitro.fired && this.input.device === 'gamepad' && Settings.data.rumble) {
+      const R = CONFIG.nitro.rumble, rb = this.rumble;
+      rb.send(this.input.gamepad.pad, R[0], R[1], R[2]); rb.next = rb.clock + R[2];
+    }
     this.acc += dt;
     let steps = 0;
     while (this.acc >= P.dt && steps < P.maxSteps) {
@@ -3600,9 +4119,22 @@ class Game {
       this.acc -= P.dt; steps++;
     }
     if (steps === P.maxSteps) this.acc = 0;
+    this.nitro.add(this.drift.update(dt, this.car));
+    for (const e of this.drift.events) {
+      const D = CONFIG.drift;
+      if (e.type === 'bank') {
+        if (e.tier >= 0) { this.hud.popup(D.tiers[e.tier][1], '+' + fmtPts(e.points), 't' + (e.tier + 1)); this.sound.ui('tier' + e.tier); }
+        else if (e.points > 0) { this.hud.popup('+' + fmtPts(e.points), '', 't0'); this.sound.ui('bank'); }
+      } else if (e.type === 'lost') { this.hud.popup('DRIFT LOST', e.points ? '-' + fmtPts(e.points) : '', 'lost'); this.sound.ui('lost'); }
+      else if (e.type === 'mult') this.sound.ui('mult');
+    }
+    this.drift.events.length = 0;
     for (const e of this.laps.events) {
-      if (e.type === 'start') this.hud.showBanner('Go!', 'Lap 1', 1.5);
-      else if (e.type === 'lap') this.hud.showBanner(e.best ? 'Best lap!' : 'Lap ' + (e.lap - 1), formatTime(e.time), 2.5);
+      if (e.type === 'start') { this.hud.showBanner('Lap 1', 'Clock running', 1.5); this.drift.newLap(); }
+      else if (e.type === 'lap') {
+        const dl = this.drift.newLap();
+        this.hud.showBanner(e.best ? 'Best lap!' : 'Lap ' + (e.lap - 1), formatTime(e.time) + '  \u00b7  drift ' + fmtPts(dl), 2.5);
+      }
     }
     this.laps.events.length = 0;
     const sec = this.car.state.section;
@@ -3627,6 +4159,12 @@ class Game {
     this.last = now;
     this.simulate(dt);
     this.menu.update(dt);
+    // a controller press can start the sound only after the page has had a key press / click / tap
+    if (this.input.gamepad.state.fresh && !this.sound.running && !this.sound.unlock() && !this.soundHint) {
+      this.soundHint = true;
+      this.hud.toast('Press any key or click once to turn on sound', 4);
+    }
+    this.sound.update(dt, this);
     if (this.state === 'race') {
       const live = this.paused ? 0 : dt;
       this.car.updateVisual(this.acc / CONFIG.physics.dt, live);
@@ -3635,7 +4173,7 @@ class Game {
       this.scenery.update(live, this.car);
       this.updateSun();
       this.rumble.update(dt, this.input.gamepad.pad, this.car, this.track, !this.paused && this.input.device === 'gamepad');
-      this.speedFx.update(dt, Math.abs(this.car.state.vF) * 3.6, !this.paused);
+      this.speedFx.update(dt, Math.abs(this.car.state.vF) * 3.6, !this.paused, this.cameraRig.boost);
       this.hud.update(dt, this);
       this.renderer.render(this.scene, this.camera);
     } else if (this.menu.name === 'select') {
