@@ -202,7 +202,9 @@ const CONFIG = {
     dt: 1 / 120,          // fixed physics step (s)
     maxSteps: 12,         // max physics steps per rendered frame
     gravity: 9.81,
-    lateralGripAccel: 11, // m/s² cornering limit at grip 1.0 (Physics + input steering scale)
+    lateralGripAccel: 15.5, // m/s² cornering limit at grip 1.0 (≈1.6 g; Physics + input steering scale)
+    slideGripAccel: 11,     // m/s² grip while handbrake / power sliding (keeps drifts as loose as before)
+    corneringDrag: 0.055,   // tyre scrub: m/s² of drag per m/s² of cornering
     wallRestitution: 0.3, // bounciness of barriers
     wallFriction: 0.25,   // speed scrubbed along the wall on impact
   },
@@ -250,31 +252,34 @@ const CONFIG = {
       name: 'Brisa GT',
       color: 0xff7a1a,
       mass: 1280,             // kg (wall impulses)
-      topSpeed: 240,          // km/h
+      topSpeed: 256,          // km/h, engine limit (drag holds the real top speed a little below)
       acceleration: 8.5,      // m/s² peak engine acceleration
       powerCurve: 2.2,        // how quickly acceleration fades towards top speed
+      throttleCurve: 0.5,     // part throttle runs out of pull at topSpeed × throttle^this (25% → half)
+      engineBraking: 1.0,     // m/s² at top speed with the throttle released
       braking: 16,            // m/s²
       reverseSpeed: 35,       // km/h
       handbrakeDecel: 3.5,    // m/s²
-      rollingDrag: 0.35,      // m/s² when coasting
-      aeroDrag: 0.00025,      // * v² when coasting
+      rollingDrag: 0.35,      // m/s², always
+      aeroDrag: 0.00025,      // * v², always
       grip: 1.0,              // cornering grip (× physics.lateralGripAccel)
       lateralGrip: 9,         // how fast sideways slip is killed (1/s)
       driftFactor: 0.78,      // 0..1 rear grip lost on handbrake
       maxDriftAngle: 0.8,     // rad, drift assist keeps slides below this angle
-      slideMomentum: 0.3,     // fraction of scrubbed sideways speed kept as forward speed
+      slideMomentum: 0.75,    // fraction of the speed a slide loses that is kept going forward
       maxSteer: 0.55,         // rad, front wheel angle at low speed
-      highSpeedSteer: 0.3,    // fraction of maxSteer left at top speed
-      understeer: 0.28,       // yaw reduction at top speed
+      highSpeedSteer: 0.4,    // fraction of maxSteer left at top speed
+      understeer: 0.12,       // yaw reduction at top speed
       yawResponse: 7,         // how fast the car rotates towards the steering target
-      weightTransfer: 0.18,   // grip gained on the front when braking (lost when accelerating)
+      weightTransfer: 0.18,   // front grip gained when braking (a third of it lost when accelerating)
       weightTransferRate: 5,
       slopeEffect: 0.6,       // how strongly hills slow / speed you up
       wheelbase: 2.6, trackWidth: 1.64, length: 4.5, width: 1.9,
       wheelRadius: 0.34, wheelWidth: 0.26, frontAxle: 1.35,
       gearShiftUp: [52, 88, 124, 162, 202], // km/h
       shiftTime: 0.14,
-      visualPitch: 0.05, visualRoll: 0.006,
+      visualPitch: 0.05,
+      rollMax: 0.035,         // rad of body roll (≈2°), reached at the car's max cornering g
     },
   },
   playerCar: 'brisaGT',
@@ -1766,7 +1771,8 @@ class Car {
 
     // weight transfer: nose dives when braking, squats when accelerating, rolls out of turns
     this.visPitch = damp(this.visPitch, s.load * cfg.visualPitch, 8, dt);
-    this.visRoll = damp(this.visRoll, clamp(s.latAccel * cfg.visualRoll, -0.08, 0.08), 8, dt);
+    const rollGain = cfg.rollMax / (cfg.grip * CONFIG.physics.lateralGripAccel);   // full roll only at the grip limit
+    this.visRoll = damp(this.visRoll, clamp(s.latAccel * rollGain, -cfg.rollMax, cfg.rollMax), 8, dt);
     m.body.rotation.x = this.visPitch;
     m.body.rotation.z = this.visRoll;
     if (dt > 0) m.body.position.y = s.surfaceShake > 0 ? (Math.random() - 0.5) * s.surfaceShake : 0;   // frozen while paused
@@ -1830,7 +1836,8 @@ const Physics = {
     if (thr > 0) {
       if (vF < -0.5) ax += c.braking * thr;                          // throttle while rolling back = brake
       else {
-        const r = Math.max(0, vF) / (cap * 1.02);
+        // part throttle = less power: the pull fades out at a lower speed, so every pedal position has a cruise speed
+        const r = Math.max(0, vF) / (cap * 1.02 * Math.pow(thr, c.throttleCurve));
         let a = c.acceleration * thr * Math.max(0, 1 - Math.pow(r, c.powerCurve));
         if (s.shiftTimer > 0) a *= 0.35;
         if (handbrake) a *= 0.4;                                     // rear wheels locked
@@ -1842,7 +1849,9 @@ const Physics = {
       else if (vF > -c.reverseSpeed / 3.6) ax -= c.acceleration * 0.6 * brk;
     }
     if (handbrake) ax -= Math.sign(vF) * c.handbrakeDecel * Math.min(1, speedAbs / 3);
-    if (thr === 0) ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag;
+    ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag * Math.min(1, speedAbs / 2);
+    if (vF > 0) ax -= c.engineBraking * ratio * (1 - Math.min(1, thr * 4));     // lifting (or barely on it) engine-brakes
+    ax -= Math.sign(vF) * Math.min(Math.abs(s.latAccel), 20) * CONFIG.physics.corneringDrag;   // tyres scrub speed in corners
     ax -= Math.sign(vF) * sDrag * Math.min(1, speedAbs / 4);
     if (speedAbs > cap) ax -= Math.sign(vF) * (speedAbs - cap) * 0.9;  // scrub off speed on rough ground
     const parked = thr === 0 && brk === 0 && speedAbs < 0.4;
@@ -1862,10 +1871,14 @@ const Physics = {
     s.steerAngle = ctrl.steer * steerLimit;
     const slip = Math.atan2(Math.abs(vS), Math.max(speedAbs, 0.1));
     const hb = handbrake && speedAbs > 4;
-    const powerSlide = !hb && s.drifting && thr > 0.5 && slip > 0.15 && speedAbs > 12;
+    const powerSlide = !hb && s.drifting && thr >= 0.6 && slip > 0.15 && speedAbs > 12;   // part throttle never slides
     let targetYaw = -vF * Math.tan(s.steerAngle) / c.wheelbase;     // steer right (+) → yaw clockwise (−)
-    const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * (1 + c.weightTransfer * s.load);
-    let yawLimit = aLatMax / Math.max(speedAbs, 2);
+    // weight transfer: braking loads the front (full gain), throttle unloads it (a third of the effect)
+    const wLoad = 1 + c.weightTransfer * (s.load >= 0 ? s.load : s.load / 3);
+    const aLatMax = c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad;
+    const sliding = hb || powerSlide;
+    const aLatSlide = sliding ? c.grip * CONFIG.physics.slideGripAccel * sGrip * wLoad : aLatMax;   // drifts keep step-2 looseness
+    let yawLimit = aLatSlide / Math.max(speedAbs, 2);
     if (hb) yawLimit *= 1 + c.driftFactor * 3.0;
     else if (powerSlide) yawLimit *= 1 + c.driftFactor * 0.9;
     targetYaw = clamp(targetYaw, -yawLimit, yawLimit) * (1 - c.understeer * ratio * ratio);
@@ -1880,11 +1893,14 @@ const Physics = {
 
     // ---- lateral grip ----
     // sideways speed is killed exponentially, but never faster than the tyres can push (friction circle)
-    let latGrip = c.lateralGrip * sGrip, latCap = aLatMax * 1.15;
+    let latGrip = c.lateralGrip * sGrip, latCap = aLatSlide * 1.15;
     if (hb) { latGrip *= 1 - c.driftFactor; latCap *= 1 - c.driftFactor * 0.6; }
     else if (powerSlide) { latGrip *= 1 - c.driftFactor * 0.5; latCap *= 1 - c.driftFactor * 0.35; }
     const dvS = clamp(vS * (1 - Math.exp(-latGrip * dt)), -latCap * dt, latCap * dt);
-    vF += Math.sign(vF) * Math.abs(dvS) * c.slideMomentum;
+    // a slide that grips up keeps some of its speed: only the speed actually lost (≈0 when cornering on grip, large
+    // when a drift straightens) is handed back to vF, so cornering itself never pushes the car forward
+    const lost = Math.hypot(vF, vS) - Math.hypot(vF, vS - dvS);
+    vF += Math.sign(vF) * lost * c.slideMomentum;
     vS -= dvS;
     // drift assist: never let the slide angle exceed maxDriftAngle while moving forward
     const slipNow = Math.atan2(Math.abs(vS), Math.abs(vF));
@@ -2432,7 +2448,7 @@ class Input {
     if (!I.gripAwareSteering || handbrake || s.drifting || v < 4) return 1;
     const ratio = Math.min(1, v / (c.topSpeed / 3.6));
     const steerLimit = c.maxSteer * (1 - (1 - c.highSpeedSteer) * Math.pow(ratio, 0.8));   // as in Physics.step
-    const need = Math.atan(c.grip * CONFIG.physics.lateralGripAccel * c.wheelbase / (v * v));
+    const need = Math.atan(c.grip * CONFIG.physics.lateralGripAccel * c.wheelbase / (v * v));   // lock that just reaches the grip limit
     return clamp(need / steerLimit * I.lockMargin, I.minLock, 1);
   }
 
