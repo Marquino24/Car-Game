@@ -161,14 +161,14 @@ function pageSuite() {
   }
 
   // One flying lap on autopilot (normal AI), nitro off: lap time + time at each track sample (for split comparisons)
-  function lap(key) {
+  function lap(key, nitro = false) {
     const T = g.track, n = T.n, car = mk(key), s = car.state;
     const ai = new AIDriver(car, g.line, CONFIG.race.difficulty.normal, mulberry32(7), { autopilot: true }); ai.launchDelay = 0;
     car.placeAt(T, n - 40);
     const at = new Float64Array(n).fill(-1), spd = new Float32Array(n);
     let t = 0, lastIdx = s.idx, prog = 0, started = false, t0 = 0;
     for (let f = 0; f < 60 * 400; f++) {
-      const c = ai.update(1 / 60, t, 1); c.nitro = false; ai.nitroWant = false;
+      const c = ai.update(1 / 60, t, 1); if (!nitro) { c.nitro = false; ai.nitroWant = false; }
       for (let k = 0; k < 2; k++) {
         Physics.step(car, c, T, DT); t += DT;
         let d = s.idx - lastIdx; if (d < -n / 2) d += n; if (d > n / 2) d -= n; lastIdx = s.idx;
@@ -210,7 +210,7 @@ const run = (expr) => page.evaluate(expr);
 
 const R = { file: path.basename(file), errors };
 R.keys = await run('__S.KEYS');
-R.power = await run('[1, 0.75, 0.5, 0.25, 0.08].map(l => [l, +__S.power(l).toFixed(3)])');
+R.power = await run('[1, 0.85, 0.7, 0.6, 0.5, 0.25, 0.08].map(l => [l, +__S.power(l).toFixed(3)])');
 R.fullLock = await run(`__S.KEYS.flatMap(k => [60, 75, 90].flatMap(v => [0.25, 1].map(t => __S.fullLock(k, v, t))))`);
 R.fullLockManual = await run(`__S.KEYS.flatMap(k => [60, 90].map(v => __S.fullLock(k, v, 1, true)))`);
 R.onset = await run(`__S.KEYS.map(k => [k, __S.onset(k)])`);

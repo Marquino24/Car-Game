@@ -858,9 +858,10 @@ const CONFIG = {
   nitro: {
     accel: 7.5,             // m/s² extra acceleration while boosting (× power)
     topSpeedMul: 1.1,       // engine limit while boosting (the +10% is × power)
-    // power by bar level (a smooth curve): min + (max - min) × level^curve → 100%: 1.3×, 50%: 0.6×, near empty: 0.3×.
-    // Read every frame, so a boost fades as the bar drains. Scales accel, top-speed boost, FOV kick, flames, speed lines.
-    power: { min: 0.3, max: 1.3, curve: 1.737 },
+    // power by bar level: a smooth monotone curve through these [level, ×] points. Full strength from 100% down to 70%,
+    // then it fades: 0.6× at 50%, 0.3× near empty. Read every frame, so a boost fades as the bar drains below 70%.
+    // Scales accel, top-speed boost, FOV kick, camera push, speed lines, flames and hiss.
+    power: { points: [[0, 0.3], [0.5, 0.6], [0.7, 1.3], [1, 1.3]] },
     aiFireAt: 0.85,         // AI saves the bar and fires near full, on straights
     overDecay: 0.04,        // per second: the raised limit falls back after a boost
     understeer: 0.1,        // front grip given up while boosting (on the yaw limit only)
@@ -896,7 +897,7 @@ const CONFIG = {
     nearMiss: { gap: 1.3, minRel: 5, nitro: 0.08 },                              // m of air, m/s faster, bar
     // Start: hold the gas from the "2" through to GO = perfect start (kick + extra pull); anything else = a bad start:
     // the automatic gearbox sticks in 1st for badLock s (manual drivers can still shift up themselves)
-    classPace: { brisaGT: 124.7, toroV8: 122.7, kazeRS: 124.9, montanaX: 129.4, ciclonR: 101.7 },   // s, autopilot lap: AI balance
+    classPace: { brisaGT: 127.7, toroV8: 124.9, kazeRS: 127.0, montanaX: 131.8, ciclonR: 103.1 },   // s, autopilot lap: AI balance (step 7b: hairpins on grip)
     balance: 1.6,
     launch: { kick: 4, boost: 4, boostTime: 1.6, badLock: 2.4, rumble: [0.9, 0.7, 260] },   // m/s, m/s², s, s
     aiStart: { easy: [0.08, 0.35], normal: [0.15, 0.25], hard: [0.3, 0.08] },              // AI chance of [perfect, bad] start
@@ -3550,10 +3551,19 @@ class DriftScore {
   newLap() { const t = this.lap; this.lap = 0; return t; }
 }
 
-/** Nitro strength (× the base boost) for a bar level 0..1. */
+/** Nitro strength (× the base boost) for a bar level 0..1: monotone cubic (Fritsch-Carlson) through CONFIG.nitro.power.points. */
 function nitroPower(level) {
-  const P = CONFIG.nitro.power;
-  return P.min + (P.max - P.min) * Math.pow(clamp(level, 0, 1), P.curve);
+  const P = CONFIG.nitro.power, pts = P.points;
+  if (!P.m) {                                                       // tangents, once: no overshoot, flat where the curve is flat
+    const n = pts.length, d = [];
+    for (let i = 0; i < n - 1; i++) d.push((pts[i + 1][1] - pts[i][1]) / (pts[i + 1][0] - pts[i][0]));
+    P.m = pts.map((_, i) => i === 0 ? d[0] : i === n - 1 ? d[n - 2] : d[i - 1] * d[i] <= 0 ? 0 : 2 / (1 / d[i - 1] + 1 / d[i]));
+    P.min = pts[0][1]; P.max = Math.max(...pts.map(q => q[1]));
+  }
+  const x = clamp(level, 0, 1);
+  let i = 0; while (i < pts.length - 2 && x > pts[i + 1][0]) i++;
+  const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], h = x1 - x0, t = (x - x0) / h, t2 = t * t, t3 = t2 * t;
+  return (2 * t3 - 3 * t2 + 1) * y0 + (t3 - 2 * t2 + t) * h * P.m[i] + (-2 * t3 + 3 * t2) * y1 + (t3 - t2) * h * P.m[i + 1];
 }
 
 class Nitro {
@@ -4072,7 +4082,7 @@ class Hud {
       if (this.cache.nPct !== pct) {
         this.cache.nPct = pct; el.nitroBar.style.width = pct + '%'; el.nitroPct.textContent = pct + '%';
         // colour = strength: dim navy when low, bright blue → white when full (same curve as the boost)
-        const P = CONFIG.nitro.power, k = (nitroPower(n.level) - P.min) / (P.max - P.min);
+        const pw = nitroPower(n.level), P = CONFIG.nitro.power, k = (pw - P.min) / (P.max - P.min);
         const mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',');
         el.nitroBar.style.background = `linear-gradient(90deg, rgb(${mix([22, 48, 110], [120, 215, 255])}), rgb(${mix([40, 95, 190], [255, 255, 255])}))`;
         el.nitroBar.style.boxShadow = k > 0.75 ? `0 0 ${Math.round((k - 0.75) * 40)}px rgba(160,230,255,.9)` : '';
