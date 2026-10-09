@@ -588,9 +588,11 @@ const CONFIG = {
       lateralGrip: 7,
       driftFactor: 0.82,
       maxDriftAngle: 0.85,
-      drift: { grip: 27.5, angle: 58, inRate: 3.6, outRate: 1.3, scrub: 0.38, resp: 4.2, stickOn: 0.78, minKmh: 70 },   // drifts easiest, big lazy angles, slow to recover
+      drift: { grip: 27.5, angle: 58, inRate: 3.6, outRate: 1.3, scrub: 0.38, resp: 4.2, stickOn: 0.78 },   // drifts easiest, big lazy angles, slow to recover
       slideMomentum: 0.8,
-      powerOversteer: 0.4,    // loose rear end: throttle mid-corner steps the tail out
+      powerOversteer: 0.4,    // loose rear end: throttle mid-corner steps the tail out (above the drift blend speed)
+      lowSpeedOversteer: 0.3, // share of that kept below it: a wiggle on the throttle out of a hairpin, never a spin
+      lowSpeedGrip: 0.3,      // heavy and lazy: needs a bit more bite than the others to hold a hairpin on grip
       maxSteer: 0.5,
       highSpeedSteer: 0.5,
       understeer: 0.14,       // pushes wide in fast sweepers
@@ -820,16 +822,19 @@ const CONFIG = {
   // Motorfest-style handling (all cars, player and AI)
   handling: {
     drift: {
-      minKmh: 80,           // steer-to-drift only above this speed
+      minKmh: 120,          // steer-to-drift speed (nominal): it fades in across blend[0]..blend[1]
+      blend: [110, 140],    // km/h: below blend[0] full lock is a clean grip turn; above blend[1] drifts exactly as before.
+                            // In between, a stick-started drift (and power oversteer) only reaches that share of full strength
       stickOn: 0.85,        // stick past this (with throttle) breaks the rear loose
       thrOn: 0.2,
       stickHold: 0.35,      // keep the stick into the turn past this to hold the drift
       tapTime: 0.35,        // s: an L2 tap shorter than this while turning kicks a drift
-      tapKmh: 60,
+      tapKmh: 120,          // L2 tap / manual downshift only kick a drift above this (slowing for a hairpin never does)
       drive: 0.45,          // share of engine drive lost to wheelspin at full drift
     },
     lift: { decel: 4.5, grip: 0.22 },   // lifting while turning: m/s² of engine/drag braking and front grip gained
     brakeUndersteer: 0.35,              // front grip lost braking hard at full lock
+    lowSpeedGrip: 0.18,                 // extra cornering grip below drift.blend[0], fading out by blend[1]: hairpins on grip
     // drift assist: spring towards the target angle (× car response) and the most angle it allows (deg)
     assist: { off: { spring: 0.35, cap: 85, over: 0.45 }, low: { spring: 0.7, cap: 65, over: 0.12 }, high: { spring: 1, cap: 55, over: 0 } },
     spinAngle: 100,       // deg between body and travel: a spin
@@ -851,8 +856,12 @@ const CONFIG = {
 
   // Nitro: an extra push and a raised engine limit; grip is untouched (boosting into a corner pushes wide)
   nitro: {
-    accel: 7.5,             // m/s² extra acceleration while boosting
-    topSpeedMul: 1.1,       // engine limit while boosting
+    accel: 7.5,             // m/s² extra acceleration while boosting (× power)
+    topSpeedMul: 1.1,       // engine limit while boosting (the +10% is × power)
+    // power by bar level (a smooth curve): min + (max - min) × level^curve → 100%: 1.3×, 50%: 0.6×, near empty: 0.3×.
+    // Read every frame, so a boost fades as the bar drains. Scales accel, top-speed boost, FOV kick, flames, speed lines.
+    power: { min: 0.3, max: 1.3, curve: 1.737 },
+    aiFireAt: 0.85,         // AI saves the bar and fires near full, on straights
     overDecay: 0.04,        // per second: the raised limit falls back after a boost
     understeer: 0.1,        // front grip given up while boosting (on the yaw limit only)
     drain: 0.3,             // bar per second (full bar ≈ 3.3 s)
@@ -861,7 +870,7 @@ const CONFIG = {
     driftFill: 0.11,        // bar per second of a 30°, 100 km/h drift
     speedFill: 0.02,        // bar per second of clean driving well above speedFillFrom
     speedFillFrom: 150,     // km/h
-    fov: 9, camPush: 1.6,   // chase cam: extra FOV (deg) and distance (m)
+    fov: 9, camPush: 1.6,   // chase cam: extra FOV (deg) and distance (m) at 1.0× power
     rumble: [0.6, 0.5, 220],
   },
 
@@ -2455,7 +2464,7 @@ class Car {
       offroad: 0, surfaceShake: 0, drifting: false, handbrake: false, braking: false,
       gear: 1, shiftTimer: 0, impact: 0, wall: false, boosting: false, boostOver: 0,
       rpm: 0, limT: 0, limiter: false, blockT: 0, shifts: 0, gearLock: 0, launchT: 0,   // engine + gearbox (manual / start)
-      dAmt: 0, dDir: 0, dAngle: 0, brkHeld: 0, spins: 0, spinning: false,
+      dAmt: 0, dDir: 0, dAngle: 0, dCap: 1, brkHeld: 0, spins: 0, spinning: false, boostPow: 0,
       spinF: 0, spinR: 0,
       prev: { x: 0, y: 0, z: 0, h: 0, pitch: 0 },
     };
@@ -2474,7 +2483,7 @@ class Car {
     s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
     s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
     s.rpm = this.cfg.sound.idle; s.limT = 0; s.limiter = false; s.blockT = 0; s.gearLock = 0; s.launchT = 0;
-    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.brkHeld = 0; s.spinning = false;
+    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.dCap = 1; s.brkHeld = 0; s.spinning = false; s.boostPow = 0;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
@@ -2528,11 +2537,12 @@ class Car {
     if (this.hdr && s.braking) m.tailMat.color.multiplyScalar(3);
     m.glow.visible = s.braking;
     // nitro flames flicker (frozen while paused)
-    this.boostVis = dt > 0 ? damp(this.boostVis, s.boosting ? 1 : 0, 14, dt) : this.boostVis;
+    this.boostVis = dt > 0 ? damp(this.boostVis, s.boosting ? s.boostPow : 0, 14, dt) : this.boostVis;   // full bar: long flames
     m.flames.visible = this.boostVis > 0.03;
     if (m.flames.visible && dt > 0) for (const f of m.flames.children) {
       const w = 0.8 + Math.random() * 0.35;
-      f.scale.set(w, w, this.boostVis * (0.7 + Math.random() * 0.6));
+      const k = Math.min(1.15, 0.55 + 0.45 * this.boostVis);
+      f.scale.set(w * k, w * k, this.boostVis * (0.7 + Math.random() * 0.6));
     }
   }
 }
@@ -2589,8 +2599,9 @@ const Physics = {
     const speedAbs = Math.abs(vF);
     // nitro raises the engine limit; afterwards the limit eases back (no wall of drag)
     const N = CONFIG.nitro, nitro = !!ctrl.nitro && s.vF > -0.5;
-    s.boostOver = nitro ? N.topSpeedMul - 1 : Math.max(0, s.boostOver - N.overDecay * dt);
-    s.boosting = nitro;
+    const nPow = nitro ? (ctrl.nitroPower !== undefined ? ctrl.nitroPower : 1) : 0;   // bar-level strength (Nitro.power)
+    s.boostOver = nitro ? (N.topSpeedMul - 1) * nPow : Math.max(0, s.boostOver - N.overDecay * dt);
+    s.boosting = nitro; s.boostPow = nPow;
     const vTop = c.topSpeed / 3.6, cap = vTop * sTop * (1 + s.boostOver);
     const ratio = Math.min(1, speedAbs / vTop);
     const thr = ctrl.throttle, brk = ctrl.brake;
@@ -2620,7 +2631,7 @@ const Physics = {
     ax -= vF * Math.abs(vF) * c.aeroDrag + Math.sign(vF) * c.rollingDrag * Math.min(1, speedAbs / 2);
     if (vF > 0 && !nitro) ax -= (manualDrive ? this.engineBrake(car, vF) : c.engineBraking * ratio) * (1 - Math.min(1, thr * 4));   // lifting (or barely on it) engine-brakes
     if (s.launchT > 0 && thr > 0.5 && vF >= 0) ax += CONFIG.race.launch.boost * Math.min(1, s.launchT / 0.5);   // perfect start: extra pull, fading
-    if (nitro && !(manualDrive && s.limT > 0)) ax += N.accel * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
+    if (nitro && !(manualDrive && s.limT > 0)) ax += N.accel * nPow * Math.max(0, 1 - Math.pow(Math.max(0, vF) / (cap * 0.94), 4)) * (handbrake ? 0.4 : 1);   // fades out ≈ the raised top speed
     // lift-off turn-in: lifting while turning scrubs speed fast and tucks the nose in (the Motorfest way to slow for a corner)
     const liftK = vF > 11 && !nitro ? clamp((Math.abs(stick) - 0.25) / 0.5, 0, 1) * (1 - Math.min(1, thr / 0.15)) : 0;
     if (liftK > 0) ax -= H.lift.decel * liftK;
@@ -2646,17 +2657,23 @@ const Physics = {
     const slip = Math.atan2(Math.abs(vS), Math.max(speedAbs, 0.1));
     const hb = handbrake && speedAbs > 4;
     const powerSlide = !hb && s.drifting && thr >= 0.6 && slip > 0.15 && speedAbs > 12;   // part throttle never slides
+    // below the drift blend speed the grip model stays planted: power slides and power oversteer fade out (hairpins grip)
+    // (true speed, so a drift's angle doesn't count against it; a full-strength drift already under way is left alone)
+    const BL = H.drift.blend, kmhV = Math.hypot(vF, vS) * 3.6;
+    const lowG = kmhV >= BL[1] || (s.dAmt > 0.02 && s.dCap >= 1) ? 1 : smoothstep(BL[0], BL[1], kmhV);
     let targetYaw = -vF * Math.tan(s.steerAngle) / c.wheelbase;     // steer right (+) → yaw clockwise (−)
     // throttle unloads the front a little; braking hard while turning understeers (Motorfest); lifting tucks the nose in
     const wLoad = 1 + c.weightTransfer * Math.min(0, s.load) / 3;
     const brakeUS = brk > 0.1 && vF > 10 ? 1 - H.brakeUndersteer * brk * Math.min(1, Math.abs(stick) * 1.5) : 1;
     const fade = c.gripFade ? lerp(1, c.gripFade[2], smoothstep(c.gripFade[0], c.gripFade[1], speedAbs * 3.6)) : 1;
-    const aLatMax = (car.perf || 1) * c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad * fade * (1 + H.lift.grip * liftK) * brakeUS;
+    let aLatMax = (car.perf || 1) * c.grip * CONFIG.physics.lateralGripAccel * sGrip * wLoad * fade * (1 + H.lift.grip * liftK) * brakeUS;
+    if (lowG < 1) aLatMax *= 1 + (c.lowSpeedGrip !== undefined ? c.lowSpeedGrip : H.lowSpeedGrip) * (1 - lowG);
     const sliding = hb || powerSlide;
-    const aLatSlide = sliding ? (car.perf || 1) * c.grip * CONFIG.physics.slideGripAccel * sGrip * wLoad : aLatMax;   // drifts keep step-2 looseness
+    let aLatSlide = sliding ? (car.perf || 1) * c.grip * CONFIG.physics.slideGripAccel * sGrip * wLoad : aLatMax;   // drifts keep step-2 looseness
+    if (powerSlide && lowG < 1) aLatSlide = lerp(aLatMax, aLatSlide, lowG);
     let yawLimit = aLatSlide / Math.max(speedAbs, 2) * (nitro ? 1 - N.understeer : 1);   // boosting never adds grip
     if (hb) yawLimit *= 1 + c.driftFactor * 3.0;
-    else if (powerSlide) yawLimit *= 1 + c.driftFactor * 0.9;
+    else if (powerSlide) yawLimit *= 1 + c.driftFactor * 0.9 * lowG;
     // trail-braking at speed (hypercar only): the light rear steps out and the car rotates
     const trail = c.brakeInstability && brk > 0.2 && vF > 25 ? c.brakeInstability * brk * Math.min(1, Math.abs(ctrl.steer) * 1.5) * smoothstep(25, 60, vF) : 0;
     if (trail) yawLimit *= 1 + trail * 1.6;
@@ -2675,9 +2692,10 @@ const Physics = {
     let latGrip = c.lateralGrip * sGrip * fade, latCap = aLatSlide * 1.15;
     if (trail) { latGrip *= 1 - trail; latCap *= 1 - trail * 0.6; }
     if (hb) { latGrip *= 1 - c.driftFactor; latCap *= 1 - c.driftFactor * 0.6; }
-    else if (powerSlide) { latGrip *= 1 - c.driftFactor * 0.5; latCap *= 1 - c.driftFactor * 0.35; }
+    else if (powerSlide) { latGrip *= 1 - c.driftFactor * 0.5 * lowG; latCap *= 1 - c.driftFactor * 0.35 * lowG; }
     if (c.powerOversteer && thr > 0 && vF > 3) {                     // big torque steps the rear out
-      const loose = c.powerOversteer * thr * (1 - ratio) * Math.min(1, Math.abs(s.yawRate) * 2);
+      let loose = c.powerOversteer * thr * (1 - ratio) * Math.min(1, Math.abs(s.yawRate) * 2);
+      if (lowG < 1) loose *= lerp(c.lowSpeedOversteer || 0, 1, lowG);
       latGrip *= 1 - loose; latCap *= 1 - loose * 0.5;
     }
     const dvS = clamp(vS * (1 - Math.exp(-latGrip * dt)), -latCap * dt, latCap * dt);
@@ -2804,12 +2822,20 @@ const Physics = {
     if (s.spinning) {                                                // a spin: no new drift until the car is pointing along its travel again
       if (V0 < 4 || Math.abs(wrapAngle(h0 - Math.atan2(vx0, vz0))) < 0.35) s.spinning = false;
     } else if (s.dAmt <= 0.02) {
-      if (mf && kmh > (D.minKmh || H.drift.minKmh) && Math.abs(stick) > (D.stickOn || H.drift.stickOn) && thr > H.drift.thrOn) { want = true; s.dDir = Math.sign(stick); }
+      const BL = H.drift.blend, gate = kmh >= BL[1] ? 1 : smoothstep(BL[0], BL[1], kmh);   // steer-to-drift fades in with speed
+      s.dCap = 1;
+      if (mf && gate > 0 && Math.abs(stick) > (D.stickOn || H.drift.stickOn) && thr > H.drift.thrOn) { want = true; s.dDir = Math.sign(stick); s.dCap = gate; }
       else if (mf && tap && Math.abs(stick) > 0.5 && kmh > H.drift.tapKmh) { want = true; s.dDir = Math.sign(stick); s.dAmt = 0.45; }
       else if (mf && s.dsKick > 0 && Math.abs(stick) > 0.75 && kmh > H.drift.tapKmh) { want = true; s.dDir = Math.sign(stick); s.dAmt = 0.3; }   // manual downshift
       else if (mf && hb && Math.abs(stick) > 0.3 && V0 > 6) { want = true; s.dDir = Math.sign(stick); }
-    } else want = (stick * s.dDir > H.drift.stickHold || hb) && V0 > 9;
-    s.dAmt = want ? Math.min(1, s.dAmt + D.inRate * dt) : Math.max(0, s.dAmt - D.outRate * dt);
+    } else {
+      want = (stick * s.dDir > H.drift.stickHold || hb) && V0 > 9;
+      if (s.dCap < 1) {   // a part-strength stick drift (started at 110-140 km/h) can grow with speed, or to full on the handbrake
+        const BL = H.drift.blend;
+        s.dCap = hb ? 1 : Math.max(s.dCap, kmh >= BL[1] ? 1 : smoothstep(BL[0], BL[1], kmh));
+      }
+    }
+    s.dAmt = want ? Math.min(s.dCap < 1 ? s.dCap : 1, s.dAmt + D.inRate * dt) : Math.max(0, s.dAmt - D.outRate * dt);
     if (s.dAmt <= 0 || V0 < 3) { s.dAngle = 0; return; }
     const w = s.dAmt * s.dAmt * (3 - 2 * s.dAmt);
     const into = clamp(stick * s.dDir, 0, 1), lift = 1 - clamp(thr / 0.5, 0, 1);
@@ -2818,7 +2844,8 @@ const Physics = {
     const phi0 = Math.atan2(vx0, vz0), phiD = phi0 - s.dDir * aPath / Math.max(V0, 5) * dt;
     // body angle to the travel direction (signed into the turn)
     const cap = Math.min(D.angle * (1 + A.over), A.cap) * Math.PI / 180;
-    const target = -s.dDir * cap * clamp((into - 0.3) / 0.7, 0, 1) * (0.55 + 0.45 * thr) * (1 + A.over * thr);
+    let target = -s.dDir * cap * clamp((into - 0.3) / 0.7, 0, 1) * (0.55 + 0.45 * thr) * (1 + A.over * thr);
+    if (s.dCap < 1) target *= s.dCap;                                // part-strength stick drift (110-140 km/h): a smaller angle
     const a0 = wrapAngle(h0 - phi0), aD = a0 + (target - a0) * (1 - Math.exp(-D.resp * A.spring * dt));
     // blend over the grip model's result by drift amount
     const V1 = Math.hypot(s.vx, s.vz), phi1 = Math.atan2(s.vx, s.vz);
@@ -2913,7 +2940,7 @@ class CameraRig {
   update(dt, car) {
     const cam = this.camera, s = car.state, p = car.renderPos;
     const ratio = clamp(Math.abs(s.vF) / (car.cfg.topSpeed / 3.6), 0, 1), N = CONFIG.nitro;
-    this.boost = damp(this.boost, s.boosting ? 1 : 0, s.boosting ? 6 : 2.5, dt);
+    this.boost = damp(this.boost, s.boosting ? s.boostPow : 0, s.boosting ? 6 : 2.5, dt);   // nitro power: FOV kick, push, speed lines
     let targetFov;
     if (this.mode === 'chase') {
       const cc = CONFIG.camera.chase;
@@ -3523,8 +3550,15 @@ class DriftScore {
   newLap() { const t = this.lap; this.lap = 0; return t; }
 }
 
+/** Nitro strength (× the base boost) for a bar level 0..1. */
+function nitroPower(level) {
+  const P = CONFIG.nitro.power;
+  return P.min + (P.max - P.min) * Math.pow(clamp(level, 0, 1), P.curve);
+}
+
 class Nitro {
   constructor() { this.reset(); }
+  get power() { return nitroPower(this.level); }
   reset() { this.level = CONFIG.nitro.start; this.active = false; this.fired = false; this.clean = 0; }
   add(x) { this.level = clamp(this.level + x, 0, 1); }
 
@@ -3841,7 +3875,7 @@ class Sound {
     // nitro: whoosh on activation, hiss while it burns
     if (s.boosting && !this.wasBoost) this.whoosh();
     this.wasBoost = s.boosting;
-    set(this.hiss.g.gain, s.boosting ? 0.16 : 0, s.boosting ? 0.05 : 0.15);
+    set(this.hiss.g.gain, s.boosting ? 0.08 + 0.07 * (s.boostPow || 1) : 0, s.boosting ? 0.05 : 0.15);
     // impacts and wall scrapes
     if (s.impact > this.lastImpact + 0.04) this.thud(clamp(0.25 + s.impact, 0, 1));
     this.lastImpact = s.impact;
@@ -4035,7 +4069,14 @@ class Hud {
     }
     if (n) {
       const pct = Math.round(n.level * 100);
-      if (this.cache.nPct !== pct) { this.cache.nPct = pct; el.nitroBar.style.width = pct + '%'; el.nitroPct.textContent = pct + '%'; }
+      if (this.cache.nPct !== pct) {
+        this.cache.nPct = pct; el.nitroBar.style.width = pct + '%'; el.nitroPct.textContent = pct + '%';
+        // colour = strength: dim navy when low, bright blue → white when full (same curve as the boost)
+        const P = CONFIG.nitro.power, k = (nitroPower(n.level) - P.min) / (P.max - P.min);
+        const mix = (a, b) => a.map((v, i) => Math.round(v + (b[i] - v) * k)).join(',');
+        el.nitroBar.style.background = `linear-gradient(90deg, rgb(${mix([22, 48, 110], [120, 215, 255])}), rgb(${mix([40, 95, 190], [255, 255, 255])}))`;
+        el.nitroBar.style.boxShadow = k > 0.75 ? `0 0 ${Math.round((k - 0.75) * 40)}px rgba(160,230,255,.9)` : '';
+      }
       const cls = n.active ? 'active' : n.level >= CONFIG.nitro.minStart ? 'ready' : '';
       if (this.cache.nCls !== cls) { this.cache.nCls = cls; el.nitroBox.className = 'panel ' + cls; }
     }
@@ -4799,7 +4840,8 @@ class RacingLine {
       // tight corners: Motorfest drivers drift them, on the car's drift grip
       if (cfg.drift && sk.drift !== false && this.R[i] < 160) {
         const vd = Math.min(vMax, Math.sqrt(cfg.drift.grip * sk.gripUse * this.R[i]));
-        if (vd > vi * 1.03) { vi = vd; driftAt[i] = 1; }
+        // only where a stick drift is at full strength: slower corners (hairpins) are taken on grip
+        if (vd > vi * 1.03 && vd * 3.6 >= CONFIG.handling.drift.blend[1]) { vi = vd; driftAt[i] = 1; }
       }
       v[i] = vi;
     }
@@ -4876,7 +4918,7 @@ class AIDriver {
     const reach = 3 + Math.round(v * 0.5 / T.cfg.sampleSpacing);     // commit about half a second before the corner
     for (let k = 1; k <= reach; k++) if (this.profile.driftAt[(i + k) % n]) { plan = (i + k) % n; break; }
     if (plan < 0 && s.dAmt > 0.1 && line.R[i] < 220) plan = i;
-    if (plan >= 0 && v * 3.6 > 80) {
+    if (plan >= 0 && v * 3.6 > CONFIG.handling.drift.blend[1]) {
       // which way the corner turns: the road's own bend (tangent at the corner vs further in), steering sign convention
       let m = plan; for (let k = 0, j2 = plan; k < 40 && this.profile.driftAt[j2]; k++, j2 = (j2 + 1) % n) if (line.R[j2] < line.R[m]) m = j2;   // tightest point
       const A = (m - 6 + n) % n, B = (m + 6) % n, ax = T.RZ[A], az = -T.RX[A], bx = T.RZ[B], bz = -T.RX[B];
@@ -4917,10 +4959,11 @@ class AIDriver {
     let minAhead = Infinity;
     for (let k = 4; k < 64; k += 4) minAhead = Math.min(minAhead, this.profile[(i + k) % n]);
     const straight = minAhead > v + 7 && v > 20 && Math.abs(c.steer) < 0.35;
-    if (!this.nitroWant && straight && this.nitro.level > 0.35 && this.rnd() < dt * 2 * this.sk.nitro) { this.nitroWant = true; this.nitroUses++; }
+    if (!this.nitroWant && straight && this.nitro.level > CONFIG.nitro.aiFireAt && this.rnd() < dt * 2 * this.sk.nitro) { this.nitroWant = true; this.nitroUses++; }
     if (!straight) this.nitroWant = false;
     this.nitro.add(0.02 * dt);                                       // AI bars refill slowly too
     c.nitro = this.nitro.update(dt, this.nitroWant, car);
+    c.nitroPower = this.nitro.power;
     // ---- the odd drift into a hairpin (Kaze drivers much more often) ----
     if (this.driftT > 0) { this.driftT -= dt; c.handbrake = true; c.throttle = Math.max(c.throttle, 0.5); }
     else {
@@ -5695,6 +5738,7 @@ class Game {
       }
       // nitro: fires on press with enough in the bar, burns while held
       ctrl.nitro = this.nitro.update(dt, ctrl.nitroWant, this.car);
+      ctrl.nitroPower = this.nitro.power;
       if (this.nitro.fired && this.input.device === 'gamepad' && Settings.data.rumble) {
         const R = CONFIG.nitro.rumble, rb = this.rumble;
         rb.send(this.input.gamepad.pad, R[0], R[1], R[2]); rb.next = rb.clock + R[2];
