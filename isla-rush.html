@@ -529,7 +529,7 @@ const CONFIG = {
       lateralGrip: 9,         // how fast sideways slip is killed (1/s)
       driftFactor: 0.78,      // 0..1 rear grip lost on handbrake
       maxDriftAngle: 0.8,     // rad, drift assist keeps slides below this angle
-      drift: { grip: 30, angle: 50, inRate: 3.0, outRate: 2.2, scrub: 0.42, resp: 6 },   // balanced, easy to hold
+      drift: { grip: 30, angle: 50, inRate: 3.0, outRate: 2.2, scrub: 0.42, resp: 6, filter: 0.15, rate: 100 },   // balanced, easy to hold
       slideMomentum: 0.75,    // fraction of the speed a slide loses that is kept going forward
       maxSteer: 0.55,         // rad, front wheel angle at low speed
       highSpeedSteer: 0.55,    // fraction of maxSteer left at top speed
@@ -588,7 +588,7 @@ const CONFIG = {
       lateralGrip: 7,
       driftFactor: 0.82,
       maxDriftAngle: 0.85,
-      drift: { grip: 27.5, angle: 58, inRate: 3.6, outRate: 1.3, scrub: 0.38, resp: 4.2, stickOn: 0.78 },   // drifts easiest, big lazy angles, slow to recover
+      drift: { grip: 27.5, angle: 58, inRate: 3.6, outRate: 1.3, scrub: 0.38, resp: 4.2, stickOn: 0.78, filter: 0.2, rate: 75 },   // drifts easiest, big lazy angles, slow to recover
       slideMomentum: 0.8,
       powerOversteer: 0.4,    // loose rear end: throttle mid-corner steps the tail out (above the drift blend speed)
       lowSpeedOversteer: 0.3, // share of that kept below it: a wiggle on the throttle out of a hairpin, never a spin
@@ -650,7 +650,7 @@ const CONFIG = {
       lateralGrip: 10,
       driftFactor: 0.86,      // easiest to drift
       maxDriftAngle: 0.95,
-      drift: { grip: 33, angle: 47, inRate: 4.6, outRate: 3.6, scrub: 0.44, resp: 9.5 },   // snappy, quickest transitions
+      drift: { grip: 33, angle: 47, inRate: 4.6, outRate: 3.6, scrub: 0.44, resp: 9.5, filter: 0.12, rate: 140 },   // snappy, quickest transitions
       slideMomentum: 0.95,     // keeps its speed through a slide
       maxSteer: 0.6,
       highSpeedSteer: 0.6,
@@ -709,7 +709,7 @@ const CONFIG = {
       lateralGrip: 8.5,
       driftFactor: 0.72,
       maxDriftAngle: 0.8,
-      drift: { grip: 30.5, angle: 45, inRate: 2.0, outRate: 1.8, scrub: 0.4, resp: 4 },   // heavier, gradual slides
+      drift: { grip: 30.5, angle: 45, inRate: 2.0, outRate: 1.8, scrub: 0.4, resp: 4, filter: 0.2, rate: 65 },   // heavier, gradual slides
       slideMomentum: 0.8,
       offroadRecovery: 0.7,   // barely slows on grass and sand
       maxSteer: 0.56,
@@ -772,7 +772,7 @@ const CONFIG = {
       lateralGrip: 8.5,
       driftFactor: 0.6,       // reluctant to slide
       maxDriftAngle: 0.7,
-      drift: { grip: 34, angle: 44, inRate: 3.4, outRate: 3.0, scrub: 0.36, resp: 7.5 },   // planted, drifts cleanly at full lock
+      drift: { grip: 34, angle: 44, inRate: 3.4, outRate: 3.0, scrub: 0.36, resp: 7.5, filter: 0.14, rate: 110 },   // planted, drifts cleanly at full lock
       slideMomentum: 0.7,
       offroadRecovery: -0.35, // scrapes its splitter on grass and sand
       maxSteer: 0.52,
@@ -827,7 +827,13 @@ const CONFIG = {
                             // In between, a stick-started drift (and power oversteer) only reaches that share of full strength
       stickOn: 0.85,        // stick past this (with throttle) breaks the rear loose
       thrOn: 0.2,
-      stickHold: 0.35,      // keep the stick into the turn past this to hold the drift
+      // one continuous drift state (step 7c): it lives while speed > keepKmh and throttle or stick are working, and ends
+      // once the body angle stays under endAngle for endTime (after the first minTime), or the car slows right down
+      keepKmh: 50, endAngle: 6, endTime: 0.3, minTime: 0.5,
+      easeTime: 0.3,        // s: drift amount eases in / out (smoothstep) over the grip model
+      holdShare: 0.45,      // share of the car's max angle held with the stick centred (countersteer → less, full → 0)
+      filter: 0.15,         // s: low-pass on stick + throttle for the drift target (per car: drift.filter)
+      rate: 100,            // deg/s: most the body angle may change in a drift (per car: drift.rate)
       tapTime: 0.35,        // s: an L2 tap shorter than this while turning kicks a drift
       tapKmh: 120,          // L2 tap / manual downshift only kick a drift above this (slowing for a hairpin never does)
       drive: 0.45,          // share of engine drive lost to wheelspin at full drift
@@ -897,7 +903,7 @@ const CONFIG = {
     nearMiss: { gap: 1.3, minRel: 5, nitro: 0.08 },                              // m of air, m/s faster, bar
     // Start: hold the gas from the "2" through to GO = perfect start (kick + extra pull); anything else = a bad start:
     // the automatic gearbox sticks in 1st for badLock s (manual drivers can still shift up themselves)
-    classPace: { brisaGT: 127.0, toroV8: 124.5, kazeRS: 126.2, montanaX: 131.0, ciclonR: 102.4 },   // s, autopilot lap: AI balance (step 7b: hairpins on grip)
+    classPace: { brisaGT: 127.6, toroV8: 125.4, kazeRS: 125.9, montanaX: 131.2, ciclonR: 102.4 },   // s, autopilot lap: AI balance (step 7c: hairpins on grip, continuous drifts)
     balance: 1.6,
     launch: { kick: 4, boost: 4, boostTime: 1.6, badLock: 2.4, rumble: [0.9, 0.7, 260] },   // m/s, m/s², s, s
     aiStart: { easy: [0.08, 0.35], normal: [0.15, 0.25], hard: [0.3, 0.08] },              // AI chance of [perfect, bad] start
@@ -935,7 +941,7 @@ const CONFIG = {
   camera: {
     near: 0.2, far: 4200,
     chase: { distance: 6.0, distanceAtSpeed: 1.8, height: 2.0, heightAtSpeed: -0.2, lookHeight: 1.1, lookAhead: 4,
-             yawLag: 4.5, offsetLag: 10,
+             yawLag: 4.5, offsetLag: 10, driftLook: 0.5,   // driftLook: share of the travel direction the camera looks along in a full drift
              fov: 60, fovAtSpeed: 30, fovCurve: 2.0,          // FOV ramps hardest near top speed (60° → 90°)
              accelPull: 0.9, brakePush: 0.45,                 // m: pull back under acceleration, close in under braking
              shake: 0.05, shakeFrom: 180, shakeFull: 240 },   // m of high-frequency vibration above 180 km/h
@@ -2465,7 +2471,7 @@ class Car {
       offroad: 0, surfaceShake: 0, drifting: false, handbrake: false, braking: false,
       gear: 1, shiftTimer: 0, impact: 0, wall: false, boosting: false, boostOver: 0,
       rpm: 0, limT: 0, limiter: false, blockT: 0, shifts: 0, gearLock: 0, launchT: 0,   // engine + gearbox (manual / start)
-      dAmt: 0, dDir: 0, dAngle: 0, dCap: 1, brkHeld: 0, spins: 0, spinning: false, boostPow: 0,
+      dAmt: 0, dDir: 0, dAngle: 0, dCap: 1, dOn: false, dRearm: false, dAng: 0, dAngV: 0, dStick: 0, dThr: 0, dT: 0, dLowT: 0, brkHeld: 0, spins: 0, spinning: false, boostPow: 0,
       spinF: 0, spinR: 0,
       prev: { x: 0, y: 0, z: 0, h: 0, pitch: 0 },
     };
@@ -2484,7 +2490,7 @@ class Car {
     s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
     s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
     s.rpm = this.cfg.sound.idle; s.limT = 0; s.limiter = false; s.blockT = 0; s.gearLock = 0; s.launchT = 0;
-    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.dCap = 1; s.brkHeld = 0; s.spinning = false; s.boostPow = 0;
+    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.dCap = 1; s.dOn = false; s.dRearm = false; s.dAng = 0; s.dAngV = 0; s.dStick = 0; s.dThr = 0; s.dT = 0; s.dLowT = 0; s.brkHeld = 0; s.spinning = false; s.boostPow = 0;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
@@ -2805,60 +2811,87 @@ const Physics = {
   },
 
   /**
-   * Arcade drift layer. A drift starts from the stick (past ~85% above 80 km/h with throttle), a quick L2 tap while
-   * turning, or the handbrake. While it lasts, the direction of travel turns on the car's "drift grip" (more stick
-   * and lifting = tighter) and the body angle to it follows stick and throttle; the assist springs the angle towards
-   * that target and caps it, so the car never spins unless the assist is off and it is overdone. Centring or
-   * countersteering lets the drift fade and the grip model take back over: no snap.
+   * Arcade drift layer (Motorfest style). A drift starts from the stick (past ~85% with throttle, fading in between
+   * handling.drift.blend km/h), a quick L2 tap or manual downshift (above tapKmh) while turning, or the handbrake.
+   * Once started it is ONE continuous state: it stays alive while the car is fast enough and the throttle or the stick
+   * is working, and only ends once the body angle has stayed small for a moment (or the car slows right down), so
+   * small corrections never drop it. The stick sets the body angle continuously: full into the turn = the car's max
+   * angle, centred = a medium hold, light countersteer = a shallower angle, full countersteer = straighten and exit.
+   * Stick and throttle are low-pass filtered, the angle follows a critically damped spring with a per-car rate cap,
+   * and the drift amount eases in and out (smoothstep) over the grip model, so nothing ever snaps.
    */
   driftStep(car, stick, thr, brk, hb, nitro, sGrip, h0, vx0, vz0, dt) {
-    const c = car.cfg, s = car.state, H = CONFIG.handling, D = c.drift, HS = car.handling || DEFAULT_HANDLING;
+    const c = car.cfg, s = car.state, H = CONFIG.handling, HD = H.drift, D = c.drift, HS = car.handling || DEFAULT_HANDLING;
     if (!D) return;
     const mf = HS.style !== 'grip', A = H.assist[HS.assist] || H.assist.high;
-    const V0 = Math.hypot(vx0, vz0), kmh = V0 * 3.6;
+    const V0 = Math.hypot(vx0, vz0), kmh = V0 * 3.6, phi0 = Math.atan2(vx0, vz0), a0 = wrapAngle(h0 - phi0);
     if (s.dsKick > 0) s.dsKick -= dt;
     let tap = false;                                                 // L2 tap: pressed and released quickly
-    if (brk > 0.3) s.brkHeld += dt; else { if (s.brkHeld > 0 && s.brkHeld < H.drift.tapTime) tap = true; s.brkHeld = 0; }
-    let want = false;
+    if (brk > 0.3) s.brkHeld += dt; else { if (s.brkHeld > 0 && s.brkHeld < HD.tapTime) tap = true; s.brkHeld = 0; }
+    // ---- start / keep / end the one continuous drift state ----
     if (s.spinning) {                                                // a spin: no new drift until the car is pointing along its travel again
-      if (V0 < 4 || Math.abs(wrapAngle(h0 - Math.atan2(vx0, vz0))) < 0.35) s.spinning = false;
-    } else if (s.dAmt <= 0.02) {
-      const BL = H.drift.blend, gate = kmh >= BL[1] ? 1 : smoothstep(BL[0], BL[1], kmh);   // steer-to-drift fades in with speed
-      s.dCap = 1;
-      if (mf && gate > 0 && Math.abs(stick) > (D.stickOn || H.drift.stickOn) && thr > H.drift.thrOn) { want = true; s.dDir = Math.sign(stick); s.dCap = gate; }
-      else if (mf && tap && Math.abs(stick) > 0.5 && kmh > H.drift.tapKmh) { want = true; s.dDir = Math.sign(stick); s.dAmt = 0.45; }
-      else if (mf && s.dsKick > 0 && Math.abs(stick) > 0.75 && kmh > H.drift.tapKmh) { want = true; s.dDir = Math.sign(stick); s.dAmt = 0.3; }   // manual downshift
-      else if (mf && hb && Math.abs(stick) > 0.3 && V0 > 6) { want = true; s.dDir = Math.sign(stick); }
+      if (V0 < 4 || Math.abs(a0) < 0.35) s.spinning = false;
+    } else if (!s.dOn) {
+      if (s.dRearm && Math.abs(stick) < 0.5) s.dRearm = false;      // after a drift: the stick must come back before steer-to-drift re-fires
+      const BL = HD.blend, gate = kmh >= BL[1] ? 1 : smoothstep(BL[0], BL[1], kmh);   // steer-to-drift fades in with speed
+      let dir = 0, cap = 1;
+      if (mf && gate > 0 && !s.dRearm && Math.abs(stick) > (D.stickOn || HD.stickOn) && thr > HD.thrOn) { dir = Math.sign(stick); cap = gate; }
+      else if (mf && tap && Math.abs(stick) > 0.5 && kmh > HD.tapKmh) dir = Math.sign(stick);
+      else if (mf && s.dsKick > 0 && Math.abs(stick) > 0.75 && kmh > HD.tapKmh) dir = Math.sign(stick);   // manual downshift
+      else if (mf && hb && Math.abs(stick) > 0.3 && V0 > 6) dir = Math.sign(stick);
+      if (dir) {
+        // pick up from whatever the grip model is doing: current slip angle, current inputs, no jump
+        if (s.dAmt <= 0.02 || dir !== s.dDir) { s.dAng = a0; s.dAngV = 0; s.dStick = clamp(stick * dir, -1, 1); s.dThr = thr; }
+        s.dOn = true; s.dDir = dir; s.dCap = cap; s.dT = 0; s.dLowT = 0;
+      }
     } else {
-      want = (stick * s.dDir > H.drift.stickHold || hb) && V0 > 9;
+      s.dT += dt;
       if (s.dCap < 1) {   // a part-strength stick drift (started at 110-140 km/h) can grow with speed, or to full on the handbrake
-        const BL = H.drift.blend;
+        const BL = HD.blend;
         s.dCap = hb ? 1 : Math.max(s.dCap, kmh >= BL[1] ? 1 : smoothstep(BL[0], BL[1], kmh));
       }
+      const working = thr > 0.1 || Math.abs(stick) > 0.15 || hb;   // throttle or stick still driving it
+      s.dLowT = Math.abs(a0) < HD.endAngle * Math.PI / 180 && s.dT > HD.minTime ? s.dLowT + dt : 0;
+      if ((kmh < HD.keepKmh && !hb) || V0 < 3 || !working || s.dLowT > HD.endTime) { s.dOn = false; s.dRearm = true; }   // (countersteer held to exit must not kick a new drift the other way)
     }
-    s.dAmt = want ? Math.min(s.dCap < 1 ? s.dCap : 1, s.dAmt + D.inRate * dt) : Math.max(0, s.dAmt - D.outRate * dt);
-    if (s.dAmt <= 0 || V0 < 3) { s.dAngle = 0; return; }
+    // drift amount eases in / out over ~0.3 s (smoothstep blend below, so the hand-over to grip never jumps)
+    const rate = 1 / HD.easeTime;
+    s.dAmt = s.dOn ? Math.min(s.dCap < 1 ? Math.max(s.dCap, 0) : 1, s.dAmt + rate * dt) : Math.max(0, s.dAmt - rate * dt);
+    if (s.dAmt <= 0 || V0 < 3) { s.dAngle = Math.abs(a0); s.dAng = a0; s.dAngV = 0; s.dStick = 0; s.dThr = thr; return; }
     const w = s.dAmt * s.dAmt * (3 - 2 * s.dAmt);
-    const into = clamp(stick * s.dDir, 0, 1), lift = 1 - clamp(thr / 0.5, 0, 1);
-    // direction of travel turns into the corner on drift grip
-    const aPath = (car.perf || 1) * D.grip * sGrip * (0.35 + 0.65 * into) * (1 + 0.3 * lift) * (nitro ? 0.85 : 1);
-    const phi0 = Math.atan2(vx0, vz0), phiD = phi0 - s.dDir * aPath / Math.max(V0, 5) * dt;
-    // body angle to the travel direction (signed into the turn)
+    // ---- filtered inputs: stick into the turn (+) / countersteer (−), throttle ----
+    const fk = 1 - Math.exp(-dt / (D.filter || HD.filter));
+    s.dStick += (clamp(stick * s.dDir, -1, 1) - s.dStick) * fk;
+    s.dThr += (thr - s.dThr) * fk;
+    const u = s.dStick, lift = 1 - clamp(s.dThr / 0.5, 0, 1);
+    // direction of travel turns into the corner on drift grip: more stick (and lifting) = tighter, countersteer = wider
+    const turn = u >= 0 ? 0.35 + 0.65 * u : 0.35 * (1 + 0.7 * u);
+    const aPath = (car.perf || 1) * D.grip * sGrip * turn * (1 + 0.3 * lift) * (nitro ? 0.85 : 1);
+    const phiD = phi0 - s.dDir * aPath / Math.max(V0, 5) * dt;
+    // ---- body angle: stick → share of the car's max angle, throttle adds a little ----
     const cap = Math.min(D.angle * (1 + A.over), A.cap) * Math.PI / 180;
-    let target = -s.dDir * cap * clamp((into - 0.3) / 0.7, 0, 1) * (0.55 + 0.45 * thr) * (1 + A.over * thr);
+    const hold = HD.holdShare;                                       // stick centred: a medium hold
+    const share = u >= 0 ? hold + (1 - hold) * u : hold * Math.pow(1 + u, 1.3);   // full countersteer → 0: straighten out
+    let target = -s.dDir * cap * share * (0.78 + 0.22 * s.dThr) * (1 + A.over * s.dThr);
     if (s.dCap < 1) target *= s.dCap;                                // part-strength stick drift (110-140 km/h): a smaller angle
-    const a0 = wrapAngle(h0 - phi0), aD = a0 + (target - a0) * (1 - Math.exp(-D.resp * A.spring * dt));
-    // blend over the grip model's result by drift amount
+    // critically damped spring (no overshoot) with a per-car cap on how fast the angle may change
+    if (Math.abs(wrapAngle(a0 - s.dAng)) > 0.25) { s.dAng = a0; s.dAngV = 0; }   // knocked off line (wall, car): restart from the real angle
+    else s.dAng += wrapAngle(a0 - s.dAng) * (1 - w);                 // while blending in/out, track the real angle
+    const om = D.resp * A.spring, vMax = (D.rate || HD.rate) * Math.PI / 180;
+    s.dAngV += (om * om * (target - s.dAng) - 2 * om * s.dAngV) * dt;
+    s.dAngV = clamp(s.dAngV, -vMax, vMax);
+    s.dAng += s.dAngV * dt;
+    // ---- blend over the grip model's result by drift amount ----
     const V1 = Math.hypot(s.vx, s.vz), phi1 = Math.atan2(s.vx, s.vz);
-    const phi = phi1 + wrapAngle(phiD - phi1) * w, h = s.h + wrapAngle(phiD + aD - s.h) * w;
+    const phi = phi1 + wrapAngle(phiD - phi1) * w, h = s.h + wrapAngle(phiD + s.dAng - s.h) * w;
     // speed in a drift: engine / brakes along the nose, minus a drift scrub (no sideways-grip losses: drifts carry speed)
-    const Vd = Math.max(0, V0 + (s.axLong * Math.cos(a0) - D.scrub * Math.abs(Math.sin(aD)) * CONFIG.physics.gravity) * dt);
+    const Vd = Math.max(0, V0 + (s.axLong * Math.cos(a0) - D.scrub * Math.abs(Math.sin(s.dAng)) * CONFIG.physics.gravity) * dt);
     const V = lerp(V1, Vd, w);
     s.vx = Math.sin(phi) * V; s.vz = Math.cos(phi) * V;
     s.yawRate = wrapAngle(h - h0) / dt;
     s.h = wrapAngle(h);
     s.dAngle = Math.abs(wrapAngle(s.h - phi));
-    if (s.dAngle > H.spinAngle * Math.PI / 180) { s.spins++; s.spinning = true; s.dAmt = 0; }   // overdone with the assist off: a spin
+    if (s.dAngle > H.spinAngle * Math.PI / 180) { s.spins++; s.spinning = true; s.dOn = false; s.dAmt = 0; }   // overdone with the assist off: a spin
   },
 
   collideWalls(car, q, fx, fz, rx, rz) {
@@ -2945,7 +2978,15 @@ class CameraRig {
     let targetFov;
     if (this.mode === 'chase') {
       const cc = CONFIG.camera.chase;
-      this.yaw += wrapAngle(car.renderH - this.yaw) * (1 - Math.exp(-cc.yawLag * dt));
+      // drifting: look along a smoothed blend of the nose and the direction of travel, so the view swings with the slide
+      // instead of jerking with every correction of the body angle
+      const sp = Math.hypot(s.vx, s.vz);
+      this.dBlend = damp(this.dBlend || 0, sp > 5 ? cc.driftLook * s.dAmt * s.dAmt * (3 - 2 * s.dAmt) : 0, 3, dt);
+      // the travel direction is smoothed too, so a wall bounce or a knock doesn't swing the view
+      const trav = sp > 5 ? Math.atan2(s.vx, s.vz) : car.renderH;
+      this.travel = this.travel === undefined ? trav : this.travel + wrapAngle(trav - this.travel) * (1 - Math.exp(-6 * dt));
+      const yawT = this.dBlend > 1e-3 ? car.renderH + wrapAngle(this.travel - car.renderH) * this.dBlend : car.renderH;
+      this.yaw += wrapAngle(yawT - this.yaw) * (1 - Math.exp(-cc.yawLag * dt));
       // pull back while accelerating, close in while braking
       this.pull = damp(this.pull, clamp(s.longAccel / car.cfg.acceleration, -1, 1), 3, dt);
       const surge = (this.pull > 0 ? this.pull * cc.accelPull : this.pull * cc.brakePush) * this.fxScale;
@@ -4937,10 +4978,13 @@ class AIDriver {
       const Ld = Math.max(5, Math.hypot(tx, tz)), al = Math.atan2(fx * tz - fz * tx, fx * tx + fz * tz);
       const need = v * v * 2 * Math.sin(al) / Ld * dir;
       const into = (need / (this.car.cfg.drift.grip * (1 + 0.3 * (1 - clamp(this.lastThr / 0.5, 0, 1)))) - 0.35) / 0.65;
-      if (s.dAmt < 0.3) c.stick = into > 0.45 ? dir : clamp(c.steer, -0.7, 0.7);              // break loose once the corner asks for it
-      else c.stick = into < 0.3 ? clamp(c.steer, -0.7, 0.7) : dir * clamp(into, 0.36, 1);   // dial in the drift; too gentle: back to grip
+      // a drift stays alive with the stick centred (step 7c): to leave one, lift and centre for a moment (it then eases out)
+      const out = s.dOn ? 0 : clamp(c.steer, -0.7, 0.7);
+      this.exitDrift = s.dOn && !(s.dAmt < 0.3 ? into > 0.45 : into >= 0.3);
+      if (s.dAmt < 0.3) c.stick = into > 0.45 ? dir : out;                                   // break loose once the corner asks for it
+      else c.stick = into < 0.3 ? out : dir * clamp(into, 0.36, 1);                          // dial in the drift; too gentle: back to grip
       this.drifting = s.dAmt < 0.3 && into > 0.45;
-    } else { c.stick = clamp(c.steer, -0.7, 0.7); this.drifting = false; }
+    } else { this.exitDrift = s.dOn && this.driftT <= 0; c.stick = this.exitDrift ? 0 : clamp(c.steer, -0.7, 0.7); this.drifting = false; }
     // ---- speed: racing-line profile, following slower traffic ----
     let vt = this.profile[(i + 3) % n] * this.pace * pace;
     if (this.followV < vt) vt = this.followV;
@@ -4958,6 +5002,7 @@ class AIDriver {
     else if (dv > -1) { c.throttle = clamp(0.35 + dv * 0.3, 0.05, 1); c.brake = 0; }
     else if (dv > -6) { c.throttle = 0; c.brake = 0; }                  // a little too fast: lift (lift-off turn-in does the rest)
     else { c.throttle = 0; c.brake = clamp(-dv * 0.12, 0.1, 1); }
+    if (this.exitDrift) c.throttle = 0;                             // the lift that ends the drift (one frame)
     this.lastThr = c.throttle;
     // manual gearbox (some AI, and your car on autopilot if it is manual): shift on the light, down before the corner
     if (this.car.manual && s.gear >= 1 && s.shiftTimer <= 0) {

@@ -193,7 +193,32 @@ function pageSuite() {
     return { key, i0, len, kmh, secs: +t.toFixed(4), minKmh: +minK.toFixed(1) };
   }
 
-  return { KEYS, trace, section, fullLock, onset, highDrift, tap, downshift, handbrake, nitroRun, hairpins, lap, power: l => (typeof nitroPower === 'function' ? nitroPower(l) : 1) };
+  // Scripted drift with corrections (step 7c): kick in, corrections, centred, light countersteer, full countersteer out.
+  // taps = keyboard-style hold (stick flicking 1/0 every 0.2 s) instead of the analog corrections.
+  const SCRIPT = [[0.5, 1], [1.5, 0.8], [2.0, 0.4], [2.5, 1], [3.0, 0], [4.0, -0.4], [4.4, 0.9], [6.5, -1]];
+  function driftScript(key, kmh, taps = false) {
+    const car = mk(key), s = car.state; launch(car, kmh);
+    const tr = []; let prevYaw = null, maxDY = 0, maxDA = 0, prevA = null, holdD = 1, holdA = 99, exitT = null, inT = null, peak = 0;
+    const N = Math.round(6.5 / DT);
+    for (let k = 0; k < N; k++) {
+      const t = k * DT;
+      let st = SCRIPT.find(p => t < p[0])[1];
+      if (taps && t >= 0.5 && t < 3.0) st = Math.floor(t / 0.2) % 2 ? 1 : 0;
+      const L = s.drifting || s.dAmt > 0.05 ? 1 : lock(car);
+      Physics.step(car, { steer: st * L, stick: st, throttle: 0.7, brake: 0, handbrake: false, nitro: false }, flat, DT);
+      const a = wrapAngle(s.h - Math.atan2(s.vx, s.vz)) * 57.3, y = s.yawRate;
+      if (prevYaw !== null) maxDY = Math.max(maxDY, Math.abs(y - prevYaw));
+      if (prevA !== null) maxDA = Math.max(maxDA, Math.abs(a - prevA));
+      prevYaw = y; prevA = a; peak = Math.max(peak, Math.abs(a));
+      if (inT === null && s.dAmt > 0.95) inT = t;
+      if (t >= 3.1 && t < 4.0) { holdD = Math.min(holdD, s.dAmt); holdA = Math.min(holdA, Math.abs(a)); }
+      if (t >= 4.4 && exitT === null && s.dAmt <= 0) exitT = t - 4.4;
+      if (k % 6 === 0) tr.push([+t.toFixed(2), +a.toFixed(2), +y.toFixed(3), +kmhOf(s).toFixed(1), +s.dAmt.toFixed(2), st]);
+    }
+    return { key, kmh, taps, maxDYaw: +maxDY.toFixed(3), maxDAngle: +maxDA.toFixed(3), peak: +peak.toFixed(1), inT, holdDrift: +holdD.toFixed(2), holdAngle: +holdA.toFixed(1), exitT: exitT === null ? null : +exitT.toFixed(2), endKmh: +kmhOf(s).toFixed(1), spins: s.spins, trace: tr };
+  }
+
+  return { KEYS, trace, section, driftScript, fullLock, onset, highDrift, tap, downshift, handbrake, nitroRun, hairpins, lap, power: l => (typeof nitroPower === 'function' ? nitroPower(l) : 1) };
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -216,6 +241,7 @@ R.fullLockManual = await run(`__S.KEYS.flatMap(k => [60, 90].map(v => __S.fullLo
 R.onset = await run(`__S.KEYS.map(k => [k, __S.onset(k)])`);
 R.onsetFirst = await run(`__S.KEYS.map(k => [k, __S.onset(k, 0.1)])`);
 R.onsetFull = await run(`__S.KEYS.map(k => [k, __S.onset(k, 0.95)])`);
+R.driftScript = await run(`__S.KEYS.flatMap(k => [150, 180, 220].flatMap(v => [__S.driftScript(k, v), __S.driftScript(k, v, true)]))`);
 R.highDrift = await run(`__S.KEYS.flatMap(k => [150, 180, 220].map(v => __S.highDrift(k, v)))`);
 R.tap = await run(`__S.KEYS.flatMap(k => [70, 100, 115, 140].map(v => __S.tap(k, v)))`);
 R.downshift = await run(`__S.KEYS.flatMap(k => [60, 80, 100].map(v => __S.downshift(k, v)))`);
@@ -235,5 +261,5 @@ if (baseJson) {
 }
 await browser.close();
 if (out) fs.writeFileSync(out, JSON.stringify(R));
-const brief = { ...R, laps: R.laps.map(l => ({ key: l.key, lapTime: l.lapTime, resets: l.resets, spins: l.spins })), highDrift: R.highDrift.map(h => ({ key: h.key, kmh: h.kmh, peakAngle: h.peakAngle, endKmh: h.endKmh })) };
+const brief = { ...R, laps: R.laps.map(l => ({ key: l.key, lapTime: l.lapTime, resets: l.resets, spins: l.spins })), highDrift: R.highDrift.map(h => ({ key: h.key, kmh: h.kmh, peakAngle: h.peakAngle, endKmh: h.endKmh })), driftScript: (R.driftScript || []).map(({ trace, ...x }) => x) };
 console.log(JSON.stringify(brief, null, 1));

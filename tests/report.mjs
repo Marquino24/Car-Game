@@ -45,3 +45,12 @@ if (A.sections && B && B.sections) {
     p(`  ${k.padEnd(9)} ${a.length} sections: ${ta.toFixed(4)}s vs step7 ${tb.toFixed(4)}s  ${same ? 'IDENTICAL' : 'diff ' + (ta - tb).toFixed(4) + 's'}` + (same ? '' : '  ' + a.map((x, i) => x.secs !== b[i].secs ? `[@${x.i0} ${x.secs} vs ${b[i].secs}, min ${x.minKmh}]` : '').join('')));
   }
 }
+if (A.driftScript) {
+  p('\nDRIFT SCRIPT (kick 0-0.5 s, corrections, centred 2.5-3 s, light countersteer 3-4 s, full countersteer from 4.4 s)');
+  p('  max yaw-rate change per 1/120 s step (rad/s), max body-angle change per step (deg), peak angle, drift amount + angle held in light countersteer, exit time after full countersteer');
+  for (const r of A.driftScript) {
+    const b = B && B.driftScript && B.driftScript.find(x => x.key === r.key && x.kmh === r.kmh && x.taps === r.taps);
+    const f = x => `dYaw ${x.maxDYaw} dAng ${x.maxDAngle} peak ${x.peak} hold ${x.holdDrift}/${x.holdAngle}deg exit ${x.exitT}s end ${x.endKmh} spins ${x.spins}`;
+    p(`  ${r.key.padEnd(9)} ${r.kmh}${r.taps ? ' taps' : '     '}: ${f(r)}` + (b ? `\n${' '.repeat(22)}before: ${f(b)}` : ''));
+  }
+}
