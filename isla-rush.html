@@ -858,10 +858,10 @@ const CONFIG = {
   nitro: {
     accel: 7.5,             // m/s² extra acceleration while boosting (× power)
     topSpeedMul: 1.1,       // engine limit while boosting (the +10% is × power)
-    // power by bar level: a smooth monotone curve through these [level, ×] points. Full strength from 100% down to 70%,
+    // power by bar level: a smooth monotone curve through these [level, ×] points. Full strength (1.7×) from 100% down to 70%,
     // then it fades: 0.6× at 50%, 0.3× near empty. Read every frame, so a boost fades as the bar drains below 70%.
     // Scales accel, top-speed boost, FOV kick, camera push, speed lines, flames and hiss.
-    power: { points: [[0, 0.3], [0.5, 0.6], [0.7, 1.3], [1, 1.3]] },
+    power: { points: [[0, 0.3], [0.5, 0.6], [0.7, 1.7], [1, 1.7]] },
     aiFireAt: 0.85,         // AI saves the bar and fires near full, on straights
     overDecay: 0.04,        // per second: the raised limit falls back after a boost
     understeer: 0.1,        // front grip given up while boosting (on the yaw limit only)
@@ -897,7 +897,7 @@ const CONFIG = {
     nearMiss: { gap: 1.3, minRel: 5, nitro: 0.08 },                              // m of air, m/s faster, bar
     // Start: hold the gas from the "2" through to GO = perfect start (kick + extra pull); anything else = a bad start:
     // the automatic gearbox sticks in 1st for badLock s (manual drivers can still shift up themselves)
-    classPace: { brisaGT: 127.7, toroV8: 124.9, kazeRS: 127.0, montanaX: 131.8, ciclonR: 103.1 },   // s, autopilot lap: AI balance (step 7b: hairpins on grip)
+    classPace: { brisaGT: 127.0, toroV8: 124.5, kazeRS: 126.2, montanaX: 131.0, ciclonR: 102.4 },   // s, autopilot lap: AI balance (step 7b: hairpins on grip)
     balance: 1.6,
     launch: { kick: 4, boost: 4, boostTime: 1.6, badLock: 2.4, rumble: [0.9, 0.7, 260] },   // m/s, m/s², s, s
     aiStart: { easy: [0.08, 0.35], normal: [0.15, 0.25], hard: [0.3, 0.08] },              // AI chance of [perfect, bad] start
