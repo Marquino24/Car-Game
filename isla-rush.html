@@ -270,6 +270,22 @@
   #t-reset { right: calc(12px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
   #t-cam   { right: calc(92px + env(safe-area-inset-right)); top: calc(96px + env(safe-area-inset-top)); width: 70px; height: 46px; font-size: 12px; border-radius: 14px; }
 
+  /* Free Drive: city minimap, map screen, drift-zone counter */
+  body.freeroam #minimap { display: block; }
+  body.incity #laps .sub, body.incity #lapNum, body.incity #lapTime { display: none; }
+  body.incity #laps::before { content: 'PUERTO BRISA'; font-size: 13px; font-weight: 800; letter-spacing: .14em; }
+  #zoneBox { position: absolute; left: 50%; top: calc(64px + env(safe-area-inset-top)); transform: translateX(-50%); text-align: center; display: none; padding: 6px 14px; }
+  body.inzone #zoneBox { display: block; }
+  #zoneBox small { display: block; font-size: 10px; font-weight: 800; letter-spacing: .24em; opacity: .8; }
+  #zonePts { font-size: 26px; font-weight: 900; font-style: italic; color: #ff8be0; font-variant-numeric: tabular-nums; }
+  body:not(.freeroam) .fr-only { display: none; }
+  .mapwrap { display: flex; gap: 12px; width: min(96vw, 1100px); height: min(56vh, 560px); }
+  #mapcv { flex: 1; min-width: 0; height: 100%; background: rgba(30,80,110,.55); border-radius: 12px; }
+  #maprec { width: 270px; overflow: auto; font-size: 12px; margin: 0; }
+  #maprec div { display: flex; justify-content: space-between; gap: 8px; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,.08); }
+  #maprec b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #scr-map .mbtns { flex-wrap: wrap; justify-content: center; }
+  @media (max-width: 760px) { .mapwrap { flex-direction: column; height: auto; } #mapcv { height: 42vh; flex: none; } #maprec { width: auto; max-height: 18vh; } }
   #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; color: #fff; background: #123; font-size: 16px; padding: 24px; text-align: center; }
 </style>
 </head>
@@ -303,6 +319,7 @@
   <div id="dpop"></div>
   <div id="raceBox" class="panel"><div id="racePos">1/6</div><div class="gap" id="gapA"></div><div class="gap" id="gapB"></div></div>
   <canvas id="minimap"></canvas>
+  <div id="zoneBox" class="panel"><small>DRIFT ZONE</small><span id="zonePts">0</span></div>
   <div id="wrongWay">WRONG WAY</div>
   <div id="draft">SLIPSTREAM</div>
   <div id="tags"></div>
@@ -365,6 +382,8 @@
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="choice" data-key="assist" data-values="off,low,high" data-labels="Off,Low,High"><span class="lbl">Drift assist<br><span class="note" id="assist-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium" data-labels="Off,Low,Medium"><span class="lbl">City traffic (Free Drive)<br><span class="note">Low is recommended on phones and tablets</span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="sensitivity" data-min="50" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Steering sensitivity</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="speedFx" data-min="0" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Speed effects</span>
@@ -385,6 +404,10 @@
     <h2 class="mtitle">Race setup</h2>
     <div class="panelx">
       <div class="opt" data-nav data-kind="choice" data-key="mode" data-values="race,free" data-labels="Race,Free Drive"><span class="lbl">Mode<br><span class="note" id="mode-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt free-only" data-nav data-kind="choice" data-key="spawn" data-values="circuit,oldtown,downtown,port" data-labels="Circuit start,Old Town plaza,Downtown,Port"><span class="lbl">Start at<br><span class="note" id="spawn-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt free-only" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium" data-labels="Off,Low,Medium"><span class="lbl">City traffic</span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt race-only" data-nav data-kind="choice" data-key="laps" data-values="1,3,5" data-labels="1,3,5"><span class="lbl">Laps</span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
@@ -415,10 +438,23 @@
     <h2 class="mtitle">Paused</h2>
     <div class="mbtns">
       <button class="mbtn" data-nav data-act="resume">Resume</button>
+      <button class="mbtn fr-only" data-nav data-act="map">Map</button>
       <button class="mbtn" data-nav data-act="restart">Restart</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
       <button class="mbtn" data-nav data-act="controls">Controls</button>
       <button class="mbtn" data-nav data-act="quit">Quit to menu</button>
+    </div>
+  </div>
+
+  <div class="screen shade" id="scr-map" data-back="back">
+    <h2 class="mtitle">Map &middot; Puerto Brisa</h2>
+    <div class="mapwrap"><canvas id="mapcv"></canvas><div id="maprec" class="panelx"></div></div>
+    <div class="mbtns row" style="margin-top:12px">
+      <button class="mbtn" data-nav data-act="tr-circuit">Circuit start</button>
+      <button class="mbtn" data-nav data-act="tr-oldtown">Old Town</button>
+      <button class="mbtn" data-nav data-act="tr-downtown">Downtown</button>
+      <button class="mbtn" data-nav data-act="tr-port">Port</button>
+      <button class="mbtn" data-nav data-act="back">Back</button>
     </div>
   </div>
 
@@ -938,6 +974,37 @@ const CONFIG = {
     },
   },
 
+  // Free Drive city: Puerto Brisa (west of the circuit, joined to its seafront by the Malecón causeway)
+  city: {
+    chunk: 200,                                  // m: render / simulation chunks
+    land: { x0: -3080, x1: -1170, z0: -738, z1: 1130, r: 40 },   // coastline (rounded rectangle)
+    // ground under the wheels (grip × tyre grip, drag m/s², top-speed ×, camera shake, off-road share, rumble)
+    surfaces: {
+      tarmac:   { grip: 1.0,  drag: 0,    top: 1,    shake: 0,     off: 0 },
+      paving:   { grip: 0.98, drag: 0.1,  top: 1,    shake: 0,     off: 0 },
+      cobble:   { grip: 0.9,  drag: 0.25, top: 0.97, shake: 0.03,  off: 0, rumble: 0.14 },
+      concrete: { grip: 0.96, drag: 0.05, top: 1,    shake: 0.004, off: 0 },
+      grass:    { grip: 0.72, drag: 3.0,  top: 0.5,  shake: 0.05,  off: 1 },
+      sand:     { grip: 0.62, drag: 3.8,  top: 0.42, shake: 0.04,  off: 1 },
+    },
+    stepUp: 1.3,                                 // m: highest ledge the wheels climb (higher = a wall)
+    takeoff: 0.3,                                // m the ground must fall away in one step to leave it (jumps, not crests)
+    // per quality: near-detail radius (m), traffic density cap, props on, balconies on
+    quality: {
+      low:    { detail: 260, props: false, balconies: false, castShadow: false, lampEvery: 2 },
+      medium: { detail: 380, props: true,  balconies: true,  castShadow: false, lampEvery: 1 },
+      high:   { detail: 480, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
+      ultra:  { detail: 640, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
+    },
+    traffic: { off: 0, low: 12, medium: 26, speed: [9, 14], radius: 340 },   // cars, m/s, m: kept around the player
+    lights: { cycle: 18, amber: 2 },             // s: traffic-light phase (visual + traffic stops)
+    // spawn points: [x, z, heading (rad, 0 = +z)]
+    spawns: {
+      oldtown:  { name: 'Old Town plaza', at: [-2730, -236, 0] },
+      downtown: { name: 'Downtown',       at: [-1860, -540, Math.PI / 2] },
+      port:     { name: 'Port',           at: [-2470, 640, -Math.PI / 2] },
+    },
+  },
   camera: {
     near: 0.2, far: 4200,
     chase: { distance: 6.0, distanceAtSpeed: 1.8, height: 2.0, heightAtSpeed: -0.2, lookHeight: 1.1, lookAhead: 4,
@@ -1066,15 +1133,24 @@ const DEFAULT_BINDINGS = {
 const copyBindings = (b) => JSON.parse(JSON.stringify(b));
 
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high' },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high', spawn: 'circuit', traffic: IS_TOUCH ? 'low' : 'medium' },
   load() {
-    try { Object.assign(this.data, JSON.parse(localStorage.getItem('islaRush.settings') || '{}')); } catch (e) { /* storage blocked / corrupt */ }
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('islaRush.settings') || '{}') || {}; Object.assign(this.data, saved); } catch (e) { /* storage blocked / corrupt */ }
+    // saves from before per-input handling: keep a keyboard / controller choice (touch now defaults to Grip)
+    if (!saved.handlingBy && saved.handling) this.data.handlingBy = { keyboard: saved.handling, pad: saved.handling };
+    if (!this.data.handlingBy) this.data.handlingBy = {};
     if (!CONFIG.cars[this.data.car]) this.data.car = 'brisaGT';
     const b = this.data.bindings || {}, d = copyBindings(DEFAULT_BINDINGS);            // fill in anything missing (new actions, old saves)
     this.data.bindings = { pad: Object.assign(d.pad, b.pad || {}), key: Object.assign(d.key, b.key || {}) };
     return this;
   },
   save() { try { localStorage.setItem('islaRush.settings', JSON.stringify(this.data)); } catch (e) { /* storage blocked */ } },
+  // Handling style per input type: touch screens default to Grip (touch steering never auto-drifts; the handbrake button
+  // still drifts), a controller or keyboard to Motorfest. A choice made in Settings is remembered for that input type.
+  HANDLING_DEFAULTS: { touch: 'grip', pad: 'motorfest', keyboard: 'motorfest' },
+  handlingFor(profile) { const m = this.data.handlingBy || {}; return m[profile] || this.HANDLING_DEFAULTS[profile] || 'motorfest'; },
+  setHandlingFor(profile, v) { (this.data.handlingBy || (this.data.handlingBy = {}))[profile] = v; this.data.handling = v; this.save(); },
   colorIndex(key) { const i = this.data.colors[key] | 0; return clamp(i, 0, CONFIG.cars[key].colors.length - 1); },
 }.load();
 
@@ -1128,6 +1204,19 @@ class Track {
     this.length = this.DIST[n];
     this.startIndex = 0;
     this._tmp = this.makeQuery();
+  }
+
+  /** Where Free Drive's causeway meets the seafront: the sample nearest the bay corner and the sea-wall samples it opens. */
+  cityGap() {
+    if (this._gap) return this._gap;
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < this.n; i++) { const d = Math.hypot(this.X[i] + 655, this.Z[i] + 648); if (d < bd) { bd = d; bi = i; } }
+    const lim = this.HW[bi] + this.OR[bi], ex = this.X[bi] - this.RX[bi] * lim, ez = this.Z[bi] - this.RZ[bi] * lim, samples = new Set();
+    for (let k = -30; k <= 30; k++) {
+      const i = (bi + k + this.n) % this.n, L2 = this.HW[i] + this.OR[i];
+      if (Math.hypot(this.X[i] - this.RX[i] * L2 - ex, this.Z[i] - this.RZ[i] * L2 - ez) < 8.4) samples.add(i);
+    }
+    return (this._gap = { index: bi, samples, side: -1, ex, ez });
   }
 
   makeQuery() {
@@ -1236,7 +1325,10 @@ class Track {
     const rnd = mulberry32(99);
     const P = (i, o, dy) => [this.X[i] + this.RX[i] * o, this.Y[i] + dy, this.Z[i] + this.RZ[i] * o];
     const PA = (i, o, y) => [this.X[i] + this.RX[i] * o, y, this.Z[i] + this.RZ[i] * o];   // absolute height
-    const pushV = (p, c) => { pos.push(p[0], p[1], p[2]); col.push(c.r, c.g, c.b); };
+    // the sea-wall pieces where Free Drive's causeway joins go in their own mesh (shown in races, hidden in Free Drive)
+    const gpos = [], gcol = [], gap = this.cityGap();
+    let toGate = false;
+    const pushV = (p, c) => { const A = toGate ? gpos : pos, B = toGate ? gcol : col; A.push(p[0], p[1], p[2]); B.push(c.r, c.g, c.b); };
     const quad = (a, b, c, d, color) => { pushV(a, color); pushV(b, color); pushV(c, color); pushV(a, color); pushV(c, color); pushV(d, color); };
     // flat strip between lateral offsets (signed) at sample i and j
     const strip = (i, j, a1, a2, b1, b2, dy, color) => quad(P(i, a1, dy), P(i, a2, dy), P(j, b2, dy), P(j, b1, dy), color);
@@ -1279,11 +1371,13 @@ class Track {
 
         if (type === SIDE.SEA) {
           // low stone sea wall dropping straight into the ocean
+          toGate = side === gap.side && gap.samples.has(i);
           C.setHex(0xc9b48f).offsetHSL(0, 0, (rnd() - 0.5) * 0.05);
           wall(i, j, S(ei), S(ej), -0.4, 0.85, C);
           C.setHex(0xe0cfae); strip(i, j, S(ei), S(ei + 0.7), S(ej), S(ej + 0.7), 0.85, C);
           C.setHex(0x9c8a6c).offsetHSL(0, 0, (rnd() - 0.5) * 0.05);
           wall(i, j, S(ei + 0.7), S(ej + 0.7), -9, 0.85, C);
+          toGate = false;
           continue;
         }
         if (type === SIDE.DROP) {
@@ -1333,6 +1427,14 @@ class Track {
     const mesh = new THREE.Mesh(geo, mat);
     mesh.receiveShadow = quality.shadows;
     this.group.add(mesh);
+    if (gpos.length) {
+      const gg = new THREE.BufferGeometry();
+      gg.setAttribute('position', new THREE.Float32BufferAttribute(gpos, 3));
+      gg.setAttribute('color', new THREE.Float32BufferAttribute(gcol, 3));
+      gg.computeVertexNormals();
+      this.gate = new THREE.Mesh(gg, mat); this.gate.receiveShadow = quality.shadows;
+      this.group.add(this.gate);
+    }
   }
 
   buildStartLine(quality) {
@@ -2491,9 +2593,23 @@ class Car {
     s.idx = i; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
     s.rpm = this.cfg.sound.idle; s.limT = 0; s.limiter = false; s.blockT = 0; s.gearLock = 0; s.launchT = 0;
     s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.dCap = 1; s.dOn = false; s.dRearm = false; s.dAng = 0; s.dAngV = 0; s.dStick = 0; s.dThr = 0; s.dT = 0; s.dLowT = 0; s.brkHeld = 0; s.spinning = false; s.boostPow = 0;
+    s.air = false; s.vy = 0; s.vyG = 0; s.jump = null;
     const q = track.query(s.x, s.z, i, track.makeQuery());
     s.grade = q.grade; s.pitch = Math.atan(q.grade); s.s = q.s; s.section = q.section;
     Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: s.pitch });
+  }
+
+  /** Free Drive: place anywhere (x, y, z), heading h, at rest; idx = the circuit sample to search from. */
+  placeFree(x, y, z, h, idx) {
+    const s = this.state;
+    s.x = x; s.y = y; s.z = z; s.h = h;
+    s.vx = s.vz = s.vF = s.vS = s.yawRate = 0;
+    s.steer = s.steerAngle = s.longAccel = s.load = s.latAccel = 0;
+    s.idx = idx; s.gear = 1; s.shiftTimer = 0; s.drifting = false; s.boosting = false; s.boostOver = 0; s.wall = false;
+    s.rpm = this.cfg.sound.idle; s.limT = 0; s.limiter = false; s.blockT = 0; s.gearLock = 0; s.launchT = 0;
+    s.dAmt = 0; s.dDir = 0; s.dAngle = 0; s.dCap = 1; s.dOn = false; s.dRearm = false; s.dAng = 0; s.dAngV = 0; s.dStick = 0; s.dThr = 0; s.dT = 0; s.dLowT = 0; s.brkHeld = 0; s.spinning = false; s.boostPow = 0;
+    s.air = false; s.vy = 0; s.vyG = 0; s.jump = null; s.grade = 0; s.pitch = 0;
+    Object.assign(s.prev, { x: s.x, y: s.y, z: s.z, h: s.h, pitch: 0 });
   }
 
   /** Manual shift (R1 / L1, E / Q). A downshift that would over-rev is refused (the gear display flashes red). */
@@ -2572,6 +2688,7 @@ const Physics = {
   init(track) { this.q = track.makeQuery(); this.qf = track.makeQuery(); this.qr = track.makeQuery(); },
 
   step(car, ctrl, track, dt) {
+    if (track.free && car.state.air) { track.airStep(car, ctrl, dt); return; }   // Free Drive: flying off a jump
     const c = car.cfg, s = car.state, G = CONFIG.physics.gravity, SURF = CONFIG.surfaces;
     let q = track.query(s.x, s.z, s.idx, this.q);
     s.idx = q.index;
@@ -2581,25 +2698,31 @@ const Physics = {
     const stick = ctrl.stick !== undefined ? ctrl.stick : ctrl.steer;   // raw stick position (−1…1), before the grip-aware scaling
 
     // ---- surface under each wheel ----
-    const sec = track.sectionOf(q.index), offSurf = SURF[sec.surface], road = SURF.road;
-    const roadEdge = q.halfWidth + CONFIG.track.kerbWidth;
-    const hx = c.trackWidth / 2, wf = c.frontAxle, wr = c.frontAxle - c.wheelbase;
-    let off = 0;
-    for (let k = 0; k < 4; k++) {
-      const lz = k < 2 ? wf : wr, lx = (k & 1) ? hx : -hx;           // lx along local +X (= left)
-      const ox = fx * lz - rx * lx, oz = fz * lz - rz * lx;
-      if (Math.abs(q.lateral + ox * q.rx + oz * q.rz) > roadEdge) off += 0.25;
+    let off = 0, offShake, sGrip, sDrag, sTop;
+    if (track.free && q.city) {                                      // Free Drive city: road / district under each wheel
+      const f = track.surface(car, fx, fz, rx, rz);
+      off = f.off; offShake = 0; s.cityShake = f.shake; sGrip = f.grip; sDrag = f.drag; sTop = f.top;
+    } else {
+      const sec = track.sectionOf(q.index), offSurf = SURF[sec.surface], road = SURF.road;
+      const roadEdge = q.halfWidth + CONFIG.track.kerbWidth;
+      const hx = c.trackWidth / 2, wf = c.frontAxle, wr = c.frontAxle - c.wheelbase;
+      for (let k = 0; k < 4; k++) {
+        const lz = k < 2 ? wf : wr, lx = (k & 1) ? hx : -hx;           // lx along local +X (= left)
+        const ox = fx * lz - rx * lx, oz = fz * lz - rz * lx;
+        if (Math.abs(q.lateral + ox * q.rx + oz * q.rz) > roadEdge) off += 0.25;
+      }
+      let oGrip = offSurf.grip, oDrag = offSurf.drag, oTop = offSurf.topSpeedMul;
+      if (c.offroadRecovery) {                                         // rally tyres/suspension: rough ground costs less
+        oGrip = lerp(oGrip, road.grip, c.offroadRecovery * 0.6);
+        oDrag *= 1 - c.offroadRecovery;
+        oTop = lerp(oTop, road.topSpeedMul, c.offroadRecovery);
+      }
+      sGrip = lerp(road.grip, oGrip, off);
+      sDrag = lerp(road.drag, oDrag, off);
+      sTop = lerp(road.topSpeedMul, oTop, off);
+      offShake = offSurf.shake; s.cityShake = 0;
     }
     s.offroad = off;
-    let oGrip = offSurf.grip, oDrag = offSurf.drag, oTop = offSurf.topSpeedMul;
-    if (c.offroadRecovery) {                                         // rally tyres/suspension: rough ground costs less
-      oGrip = lerp(oGrip, road.grip, c.offroadRecovery * 0.6);
-      oDrag *= 1 - c.offroadRecovery;
-      oTop = lerp(oTop, road.topSpeedMul, c.offroadRecovery);
-    }
-    const sGrip = lerp(road.grip, oGrip, off);
-    const sDrag = lerp(road.drag, oDrag, off);
-    const sTop = lerp(road.topSpeedMul, oTop, off);
 
     let vF = s.vx * fx + s.vz * fz;
     let vS = s.vx * rx + s.vz * rz;
@@ -2734,6 +2857,9 @@ const Physics = {
     // ---- integrate ----
     s.x += s.vx * dt; s.z += s.vz * dt;
 
+    if (track.free) {                                                // Free Drive: circuit walls (sea wall open at the causeway) / city colliders, ground
+      track.afterMove(car, fx, fz, rx, rz, dt, (off * offShake + (s.cityShake || 0)) * Math.min(1, speedAbs / 15));
+    } else {
     // ---- barriers ----
     q = track.query(s.x, s.z, s.idx, this.q);
     s.idx = q.index;
@@ -2747,7 +2873,8 @@ const Physics = {
     s.grade = (qf.height - qr.height) / c.wheelbase;
     s.pitch = Math.atan(s.grade);
     s.lateral = q.lateral; s.s = q.s; s.section = q.section;
-    s.surfaceShake = off * offSurf.shake * Math.min(1, speedAbs / 15);
+    s.surfaceShake = off * offShake * Math.min(1, speedAbs / 15);
+    }
 
     // ---- wheels + gearbox ----
     s.spinF = (s.spinF + vF / c.wheelRadius * dt) % (Math.PI * 2);
@@ -2894,7 +3021,7 @@ const Physics = {
     if (s.dAngle > H.spinAngle * Math.PI / 180) { s.spins++; s.spinning = true; s.dOn = false; s.dAmt = 0; }   // overdone with the assist off: a spin
   },
 
-  collideWalls(car, q, fx, fz, rx, rz) {
+  collideWalls(car, q, fx, fz, rx, rz, pass = null) {
     const c = car.cfg, s = car.state, P = CONFIG.physics;
     const limit = q.halfWidth + q.offroad - 0.05;
     s.wall = false;
@@ -2906,6 +3033,7 @@ const Physics = {
       const wl = q.lateral + ox * q.rx + oz * q.rz;
       const pen = Math.abs(wl) - limit;
       if (pen <= 0) continue;
+      if (pass && pass(s.x + ox, s.z + oz, wl, q)) continue;           // Free Drive: the opening onto the causeway
       s.wall = true;
       const sg = Math.sign(wl), nx = -sg * q.rx, nz = -sg * q.rz;   // normal points back onto the track
       s.x += nx * pen; s.z += nz * pen; q.lateral -= sg * pen;
@@ -2924,6 +3052,28 @@ const Physics = {
       s.impact = Math.max(s.impact, Math.min(1, -vn / 15));
     }
     s.vF = s.vx * fx + s.vz * fz; s.vS = s.vx * rx + s.vz * rz;
+  },
+
+  /**
+   * Push the car out of an obstacle along normal (nx, nz) by pen, with an impulse at the contact (ox, oz from the car's
+   * centre); like collideWalls. (ovx, ovz) = the obstacle's velocity (traffic). Returns the impulse.
+   */
+  resolveContact(car, nx, nz, pen, ox, oz, massK = 1, e = CONFIG.physics.wallRestitution, ovx = 0, ovz = 0) {
+    const c = car.cfg, s = car.state, P = CONFIG.physics;
+    const invM = 1 / c.mass, I = c.mass * (c.length * c.length + c.width * c.width) / 12;
+    s.x += nx * pen; s.z += nz * pen; s.wall = true;
+    const pvx = s.vx + s.yawRate * oz - ovx, pvz = s.vz - s.yawRate * ox - ovz;
+    const vn = pvx * nx + pvz * nz;
+    if (vn >= 0) return 0;
+    const rn = oz * nx - ox * nz;
+    const j = -(1 + e) * vn / (invM + rn * rn / I) * massK;
+    s.vx += j * nx * invM; s.vz += j * nz * invM;
+    s.yawRate = clamp(s.yawRate + j * rn / I, -3, 3);
+    const tx = -nz, tz = nx, vt = s.vx * tx + s.vz * tz;
+    const scrub = Math.min(0.3, -vn * P.wallFriction * 0.03);
+    s.vx -= tx * vt * scrub; s.vz -= tz * vt * scrub;
+    s.impact = Math.max(s.impact, Math.min(1, -vn / 15));
+    return j;
   },
 
   gearbox(car, dt) {
@@ -3385,9 +3535,10 @@ class Rumble {
     if (now < this.next) return;
     const speed = Math.abs(s.vF);
     let strong = 0, weak = 0;
-    if (speed > 3 && this.onKerb(car, track)) weak = Math.max(weak, R.kerb * (0.6 + 0.4 * Math.min(1, speed / 40)));
+    if (speed > 3 && track && this.onKerb(car, track)) weak = Math.max(weak, R.kerb * (0.6 + 0.4 * Math.min(1, speed / 40)));
     if (s.drifting && now % R.driftPeriod < R.driftOn) { strong = Math.max(strong, R.drift * 0.6); weak = Math.max(weak, R.drift); }
     if (s.offroad > 0 && speed > 3) weak = Math.max(weak, R.offroad * s.offroad);
+    if (s.cobble > 0 && speed > 3) weak = Math.max(weak, CONFIG.city.surfaces.cobble.rumble * s.cobble * Math.min(1, speed / 20));   // Old Town cobbles
     if (strong > 0 || weak > 0) { this.send(pad, strong, weak, R.tickMs + 40); this.next = now + R.tickMs; }
   }
 }
@@ -3422,7 +3573,7 @@ class Input {
     window.addEventListener('blur', () => { this.keys.clear(); for (const k in this.touch) this.touch[k] = false; });
 
     if (IS_TOUCH) this.enableTouch();
-    window.addEventListener('touchstart', () => { this.enableTouch(); this.setDevice('touch'); }, { passive: true });
+    window.addEventListener('touchstart', () => { const was = this.touchEnabled; this.enableTouch(); this.setDevice('touch'); if (!was && this.onTouchEnabled) this.onTouchEnabled(); }, { passive: true });
     this.bindTouch();
   }
 
@@ -3978,7 +4129,7 @@ class Hud {
                 driftLap: $('driftLap'), drift: $('drift'), driftPts: $('driftPts'), driftMult: $('driftMult'), driftBar: $('driftBar').firstChild,
                 dpop: $('dpop'), nitroBox: $('nitroBox'), nitroBar: $('nitroBar').firstChild, nitroPct: $('nitroPct'),
                 racePos: $('racePos'), gapA: $('gapA'), gapB: $('gapB'), gearMode: $('gearMode'), tach: $('tach'),
-                lights: Array.from($('shiftLights').children), lightBox: $('shiftLights') };
+                lights: Array.from($('shiftLights').children), lightBox: $('shiftLights'), zonePts: $('zonePts') };
     this.tachCtx = this.el.tach.getContext('2d'); this.tachKey = null;
     this.cache = {};
     this.bannerTimer = 0; this.toastTimer = 0; this.helpTimer = 12;
@@ -4431,6 +4582,7 @@ class Menu {
     if (name === 'select') this.refreshSelect();
     if (name === 'mode') this.refreshMode();
     if (name === 'controls') this.buildControls();
+    if (name === 'map') this.g.drawMap();
     const rows = this.rows();
     this.setFocus(focus !== null ? focus : (name === 'select' || name === 'mode') ? rows.length - 1 : 0);
   }
@@ -4467,6 +4619,7 @@ class Menu {
     } else if (kind === 'choice' && row.dataset.key !== 'quality') {
       const vals = row.dataset.values.split(','), k = row.dataset.key, cur = String(Settings.data[k]);
       const v = vals[(vals.indexOf(cur) + d + vals.length) % vals.length];
+      if (k === 'handling') Settings.setHandlingFor(this.g.handlingProfile(), v);   // remembered for this input type
       Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.g.applySettings();
       if (this.name === 'mode') this.refreshMode(); else if (this.name === 'select') this.refreshChoices(this.el('select')); else this.refreshSettings();
     } else if (kind === 'choice') {
@@ -4511,6 +4664,8 @@ class Menu {
       case 'restart': g.setPaused(false); g.restartRace(); break;
       case 'quit': g.toMainMenu(); break;
       case 'hid': this.enableHid(gesture); break;
+      case 'map': this.show('map'); break;
+      case 'tr-circuit': case 'tr-oldtown': case 'tr-downtown': case 'tr-port': g.setPaused(false); g.spawnFree(act.slice(3)); break;
       case 'back': {
         if (this.name === 'settings' && this.pendingQuality !== QUALITY_NAME) { g.reloadWithQuality(this.pendingQuality); return; }
         const prev = this.stack.pop();
@@ -4657,7 +4812,9 @@ class Menu {
       row.querySelector('.val').textContent = labels[Math.max(0, vals.indexOf(String(d[row.dataset.key])))];
     }
     for (const row of scr.querySelectorAll('.race-only')) row.style.display = d.mode === 'race' ? '' : 'none';
-    document.getElementById('mode-note').textContent = d.mode === 'race' ? 'You vs 5 AI drivers from the grid' : 'Solo, no AI, laps still timed';
+    for (const row of scr.querySelectorAll('.free-only')) row.style.display = d.mode === 'free' ? '' : 'none';
+    document.getElementById('mode-note').textContent = d.mode === 'race' ? 'You vs 5 AI drivers from the grid' : 'Solo: the circuit (laps timed) and the city of Puerto Brisa';
+    document.getElementById('spawn-note').textContent = d.spawn === 'circuit' ? 'The city is west, over the Malec\u00f3n causeway' : 'Fast travel any time: pause \u2192 Map';
     document.getElementById('diff-note').textContent = d.difficulty === 'hard' ? 'Sharp rivals, few mistakes' : d.difficulty === 'easy' ? 'Relaxed rivals' : 'Rivals in the same class as your car';
     if (this.name === 'mode') this.setFocus(Math.min(this.focus, this.rows().length - 1));
   }
@@ -4674,7 +4831,8 @@ class Menu {
       else if (row.dataset.kind === 'choice') { const vals = row.dataset.values.split(','), labels = row.dataset.labels.split(','); val.textContent = labels[Math.max(0, vals.indexOf(String(Settings.data[k])))]; }
       else if (row.dataset.kind === 'toggle') val.textContent = Settings.data[k] ? 'ON' : 'OFF';
     }
-    document.getElementById('handling-note').textContent = Settings.data.handling === 'grip' ? 'Pure grip: no steer-to-drift (handbrake still drifts)' : 'Full stick at speed drifts, like Motorfest';
+    const hp = { pad: 'controller', touch: 'touch', keyboard: 'keyboard' }[this.g.handlingProfile()];
+    document.getElementById('handling-note').textContent = (Settings.data.handling === 'grip' ? 'Pure grip: no steer-to-drift (handbrake still drifts)' : 'Full stick at speed drifts, like Motorfest') + ' \u00b7 saved for ' + hp;
     document.getElementById('assist-note').textContent = { off: 'No help: overdo it and you spin', low: 'Light countersteer help, up to ~65\u00b0', high: 'Auto countersteer, max ~55\u00b0' }[Settings.data.assist] || '';
     document.getElementById('trans-note').textContent = Settings.data.transmission === 'manual' ? 'Shift yourself: R1 / L1 (E / Q). Shift light shows the best moment' : 'The car shifts for you';
     document.getElementById('q-note').textContent = (this.pendingQuality === 'ultra' ? 'Ultra: for powerful PCs. May lag on tablets and phones. ' : '') +
@@ -5280,6 +5438,1775 @@ class Race {
 }
 
 /** Minimap: track outline, start line, AI dots in their paint, the player's arrow. */
+/* =====================================================================
+ * CITY › PUERTO BRISA (Free Drive only)
+ * A ~2 × 2 km coastal city west of the circuit, joined to the circuit's seafront by the Malecón causeway.
+ * The layout (roads, blocks, structures, props) is generated once from fixed numbers. Physics reads flat lists
+ * through a spatial grid: road pieces (surface), structures (ramps, the elevated highway, the causeway, jump ramps:
+ * ground at several levels), colliders (oriented boxes / circles with a height range) and knock-over props.
+ * Rendering lives in CityView (chunks, instancing, LOD); traffic and activities in their own classes.
+ * ===================================================================== */
+const CITY_GRID = 25;                                        // m: physics grid cell
+
+class City {
+  constructor(track) {
+    this.T = track; this.C = CONFIG.city;
+    this.roads = [];                                         // { pts:[x,z,…], hw, surf, rank, name, closed }
+    this.structs = [];                                       // ramps / decks: { ax, az, ux, uz, len, hw, y0, y1, solid, surf }
+    this.cols = [];                                          // colliders: { x, z, c, s, hx, hz | r, y0, y1, st? }
+    this.props = [];                                         // knock-over props: { type, x, y, z, yaw, r }
+    this.items = [];                                         // render items: { t: type, m: Matrix4, c: colour, x, z }
+    this.buildings = [];                                     // { x, z, yaw, w, d, h, y, c, kind } (also LOD boxes)
+    this.lamps = []; this.tlights = []; this.palms = []; this.trees = [];
+    this.traps = []; this.zones = []; this.jumps = []; this.routes = []; this.signals = [];
+    this.grid = new Map(); this.stamp = 0;
+    this.layout();
+    this.indexAll();
+  }
+
+  /* ---------- terrain ---------- */
+  /** Signed distance to the coastline (rounded rectangle): < 0 on land. */
+  coast(x, z) {
+    const L = this.C.land, cx = (L.x0 + L.x1) / 2, cz = (L.z0 + L.z1) / 2;
+    const qx = Math.abs(x - cx) - ((L.x1 - L.x0) / 2 - L.r), qz = Math.abs(z - cz) - ((L.z1 - L.z0) / 2 - L.r);
+    return Math.hypot(Math.max(qx, 0), Math.max(qz, 0)) + Math.min(Math.max(qx, qz), 0) - L.r;
+  }
+  /** Natural ground height: gentle Old Town hill, a rise in the north, falling into the sea at the coast. */
+  base(x, z) {
+    let h = 3;
+    const ox = x + 2780, oz = z + 150; h += 9 * Math.exp(-(ox * ox + oz * oz) / (2 * 230 * 230));
+    const nx = x + 1900, nz = z - 760; h += 5 * Math.exp(-(nx * nx + nz * nz) / (2 * 300 * 300));
+    const d = this.coast(x, z);
+    return d > -6 ? lerp(h, -6, smoothstep(-6, 16, d)) : h;
+  }
+  /** District (also the default surface off the roads). */
+  zone(x, z) {
+    if (this.coast(x, z) > -14) return 'coast';
+    if (z < -690) return 'malecon';
+    if (x < -2425 && z > 380) return 'port';
+    if (x < -2425) return 'oldtown';
+    if (z < 330 && x < -1236) return 'downtown';
+    return 'north';
+  }
+  zoneSurface(zn, x, z) {
+    if (zn === 'coast') return 'sand';
+    if (zn === 'oldtown') return 'cobble';
+    if (zn === 'port') return (x > -2965 && x < -2615 && z > 465 && z < 815) || z > 830 ? 'concrete' : 'grass';
+    if (zn === 'downtown' || zn === 'malecon') return 'paving';
+    return 'grass';
+  }
+
+  /* ---------- layout helpers ---------- */
+  road(points, hw, surf, opts = {}) {
+    let pts = [];
+    if (opts.smooth) {
+      const curve = new THREE.CatmullRomCurve3(points.map(p => new THREE.Vector3(p[0], 0, p[1])), !!opts.closed, 'centripetal');
+      const n = Math.max(8, Math.round(curve.getLength() / 6)), P = new THREE.Vector3();
+      for (let i = 0; i <= n; i++) { if (opts.closed && i === n) break; curve.getPointAt(i / n, P); pts.push(P.x, P.z); }
+    } else {
+      for (let k = 0; k < points.length - 1; k++) {
+        const [ax, az] = points[k], [bx, bz] = points[k + 1], n = Math.max(1, Math.round(Math.hypot(bx - ax, bz - az) / 8));
+        for (let i = 0; i < n; i++) pts.push(ax + (bx - ax) * i / n, az + (bz - az) * i / n);
+      }
+      const e = points[points.length - 1]; pts.push(e[0], e[1]);
+    }
+    const r = { pts, hw, surf, rank: opts.rank || 1, name: opts.name || '', closed: !!opts.closed, lanes: opts.lanes || 2, cut: opts.cut || null, kind: opts.kind || 'street' };
+    this.roads.push(r);
+    return r;
+  }
+  /** Ramp / deck / causeway piece: top height goes y0 → y1 from a to b. */
+  struct(ax, az, bx, bz, hw, y0, y1, opts = {}) {
+    const len = Math.hypot(bx - ax, bz - az), ux = (bx - ax) / len, uz = (bz - az) / len;
+    const st = { ax, az, bx, bz, ux, uz, len, hw, y0, y1, solid: !!opts.solid, surf: opts.surf || 'tarmac', kind: opts.kind || 'ramp', rails: opts.rails || 0 };
+    this.structs.push(st);
+    return st;
+  }
+  /** Oriented box collider (yaw like Three.js: local +Z = (sin, cos)). */
+  box(x, z, yaw, hx, hz, y0 = -50, y1 = 500, extra) {
+    const c = { x, z, c: Math.cos(yaw), s: Math.sin(yaw), hx, hz, y0, y1 };
+    if (extra) Object.assign(c, extra);
+    this.cols.push(c); return c;
+  }
+  circle(x, z, r, y0 = -50, y1 = 500) { const c = { x, z, r, y0, y1 }; this.cols.push(c); return c; }
+  /** A wall from (ax,az) to (bx,bz), thickness t (≥ 2 m so nothing tunnels through at 400 km/h). */
+  wall(ax, az, bx, bz, t = 2.4, y0 = -50, y1 = 500) {
+    const len = Math.hypot(bx - ax, bz - az);
+    return this.box((ax + bx) / 2, (az + bz) / 2, Math.atan2(bx - ax, bz - az), t / 2, len / 2, y0, y1);
+  }
+  building(x, z, yaw, w, d, h, color, kind, extra = {}) {
+    const y = Math.min(this.base(x, z), this.base(x + 0.4 * w, z + 0.4 * d), this.base(x - 0.4 * w, z - 0.4 * d));
+    const b = Object.assign({ x, z, yaw, w, d, h, y, c: color, kind }, extra);
+    this.buildings.push(b);
+    if (!extra.noCollider) this.box(x, z, yaw, w / 2, d / 2);
+    return b;
+  }
+  /** Is (x, z) on a road surface (optionally ignoring one road)? Uses the grid once it exists. */
+  onRoad(x, z, margin = 0, skip = null) {
+    if (this.pieces) return this.roadAt(x, z, skip, margin);
+    for (const r of this.roads) {
+      if (r === skip) continue;
+      const P = r.pts, n = P.length / 2;
+      for (let k = 0; k < n - 1 + (r.closed ? 1 : 0); k++) {
+        const j = (k + 1) % n, ax = P[k * 2], az = P[k * 2 + 1], bx = P[j * 2], bz = P[j * 2 + 1];
+        if (Math.abs(x - ax) > 60 && Math.abs(x - bx) > 60) continue;
+        if (Math.abs(z - az) > 60 && Math.abs(z - bz) > 60) continue;
+        if (segDist(x, z, ax, az, bx, bz) < r.hw + margin) return r;
+      }
+    }
+    return null;
+  }
+
+  /* ---------- the city ---------- */
+  layout() {
+    const rnd = this.rnd = mulberry32(8080);
+    const pastel = [0xf7b7c3, 0xa8e0d0, 0xfde49e, 0xffc9a0, 0xa9d4f5, 0xf4a38c, 0xfff1d6, 0xd7c3f0, 0xbfe3a8];
+
+    // ---- Malecón + causeway to the circuit ----
+    this.malecon = this.road([[-3010, -712], [-1200, -712]], 9, 'tarmac', { rank: 3, name: 'Malecón', lanes: 4, kind: 'avenue' });
+    this.junction();
+
+    // ---- ring road (closed with the Malecón) ----
+    const ringPts = [[-1290, -712], [-1238, -640], [-1236, -450], [-1236, -160], [-1240, 150], [-1300, 330], [-1380, 430], [-1420, 505],
+      [-1420, 600], [-1420, 760], [-1420, 855], [-1470, 950], [-1600, 1020], [-1800, 1040], [-2060, 1030], [-2300, 980], [-2400, 860],
+      [-2410, 640], [-2405, 400], [-2400, 100], [-2400, -200], [-2400, -500], [-2395, -650], [-2390, -712]];
+    this.ring = this.road(ringPts, 7, 'tarmac', { smooth: true, rank: 3, name: 'Ring road', lanes: 4, kind: 'avenue' });
+
+    // ---- Downtown: avenues, roundabouts, elevated highway, towers ----
+    const dX = [-2120, -1940, -1760, -1580], dZ = [-540, -340, 20, 200];
+    this.rbs = [[-1760, -340], [-1940, 20]];
+    const cutRB = (x, z) => this.rbs.some(([cx, cz]) => Math.hypot(x - cx, z - cz) < 26);
+    for (const x of dX) this.road([[x, -703], [x, 320]], 8, 'tarmac', { rank: 2, kind: 'avenue', lanes: 4, cut: cutRB, axis: 'ns' });
+    for (const z of dZ) this.road([[-2393, z], [-1243, z]], 8, 'tarmac', { rank: 2, kind: 'avenue', lanes: 4, cut: cutRB, axis: 'ew' });
+    for (const [cx, cz] of this.rbs) {
+      const pts = []; for (let a = 0; a < 24; a++) pts.push([cx + Math.sin(a / 24 * Math.PI * 2) * 21, cz + Math.cos(a / 24 * Math.PI * 2) * 21]);
+      this.road(pts, 7, 'tarmac', { smooth: true, closed: true, rank: 2, kind: 'roundabout' });
+      this.circle(cx, cz, 13.5);
+      this.items.push({ t: 'rbIsland', x: cx, z: cz });
+    }
+    for (const r of this.roads.filter(r => r.cut)) this.applyCut(r);
+    this.highway(dX);
+    this.downtownTowers(dX, dZ);
+    // traffic lights at the downtown crossings (not the roundabouts)
+    for (const x of dX) for (const z of dZ) if (!cutRB(x, z)) this.signals.push({ x, z });
+
+    // ---- Old Town: cobbled grid, plaza with fountain, cathedral ----
+    this.oldTown(pastel);
+
+    // ---- Port: yard (drift zone), warehouses, containers, cranes, jump ----
+    this.port();
+
+    // ---- North: curved residential roads, houses, park trees ----
+    this.road([[-2405, 450], [-2150, 430], [-1950, 385], [-1760, 330]], 6, 'tarmac', { smooth: true, rank: 1, name: 'Calle del Norte' });
+    this.road([[-2060, 1030], [-1985, 850], [-1950, 640], [-1950, 392]], 6, 'tarmac', { smooth: true, rank: 1 });
+    this.indexRoads();                                       // every road exists now: index them for the placement tests below
+    this.north(pastel);
+
+    // ---- tunnel hill ----
+    this.tunnel();
+
+    // ---- coast: sea wall all round (open where the causeway leaves), palms ----
+    this.coastline();
+
+    // ---- street furniture, activities, traffic routes ----
+    this.activities();
+    this.furniture();
+    this.trafficRoutes();
+  }
+
+  /** The causeway from the Malecón's east end to a gap in the circuit's seafront sea wall. */
+  junction() {
+    const T = this.T;
+    // the seafront sample closest to the bay corner; the sea is on its left (−right) side
+    let bi = 0, bd = Infinity;
+    for (let i = 0; i < T.n; i++) { const d = Math.hypot(T.X[i] + 655, T.Z[i] + 648); if (d < bd) { bd = d; bi = i; } }
+    const lim = T.HW[bi] + T.OR[bi];
+    const ex = T.X[bi] - T.RX[bi] * lim, ez = T.Z[bi] - T.RZ[bi] * lim;                // outer edge of the corridor
+    const ix = T.X[bi] - T.RX[bi] * (T.HW[bi] - 0.5), iz = T.Z[bi] - T.RZ[bi] * (T.HW[bi] - 0.5);   // paved into the circuit road
+    const ax = ex - T.RX[bi] * 70, az = ez - T.RZ[bi] * 70;                             // straight approach, square to the circuit
+    const y0 = 3, yJ = T.Y[bi];
+    const pts = [[-1200, -712], [-1090, -718], [-960, -730], [-840, -740], [ax - T.RX[bi] * 40 + 0, az - T.RZ[bi] * 40], [ax, az], [ex, ez]];
+    this.causeway = this.road(pts, 7, 'tarmac', { smooth: true, rank: 3, name: 'Malecón causeway', kind: 'avenue' });
+    // its deck over the water: structure pieces following the road, height easing from the city to the circuit
+    const P = this.causeway.pts, n = P.length / 2;
+    let total = 0; const dist = [0];
+    for (let k = 1; k < n; k++) { total += Math.hypot(P[k * 2] - P[k * 2 - 2], P[k * 2 + 1] - P[k * 2 - 1]); dist.push(total); }
+    const yAt = (d) => lerp(y0, yJ, smoothstep(0, total, d));
+    for (let k = 0; k < n - 1; k++) {
+      this.struct(P[k * 2], P[k * 2 + 1], P[k * 2 + 2], P[k * 2 + 3], 7.6, yAt(dist[k]), yAt(dist[k + 1]), { solid: true, kind: 'causeway', rails: 1 });
+      // side walls (parapets)
+      const dx = P[k * 2 + 2] - P[k * 2], dz = P[k * 2 + 3] - P[k * 2 + 1], l = Math.hypot(dx, dz), rx = -dz / l, rz = dx / l;
+      for (const sd of [-1, 1]) this.wall(P[k * 2] + rx * sd * 9, P[k * 2 + 1] + rz * sd * 9, P[k * 2 + 2] + rx * sd * 9, P[k * 2 + 3] + rz * sd * 9, 2.4);
+    }
+    this.causewayDeckEnd = [ex, ez];
+    // paved link across the circuit's off-road strip (render only; physics treats the gap as road)
+    this.items.push({ t: 'link', ax: ex, az: ez, bx: ix, bz: iz, hw: 7, y: yJ });
+    // circuit samples whose sea wall is opened (Free Drive only)
+    const gap = [];
+    for (let k = -30; k <= 30; k++) {
+      const i = (bi + k + T.n) % T.n, L2 = T.HW[i] + T.OR[i];
+      const px = T.X[i] - T.RX[i] * L2, pz = T.Z[i] - T.RZ[i] * L2;
+      if (Math.hypot(px - ex, pz - ez) < 8.4) gap.push(i);
+    }
+    this.gap = { samples: new Set(gap), index: bi, side: -1 };
+  }
+
+  applyCut(r) {
+    const P = r.pts, out = [], segs = [];
+    // split the polyline where cut() is true (roundabouts take over there)
+    let cur = [];
+    for (let k = 0; k < P.length / 2; k++) {
+      const x = P[k * 2], z = P[k * 2 + 1];
+      if (r.cut(x, z)) { if (cur.length >= 4) segs.push(cur); cur = []; } else cur.push(x, z);
+    }
+    if (cur.length >= 4) segs.push(cur);
+    this.roads.splice(this.roads.indexOf(r), 1);
+    for (const s of segs) this.roads.push(Object.assign({}, r, { pts: s, cut: null }));
+    return out;
+  }
+
+  highway(dX) {
+    const z = -160, xw = -2393, x0 = -2170, x1 = -1450, xe = -1243, top = 13.5, hw = 7.5;
+    const by = (x) => this.base(x, z);
+    this.hwy = { z, xw, x0, x1, xe, top, hw };
+    this.struct(xw, z, x0, z, hw, by(xw), top, { solid: true, kind: 'ramp', rails: 1 });
+    this.struct(x0, z, x1, z, hw, top, top, { solid: false, kind: 'deck', rails: 1 });
+    this.struct(x1, z, xe, z, hw, top, by(xe), { solid: true, kind: 'ramp', rails: 1 });
+    // deck parapets (only at deck level) and pillars (only below it)
+    for (const sd of [-1, 1]) {
+      this.box((x0 + x1) / 2, z + sd * (hw + 1.2), Math.PI / 2, 1.2, (x1 - x0) / 2 + 2, top - 0.6, top + 2.5);
+      for (const [a, b] of [[xw, x0], [x1, xe]]) {           // ramp parapets in 20 m pieces at their local height
+        const n = Math.ceil(Math.abs(b - a) / 20);
+        for (let k = 0; k < n; k++) {
+          const xa = a + (b - a) * k / n, xb = a + (b - a) * (k + 1) / n;
+          const ya = lerp(a === xw ? by(xw) : top, a === xw ? top : by(xe), k / n), yb = lerp(a === xw ? by(xw) : top, a === xw ? top : by(xe), (k + 1) / n);
+          this.box((xa + xb) / 2, z + sd * (hw + 1.2), Math.PI / 2, 1.2, Math.abs(xb - xa) / 2 + 0.5, Math.min(ya, yb) - 0.8, Math.max(ya, yb) + 2.5);
+        }
+      }
+    }
+    for (let x = x0 + 20; x < x1; x += 45) {
+      if (dX.some(ax => Math.abs(ax - x) < 14)) continue;
+      this.box(x, z, 0, 1.3, 1.3, -50, top - 1.2);
+      this.items.push({ t: 'pillar', x, z, y: by(x), h: top - by(x) - 0.9 });
+    }
+    this.items.push({ t: 'hwy' });
+  }
+
+  downtownTowers(dX, dZ) {
+    const xs = [-2393, ...dX, -1243], zs = [-703, ...dZ, 330], rnd = this.rnd;
+    const glass = [0x6e8fa6, 0x7c98a8, 0x8aa0b0, 0x5f7f96, 0xa7b4bd, 0x93a7a0, 0xc2b8a3];
+    for (let a = 0; a < xs.length - 1; a++) for (let b = 0; b < zs.length - 1; b++) {
+      const xa = xs[a] + (a === 0 ? 7 : 8) + 4, xb = xs[a + 1] - (a + 1 === xs.length - 1 ? 7 : 8) - 4;
+      const za = zs[b] + (b === 0 ? 9 : 8) + 4, zb = zs[b + 1] - 8 - 4;
+      if (xb - xa < 20 || zb - za < 20) continue;
+      // split into 2 × 2 lots (or 2 × 3 for tall blocks); keep the highway strip clear
+      const nz = zb - za > 220 ? 3 : 2;
+      for (let i = 0; i < 2; i++) for (let j = 0; j < nz; j++) {
+        let lx0 = lerp(xa, xb, i / 2) + 3, lx1 = lerp(xa, xb, (i + 1) / 2) - 3, lz0 = lerp(za, zb, j / nz) + 3, lz1 = lerp(za, zb, (j + 1) / nz) - 3;
+        if (lz0 < -142 && lz1 > -178) { if (-160 - lz0 > lz1 + 160) lz1 = -178; else lz0 = -142; }   // under the highway
+        if (lz1 - lz0 < 18 || lx1 - lx0 < 18) continue;
+        if (this.rbs.some(([cx, cz]) => Math.hypot((lx0 + lx1) / 2 - cx, (lz0 + lz1) / 2 - cz) < 50)) continue;
+        const cx = (lx0 + lx1) / 2, cz = (lz0 + lz1) / 2, w = (lx1 - lx0) * (0.75 + rnd() * 0.2), d = (lz1 - lz0) * (0.75 + rnd() * 0.2);
+        const core = Math.exp(-((cx + 1850) ** 2 + (cz + 180) ** 2) / (2 * 380 * 380));
+        const h = 18 + rnd() * 30 + core * (40 + rnd() * 80);
+        this.building(cx, cz, 0, w, d, h, glass[Math.floor(rnd() * glass.length)], 'tower');
+      }
+    }
+  }
+
+  oldTown(pastel) {
+    const rnd = this.rnd, xs = [], zs = [];
+    for (let k = 0; k <= 9; k++) xs.push(-3000 + 60 * k);            // N-S streets −3000 … −2460
+    for (let k = 0; k <= 15; k++) zs.push(-680 + 60 * k);            // E-W streets −680 … 220
+    const plaza = this.plaza = { x0: -2816, x1: -2644, z0: -256, z1: -144, cx: -2730, cz: -200 };
+    const cath = this.cath = { x0: -2816, x1: -2644, z0: -136, z1: -84, cx: -2730, cz: -110 };
+    const inSq = (x, z) => (x > plaza.x0 && x < plaza.x1 && z > plaza.z0 && z < cath.z1);
+    for (const x of xs) {
+      const top = x === -2700 ? 470 : 220;                          // −2700 runs on up to the port
+      const pts = []; for (let z = -703; z <= top; z += 8) pts.push(x, z);
+      this.roads.push({ pts, hw: 4, surf: 'cobble', rank: 1, name: 'Old Town', closed: false, lanes: 2, kind: 'street', axis: 'ns' });
+    }
+    for (const z of zs) {
+      const pts = []; for (let x = -3010; x <= -2400; x += 8) pts.push(x, z);
+      this.roads.push({ pts, hw: 4, surf: 'cobble', rank: 1, name: 'Old Town', closed: false, lanes: 2, kind: 'street', axis: 'ew' });
+    }
+    // cut the streets that cross the plaza and the cathedral
+    for (const r of this.roads.slice()) if (r.surf === 'cobble') { r.cut = (x, z) => inSq(x, z); this.applyCut(r); }
+    // blocks: houses around the edge of each block (one collider per block)
+    for (let a = 0; a < xs.length - 1; a++) for (let b = 0; b < zs.length - 1; b++) {
+      const x0 = xs[a] + 6.5, x1 = xs[a + 1] - 6.5, z0 = zs[b] + 6.5, z1 = zs[b + 1] - 6.5, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+      if (inSq(cx, cz)) continue;
+      this.box(cx, cz, 0, (x1 - x0) / 2, (z1 - z0) / 2);
+      const side = (ax, az, bx, bz, nx, nz) => {                      // a row of houses along one side, facing out (nx, nz)
+        const len = Math.hypot(bx - ax, bz - az), n = Math.max(2, Math.round(len / 15)), yaw = Math.atan2(nx, nz);
+        for (let k = 0; k < n; k++) {
+          const t = (k + 0.5) / n, x = lerp(ax, bx, t) - nx * 6, z = lerp(az, bz, t) - nz * 6;
+          const st = 2 + Math.floor(rnd() * 3);
+          this.building(x, z, yaw, len / n - 0.4, 12, 0, pastel[Math.floor(rnd() * pastel.length)], 'house' + st, { noCollider: true, stories: st, balc: rnd() < 0.7 });
+        }
+      };
+      side(x0, z1, x1, z1, 0, 1); side(x0, z0, x1, z0, 0, -1);
+      side(x0, z0 + 12, x0, z1 - 12, -1, 0); side(x1, z0 + 12, x1, z1 - 12, 1, 0);
+    }
+    // plaza paving, fountain, cathedral
+    this.items.push({ t: 'plaza', ...plaza });
+    this.circle(plaza.cx, plaza.cz, 6.2);
+    this.items.push({ t: 'fountain', x: plaza.cx, z: plaza.cz, y: this.base(plaza.cx, plaza.cz) });
+    const cy = this.base(cath.cx, cath.cz);
+    this.box(cath.cx, cath.cz + 4, 0, 30, 16); this.box(cath.cx - 24, cath.cz - 16, 0, 6, 6); this.box(cath.cx + 24, cath.cz - 16, 0, 6, 6);
+    this.items.push({ t: 'cathedral', x: cath.cx, z: cath.cz, y: cy });
+    for (const [px, pz] of [[plaza.x0 + 8, plaza.z0 + 8], [plaza.x1 - 8, plaza.z0 + 8], [plaza.x0 + 8, plaza.z1 - 8], [plaza.x1 - 8, plaza.z1 - 8]]) this.palms.push([px, pz]);
+  }
+
+  port() {
+    const rnd = this.rnd;
+    this.road([[-2405, 640], [-2615, 640]], 8, 'concrete', { rank: 2, name: 'Port road' });
+    this.yard = { x0: -2962, x1: -2618, z0: 468, z1: 812 };
+    this.items.push({ t: 'yard', ...this.yard });
+    // warehouses along the north quay
+    for (let k = 0; k < 6; k++) {
+      const x = -2990 + k * 80 + 30;
+      this.building(x, 950, 0, 62, 120, 13 + (k % 3) * 2, [0xb9b3a6, 0x8fa3ad, 0xc2a07a, 0x9fb0a0][k % 4], 'ware');
+    }
+    // container stacks: south edge of the yard (gap for the Old Town street) and along the west quay
+    const cc = [0xd9452f, 0x2f7ad9, 0x2fa36b, 0xe0b130, 0x8a5a9e, 0xe07b30, 0x3d4f66];
+    const stack = (x, z, yaw, n) => {
+      const y = this.base(x, z);
+      for (let l = 0; l < n; l++) this.items.push({ t: 'cont', m: M(x, y + 1.3 + l * 2.6, z, yaw + (rnd() - 0.5) * 0.02, 1, 1, 1), c: cc[Math.floor(rnd() * cc.length)], x, z });
+      this.box(x, z, yaw, 1.3, 6.1, -50, y + n * 2.6);
+    };
+    for (let x = -2940; x < -2630; x += 3.2) if (Math.abs(x + 2700) > 14) stack(x, 440, 0, 1 + Math.floor(rnd() * 3));
+    for (let z = 500; z < 800; z += 3.2) stack(-3012, z, Math.PI / 2, 1 + Math.floor(rnd() * 3));
+    // cranes on the quay
+    for (const z of [520, 680, 840]) {
+      this.items.push({ t: 'crane', x: -3048, z, y: this.base(-3048, z) });
+      for (const [lx, lz] of [[-6, -7], [6, -7], [-6, 7], [6, 7]]) this.box(-3048 + lx, z + lz, 0, 0.9, 0.9);
+    }
+    // cones round the yard jump and in lines across the yard
+    for (let k = 0; k < 14; k++) this.props.push({ type: 'cone', x: -2700 + k * 6, z: 560, yaw: 0 });
+    for (let k = 0; k < 14; k++) this.props.push({ type: 'cone', x: -2700 + k * 6, z: 720, yaw: 0 });
+  }
+
+  north(pastel) {
+    const rnd = this.rnd, roads = this.roads.filter(r => r.name === 'Calle del Norte' || (r.hw === 6 && r.surf === 'tarmac'));
+    const occupied = [];
+    const free = (x, z, rad) => !occupied.some(([ox, oz, orr]) => Math.hypot(ox - x, oz - z) < orr + rad);
+    for (const r of roads) {
+      const P = r.pts;
+      for (let k = 2; k < P.length / 2 - 2; k += 4) {
+        const ax = P[k * 2 - 2], az = P[k * 2 - 1], bx = P[k * 2 + 2], bz = P[k * 2 + 3], l = Math.hypot(bx - ax, bz - az);
+        const fx = (bx - ax) / l, fz = (bz - az) / l, x0 = P[k * 2], z0 = P[k * 2 + 1];
+        for (const sd of [-1, 1]) {
+          const off = r.hw + 14, x = x0 - fz * sd * off, z = z0 + fx * sd * off;
+          if (this.zone(x, z) !== 'north' || !free(x, z, 9) || this.onRoad(x, z, 9)) continue;
+          occupied.push([x, z, 9]);
+          this.building(x, z, Math.atan2(fz * sd, -fx * sd) + Math.PI / 2 * 0, 12, 10, 0, pastel[Math.floor(rnd() * pastel.length)], 'house2', { stories: 2 });
+        }
+      }
+    }
+    // park trees on open ground
+    let tries = 0;
+    while (this.trees.length < 260 && tries++ < 4000) {
+      const x = -2390 + rnd() * 1150, z = 340 + rnd() * 760;
+      if (this.zone(x, z) !== 'north' || this.onRoad(x, z, 6) || !free(x, z, 3)) continue;
+      if (Math.hypot(x + 1420, z - 680) < 190) continue;             // the tunnel hill
+      occupied.push([x, z, 3]); this.trees.push([x, z]); this.circle(x, z, 0.6);
+    }
+  }
+
+  tunnel() {
+    const cx = -1420, cz = 680, R = 175, hw = 7;
+    this.hill = { cx, cz, R, h: 42 };
+    this.items.push({ t: 'hill', x: cx, z: cz, R });
+    // tunnel walls + a ring of blocks round the rest of the hill
+    for (const sd of [-1, 1]) this.box(cx + sd * (hw + 1.8), cz, 0, 1.6, R + 4);
+    // the hill either side of the bore: axis-aligned strips following its outline (never reaching into the bore)
+    const x0 = hw + 3.4;
+    for (const sd of [-1, 1]) for (let z = cz - R; z < cz + R; z += 35) {
+      const zc = z + 17.5, chord = Math.sqrt(Math.max(0, R * R - (zc - cz) * (zc - cz))) * 0.92;
+      if (chord > x0 + 2) this.box(cx + sd * (x0 + chord) / 2, zc, 0, (chord - x0) / 2, 17.5);
+    }
+  }
+
+  coastline() {
+    const L = this.C.land, inset = 3.2;
+    const x0 = L.x0 + inset, x1 = L.x1 - inset, z0 = L.z0 + inset, z1 = L.z1 - inset;
+    const seg = (ax, az, bx, bz) => {                               // split long walls into 40 m pieces (grid friendly)
+      const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 40);
+      for (let k = 0; k < n; k++) {
+        const a = k / n, b = (k + 1) / n, px = lerp(ax, bx, a), pz = lerp(az, bz, a), qx = lerp(ax, bx, b), qz = lerp(az, bz, b);
+        if (Math.abs((pz + qz) / 2 + 712) < 26 && (px + qx) / 2 > x1 - 30) continue;   // causeway exit
+        this.wall(px, pz, qx, qz, 3);
+      }
+    };
+    seg(x0 + 40, z0, x1 - 40, z0); seg(x0 + 40, z1, x1 - 40, z1); seg(x0, z0 + 40, x0, z1 - 40); seg(x1, z0 + 40, x1, z1 - 40);
+    // rounded corners: point(a) = centre + 40 (cos a, −sin a); a0..a0+90° is the quarter facing out of the land
+    for (const [cx, cz, a0] of [[x0 + 40, z0 + 40, Math.PI / 2], [x1 - 40, z0 + 40, 0], [x1 - 40, z1 - 40, -Math.PI / 2], [x0 + 40, z1 - 40, Math.PI]]) {
+      for (let k = 0; k < 4; k++) {
+        const a = a0 + k / 4 * Math.PI / 2, b = a0 + (k + 1) / 4 * Math.PI / 2;
+        const px = cx + Math.sin(a + Math.PI / 2) * 40, pz = cz + Math.cos(a + Math.PI / 2) * 40, qx = cx + Math.sin(b + Math.PI / 2) * 40, qz = cz + Math.cos(b + Math.PI / 2) * 40;
+        if ((pz + qz) / 2 > -720 && (pz + qz) / 2 < -690 && (px + qx) / 2 > x1 - 50) continue;   // the causeway's mouth
+        this.wall(px, pz, qx, qz, 3);
+      }
+    }
+    // close the corner either side of where the Malecón runs out onto the causeway
+    this.wall(-1172, -693, -1200, -702.5, 3);
+    this.items.push({ t: 'seawall' });
+    for (let x = -3000; x < -1230; x += 26) this.palms.push([x + 6, -726]);   // Malecón promenade
+    for (let z = -660; z < 1080; z += 30) this.palms.push([-1188, z]);        // east shore
+  }
+
+  furniture() {
+    const rnd = this.rnd, Q = this.C;
+    // lamps along the big roads, both sides
+    for (const r of this.roads) {
+      if (r.surf === 'cobble' || r.kind === 'roundabout') continue;
+      const P = r.pts, n = P.length / 2, every = r.kind === 'avenue' ? 38 : 46;
+      let acc = 0;
+      for (let k = 1; k < n; k++) {
+        const ax = P[k * 2 - 2], az = P[k * 2 - 1], bx = P[k * 2], bz = P[k * 2 + 1], l = Math.hypot(bx - ax, bz - az);
+        acc += l; if (acc < every) continue; acc = 0;
+        const fx = (bx - ax) / l, fz = (bz - az) / l;
+        for (const sd of [-1, 1]) {
+          const off = r.hw + 1.6, x = bx - fz * sd * off, z = bz + fx * sd * off;
+          if (this.onRoad(x, z, 0.8, r) || this.coast(x, z) > -8) continue;
+          if (Math.abs(x - this.hill.cx) < 30 && Math.abs(z - this.hill.cz) < this.hill.R + 6) continue;   // not inside the tunnel
+          if (r === this.causeway && Math.hypot(x - this.causewayDeckEnd[0], z - this.causewayDeckEnd[1]) < 30) continue;
+          const y = r === this.causeway ? this.causewayY(x, z) : this.base(x, z);
+          this.lamps.push({ x, z, y, yaw: Math.atan2(fz * sd, -fx * sd) });
+          this.circle(x, z, 0.3, y - 2, y + 9);
+        }
+      }
+    }
+    // Old Town: a lamp on every other corner, bins and café signs
+    for (let x = -3000; x <= -2460; x += 60) for (let z = -680; z <= 220; z += 60) {
+      if (x > this.plaza.x0 - 1 && x < this.plaza.x1 + 1 && z > this.plaza.z0 - 1 && z < this.cath.z1 + 1) continue;
+      const cx = x + 5.6, cz = z + 5.6, y = this.base(cx, cz);
+      if (((x + z) / 60) % 2 === 0) { this.lamps.push({ x: cx, z: cz, y, yaw: Math.PI / 4, small: true }); this.circle(cx, cz, 0.25, y - 2, y + 7); }
+      else if (rnd() < 0.6) this.props.push({ type: 'bin', x: cx, z: cz, yaw: rnd() * 6 });
+    }
+    for (let k = 0; k < 10; k++) this.props.push({ type: 'sign', x: lerp(this.plaza.x0 + 10, this.plaza.x1 - 10, rnd()), z: this.plaza.z0 + 5 + rnd() * 6, yaw: rnd() * 6 });
+    // traffic-light poles: two corners per crossing
+    for (const sg of this.signals) for (const [sx, sz, axis] of [[10.4, 10.4, 'ns'], [-10.4, -10.4, 'ns'], [-10.4, 10.4, 'ew'], [10.4, -10.4, 'ew']]) {
+      const x = sg.x + sx, z = sg.z + sz, y = this.base(x, z);
+      this.tlights.push({ x, z, y, axis, yaw: axis === 'ns' ? (sz > 0 ? Math.PI : 0) : (sx > 0 ? -Math.PI / 2 : Math.PI / 2) });
+      this.circle(x, z, 0.3, y - 2, y + 8);
+    }
+    // a few cones by the ring-road jump
+    for (const j of this.jumps) for (const sd of [-1, 1]) for (let k = 0; k < 3; k++) this.props.push({ type: 'cone', x: j.ax - j.uz * sd * (j.hw + 1.2) - j.ux * k * 3, z: j.az + j.ux * sd * (j.hw + 1.2) - j.uz * k * 3, yaw: 0 });
+    for (const p of this.props) { p.y = this.base(p.x, p.z); p.r = p.type === 'cone' ? 0.35 : p.type === 'bin' ? 0.45 : 0.5; }
+  }
+
+  /** Deck height of the causeway at (x, z) (its nearest piece), else the ground. */
+  causewayY(x, z) {
+    let best = null, bd = Infinity;
+    for (const st of this.structs) if (st.kind === 'causeway') {
+      const dx = x - st.ax, dz = z - st.az, u = clamp(dx * st.ux + dz * st.uz, 0, st.len), d = Math.hypot(dx - st.ux * u, dz - st.uz * u);
+      if (d < bd) { bd = d; best = lerp(st.y0, st.y1, u / st.len); }
+    }
+    return best !== null && bd < 14 ? best : this.base(x, z);
+  }
+
+  activities() {
+    const R = this.ring.pts;
+    // jump 1: ring road north (westbound), centre lanes; jump 2: port yard
+    let best = 0, bd = Infinity;
+    for (let k = 0; k < R.length / 2; k++) { const d = Math.hypot(R[k * 2] + 1690, R[k * 2 + 1] - 1032); if (d < bd) { bd = d; best = k; } }
+    const k0 = best, k1 = best + 3, ax = R[k0 * 2], az = R[k0 * 2 + 1], bx = R[k1 * 2], bz = R[k1 * 2 + 1];
+    const dir = this.ringDirAt(k0) > 0 ? 1 : -1;                    // the ring runs anticlockwise; this stretch heads west
+    const l = Math.hypot(bx - ax, bz - az);
+    const addJump = (name, sx, sz, ux, uz, len, hw, h) => {
+      const y = this.base(sx, sz), st = this.struct(sx, sz, sx + ux * len, sz + uz * len, hw, y, y + h, { solid: true, kind: 'jump', surf: 'tarmac' });
+      this.jumps.push(Object.assign(st, { name, best: 0 }));
+    };
+    addJump('Ring road jump', ax, az, (bx - ax) / l * dir, (bz - az) / l * dir, 18, 3, 2.6);
+    addJump('Port jump', -2618, 640, -1, 0, 16, 5, 2.4);
+    // speed traps: Malecón, ring road east side, elevated highway
+    this.traps.push({ name: 'Malecón speed trap', x: -2000, z: -712, ux: 1, uz: 0, hw: 9, y: this.base(-2000, -712) });
+    this.traps.push({ name: 'Ring road speed trap', x: -1236, z: -300, ux: 0, uz: 1, hw: 7, y: this.base(-1236, -300) });
+    this.traps.push({ name: 'Highway speed trap', x: -1800, z: -160, ux: 1, uz: 0, hw: 7.5, y: this.hwy.top });
+    // drift zones: the port yard and the downtown roundabout
+    this.zones.push({ name: 'Port yard drift zone', rect: this.yard, y: this.base(-2790, 640) });
+    this.zones.push({ name: 'Glorieta drift zone', circle: [-1760, -340, 46], y: this.base(-1760, -340) });
+  }
+  ringDirAt(k) { const R = this.ring.pts; return Math.sign(R[(k + 1) * 2] - R[k * 2]) < 0 ? 1 : -1; }
+
+  trafficRoutes() {
+    // closed loops of lane centre lines; cars drive on the right
+    const loop = (pts) => { const out = []; for (let k = 0; k < pts.length / 2; k++) out.push([pts[k * 2], pts[k * 2 + 1]]); return out; };
+    const ringLoop = loop(this.ring.pts);
+    for (let x = -2398; x < -1290; x += 10) ringLoop.push([x, -712]);   // back east along the Malecón
+    this.routes.push({ pts: ringLoop, lane: 5, lights: false });          // outer lanes: clear of the ring-road jump
+    this.routes.push({ pts: ringLoop.slice().reverse(), lane: 5, lights: false });
+    const rect = (x0, z0, x1, z1) => { const p = []; const add = (ax, az, bx, bz) => { const n = Math.round(Math.hypot(bx - ax, bz - az) / 10); for (let i = 0; i < n; i++) p.push([lerp(ax, bx, i / n), lerp(az, bz, i / n)]); }; add(x0, z0, x1, z0); add(x1, z0, x1, z1); add(x1, z1, x0, z1); add(x0, z1, x0, z0); return p; };
+    const dt = rect(-2120, -540, -1580, 200);
+    this.routes.push({ pts: dt, lane: 4, lights: true });
+    this.routes.push({ pts: dt.slice().reverse(), lane: 4, lights: true });
+    const ot = rect(-2940, -620, -2460, 160);
+    this.routes.push({ pts: ot, lane: 2, lights: false, slow: true });
+    for (const r of this.routes) {
+      const P = r.pts, n = P.length; r.dist = [0];
+      for (let k = 1; k <= n; k++) r.dist.push(r.dist[k - 1] + Math.hypot(P[k % n][0] - P[k - 1][0], P[k % n][1] - P[k - 1][1]));
+      r.len = r.dist[n];
+      // stop lines: route positions 13 m before each signalled crossing it passes
+      r.stops = [];
+      if (r.lights) for (const sg of this.signals) for (let k = 0; k < n; k++) {
+        const [x, z] = P[k], [x2, z2] = P[(k + 1) % n];
+        if (Math.hypot(x - sg.x, z - sg.z) < 6) {
+          const axis = Math.abs(x2 - x) > Math.abs(z2 - z) ? 'ew' : 'ns';
+          r.stops.push({ d: (r.dist[k] - 14 + r.len) % r.len, axis });
+        }
+      }
+    }
+  }
+
+  /** Traffic lights: N-S green, amber, then E-W green, amber ('g' | 'a' | 'r' per axis). */
+  lightPhase(t) {
+    const L = this.C.lights, half = L.cycle / 2, u = ((t % L.cycle) + L.cycle) % L.cycle, k = u % half;
+    const mine = k < half - L.amber ? 'g' : 'a';
+    return u < half ? { ns: mine, ew: 'r' } : { ns: 'r', ew: mine };
+  }
+
+  /* ---------- spatial index ---------- */
+  cellKey(ix, iz) { return ix * 4096 + iz; }
+  cell(ix, iz, make) {
+    const k = this.cellKey(ix, iz);
+    let c = this.grid.get(k);
+    if (!c && make) { c = { roads: [], structs: [], cols: [], props: [] }; this.grid.set(k, c); }
+    return c;
+  }
+  addBox(list, x0, z0, x1, z1, item) {
+    const a = Math.floor(x0 / CITY_GRID), b = Math.floor(x1 / CITY_GRID), c = Math.floor(z0 / CITY_GRID), d = Math.floor(z1 / CITY_GRID);
+    for (let i = a; i <= b; i++) for (let j = c; j <= d; j++) this.cell(i, j, true)[list].push(item);
+  }
+  /** Road pieces (one per polyline segment) into the grid. */
+  indexRoads() {
+    this.pieces = [];
+    for (const r of this.roads) {
+      const P = r.pts, n = P.length / 2;
+      for (let k = 0; k < n - 1 + (r.closed ? 1 : 0); k++) {
+        const j = (k + 1) % n, p = { ax: P[k * 2], az: P[k * 2 + 1], bx: P[j * 2], bz: P[j * 2 + 1], r };
+        this.pieces.push(p);
+        const m = r.hw + 10;
+        this.addBox('roads', Math.min(p.ax, p.bx) - m, Math.min(p.az, p.bz) - m, Math.max(p.ax, p.bx) + m, Math.max(p.az, p.bz) + m, p);
+      }
+    }
+  }
+  /** The road (other than `skip`) whose surface reaches within `margin` of (x, z), or null. */
+  roadAt(x, z, skip = null, margin = 0) {
+    const g = this.cell(Math.floor(x / CITY_GRID), Math.floor(z / CITY_GRID), false);
+    if (!g) return null;
+    for (const p of g.roads) if (p.r !== skip && segDist(x, z, p.ax, p.az, p.bx, p.bz) < p.r.hw + margin) return p.r;
+    return null;
+  }
+  indexAll() {
+    for (const st of this.structs) {
+      const m = st.hw + 1;
+      this.addBox('structs', Math.min(st.ax, st.bx) - m, Math.min(st.az, st.bz) - m, Math.max(st.ax, st.bx) + m, Math.max(st.az, st.bz) + m, st);
+      if (st.solid) this.cols.push({ st, x: (st.ax + st.bx) / 2, z: (st.az + st.bz) / 2, c: Math.cos(Math.atan2(st.ux, st.uz)), s: Math.sin(Math.atan2(st.ux, st.uz)), hx: st.hw, hz: st.len / 2, y0: -50, y1: Math.max(st.y0, st.y1) });
+    }
+    for (const c of this.cols) {
+      let e = c.r !== undefined ? c.r : Math.abs(c.hx * c.c) + Math.abs(c.hz * c.s);
+      let f = c.r !== undefined ? c.r : Math.abs(c.hx * c.s) + Math.abs(c.hz * c.c);
+      this.addBox('cols', c.x - e, c.z - f, c.x + e, c.z + f, c);
+    }
+    for (const p of this.props) { p.home = [p.x, p.y, p.z, p.yaw]; this.addBox('props', p.x - 1, p.z - 1, p.x + 1, p.z + 1, p); }
+    this.bounds = { x0: -3200, x1: -560, z0: -900, z1: 1260 };
+  }
+
+  /* ---------- physics queries ---------- */
+  /** Inside the city's physics region (land, causeway; not the circuit corridor)? */
+  inRegion(x, z) {
+    if (x < this.C.land.x1 + 8) return true;
+    if (x > -560 || z > -600 || z < -800) return false;
+    const g = this.cell(Math.floor(x / CITY_GRID), Math.floor(z / CITY_GRID), false);
+    if (!g) return false;
+    for (const st of g.structs) if (st.kind === 'causeway') {
+      const dx = x - st.ax, dz = z - st.az, u = dx * st.ux + dz * st.uz, v = -dx * st.uz + dz * st.ux;
+      if (u >= -1 && u <= st.len - 0.3 && Math.abs(v) <= st.hw + 3) return true;   // ends at the corridor edge: beyond it, the circuit
+    }
+    return false;
+  }
+
+  /**
+   * Ground under (x, z) for something at height yRef: the highest walkable level no more than stepUp above it
+   * (so you drive under the elevated highway, and up its ramps onto it), plus the surface there.
+   */
+  groundAt(x, z, yRef, out, skip = null) {
+    let h = this.base(x, z), surf = null, rank = -1, level = 0;
+    out.st = null;
+    const g = this.cell(Math.floor(x / CITY_GRID), Math.floor(z / CITY_GRID), false);
+    if (g) {
+      for (const p of g.roads) {
+        if (p.r.rank <= rank) continue;
+        if (segDist(x, z, p.ax, p.az, p.bx, p.bz) <= p.r.hw) { surf = p.r.surf; rank = p.r.rank; }
+      }
+      const lim = yRef + this.C.stepUp;
+      for (const st of g.structs) {
+        if (st === skip) continue;
+        const dx = x - st.ax, dz = z - st.az, u = dx * st.ux + dz * st.uz, v = -dx * st.uz + dz * st.ux;
+        if (u < 0 || u > st.len || Math.abs(v) > st.hw) continue;
+        const top = lerp(st.y0, st.y1, u / st.len);
+        if (top <= lim && top >= h - 0.01) { h = top; surf = st.surf; level = st.kind === 'deck' || st.kind === 'ramp' ? 1 : level; out.st = st; }
+      }
+    }
+    if (!surf) surf = this.zoneSurface(this.zone(x, z), x, z);
+    out.h = h; out.surf = surf; out.level = level;
+    return out;
+  }
+
+  /** Nearest road centre point + its direction (for the reset button and traffic spawning). */
+  nearestRoad(x, z, y = null) {
+    let best = null, bd = Infinity;
+    for (const p of this.pieces) {
+      if (p.r.kind === 'roundabout') continue;
+      const dx = p.bx - p.ax, dz = p.bz - p.az, l2 = dx * dx + dz * dz || 1;
+      const t = clamp(((x - p.ax) * dx + (z - p.az) * dz) / l2, 0, 1), px = p.ax + dx * t, pz = p.az + dz * t;
+      let d = Math.hypot(px - x, pz - z);
+      if (p.r === this.causeway) d += 0;
+      if (d < bd) { bd = d; best = { x: px, z: pz, dx: dx / Math.sqrt(l2), dz: dz / Math.sqrt(l2), r: p.r }; }
+    }
+    // the elevated highway is a road too
+    const H = this.hwy;
+    if (H && x > H.xw && x < H.xe && Math.abs(z - H.z) < bd && (y === null || y > H.top - 4)) best = { x, z: H.z, dx: 1, dz: 0, r: null, deck: true };
+    return best;
+  }
+}
+
+function segDist(x, z, ax, az, bx, bz) {
+  const dx = bx - ax, dz = bz - az, l2 = dx * dx + dz * dz || 1e-9;
+  const t = clamp(((x - ax) * dx + (z - az) * dz) / l2, 0, 1);
+  return Math.hypot(ax + dx * t - x, az + dz * t - z);
+}
+
+/* =====================================================================
+ * CITY › VIEW
+ * Always on (cheap, whole city): ground, road surfaces, big structures (highway, causeway, tunnel hill, sea wall)
+ * and LOD boxes for every building that is not near. Near the car (chunks of 200 m inside the quality's detail
+ * radius): sidewalks + markings + set pieces merged into one mesh, and InstancedMeshes (one per repeated thing)
+ * refilled from those chunks whenever the set of near chunks changes.
+ * ===================================================================== */
+class GeoBuf {
+  constructor() { this.pos = []; this.col = []; this.C = new THREE.Color(); }
+  v(x, y, z, c) { this.pos.push(x, y, z); this.col.push(c.r, c.g, c.b); }
+  hex(h, jitter = 0, rnd = Math.random) { this.C.setHex(h); if (jitter) this.C.offsetHSL(0, 0, (rnd() - 0.5) * jitter); return this.C; }
+  quad(a, b, c, d, col) { this.v(...a, col); this.v(...b, col); this.v(...c, col); this.v(...a, col); this.v(...c, col); this.v(...d, col); }
+  /** Box from 8 corners of an oriented footprint: centre, yaw, half sizes, y0..y1 (top may slope along local z). */
+  box(x, z, yaw, hx, hz, y0, y1, col, y1b = y1, faces = 63) {
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    const P = (lx, lz, y) => [x + lx * c + lz * s, y, z - lx * s + lz * c];
+    const tA = y1, tB = y1b;                                       // top at local −z / +z
+    const p = [P(-hx, -hz, y0), P(hx, -hz, y0), P(hx, hz, y0), P(-hx, hz, y0), P(-hx, -hz, tA), P(hx, -hz, tA), P(hx, hz, tB), P(-hx, hz, tB)];
+    if (faces & 1) this.quad(p[4], p[7], p[6], p[5], col);           // top
+    if (faces & 2) this.quad(p[0], p[1], p[5], p[4], col);           // −z
+    if (faces & 4) this.quad(p[2], p[3], p[7], p[6], col);           // +z
+    if (faces & 8) this.quad(p[3], p[0], p[4], p[7], col);           // −x
+    if (faces & 16) this.quad(p[1], p[2], p[6], p[5], col);          // +x
+    if (faces & 32) this.quad(p[0], p[3], p[2], p[1], col);          // bottom
+  }
+  geometry() {
+    const g = new THREE.BufferGeometry();
+    g.setAttribute('position', new THREE.Float32BufferAttribute(this.pos, 3));
+    g.setAttribute('color', new THREE.Float32BufferAttribute(this.col, 3));
+    g.computeVertexNormals();
+    return g;
+  }
+}
+
+class CityView {
+  constructor(city, scene, quality, qualityName) {
+    this.city = city; this.scene = scene; this.Q = quality; this.CQ = CONFIG.city.quality[qualityName] || CONFIG.city.quality.low;
+    this.group = new THREE.Group(); scene.add(this.group);
+    this.vc = new THREE.MeshLambertMaterial({ vertexColors: true });
+    this.vcOff = new THREE.MeshLambertMaterial({ vertexColors: true, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 });
+    this.chunks = new Map();                                       // key → { geo (near static), items: {type: [..]} }
+    this.near = new Set(); this.nearKey = '';
+    this.stats = { loads: 0, loadMs: [], lastMs: 0 };
+    this.rnd = mulberry32(31337);
+    this.buildAlways();
+    this.makeInstanced();
+  }
+
+  chunkOf(x, z) { const B = this.city.bounds, S = CONFIG.city.chunk; return Math.floor((x - B.x0) / S) * 64 + Math.floor((z - B.z0) / S); }
+
+  /* ---------- always-on layer ---------- */
+  buildAlways() {
+    const city = this.city, rnd = this.rnd;
+    // ground: 20 m grid over the land, vertex-coloured by district
+    const G = new GeoBuf(), step = 20, L = CONFIG.city.land;
+    const xs = L.x0 - 60, xe = L.x1 + 60, zs = L.z0 - 60, ze = L.z1 + 60;
+    const nx = Math.ceil((xe - xs) / step), nz = Math.ceil((ze - zs) / step);
+    const colOf = { grass: 0x6f9a3e, paving: 0xc9bfae, cobble: 0xcdb99b, concrete: 0xa6a39c, sand: 0xe0c78f };
+    const H = [], CL = [];
+    for (let j = 0; j <= nz; j++) for (let i = 0; i <= nx; i++) {
+      const x = xs + i * step, z = zs + j * step, h = city.base(x, z), zn = city.zone(x, z);
+      H.push(h - 0.25);
+      const c = new THREE.Color(colOf[city.zoneSurface(zn, x, z)] || 0x6f9a3e);
+      if (h < 0.4) c.setHex(0xa88f62);
+      c.offsetHSL(0, 0, (rnd() - 0.5) * 0.04); CL.push(c);
+    }
+    const id = (i, j) => j * (nx + 1) + i;
+    for (let j = 0; j < nz; j++) for (let i = 0; i < nx; i++) {
+      const a = id(i, j), b = id(i + 1, j), c = id(i + 1, j + 1), d = id(i, j + 1);
+      if (H[a] < -5.5 && H[b] < -5.5 && H[c] < -5.5 && H[d] < -5.5) continue;   // open water
+      const P = (k, i2, j2) => [xs + i2 * step, H[k], zs + j2 * step];
+      G.v(...P(a, i, j), CL[a]); G.v(...P(d, i, j + 1), CL[d]); G.v(...P(c, i + 1, j + 1), CL[c]);
+      G.v(...P(a, i, j), CL[a]); G.v(...P(c, i + 1, j + 1), CL[c]); G.v(...P(b, i + 1, j), CL[b]);
+    }
+    const ground = new THREE.Mesh(G.geometry(), this.vc);
+    ground.receiveShadow = this.Q.shadows;
+    this.group.add(ground);
+
+    // roads (+ plaza, yard and the paved link onto the circuit)
+    const R = new GeoBuf(), rc = { tarmac: 0x3d3c40, cobble: 0x7d6e62, concrete: 0x9b9890 };
+    for (const r of city.roads) this.ribbon(R, r, -r.hw, r.hw, 0.06 + r.rank * 0.012, rc[r.surf] || 0x3d3c40, 0.025);
+    for (const it of city.items) {
+      if (it.t === 'plaza') this.flatRect(R, it.x0, it.z0, it.x1, it.z1, 0.07, 0xc9b49a);
+      if (it.t === 'yard') this.flatRect(R, it.x0, it.z0, it.x1, it.z1, 0.05, 0xa09d95);
+      if (it.t === 'link') {
+        const dx = it.bx - it.ax, dz = it.bz - it.az, l = Math.hypot(dx, dz), rx = -dz / l * it.hw, rz = dx / l * it.hw;
+        R.quad([it.ax - rx, it.y + 0.04, it.az - rz], [it.ax + rx, it.y + 0.04, it.az + rz], [it.bx + rx, it.y + 0.04, it.bz + rz], [it.bx - rx, it.y + 0.04, it.bz - rz], R.hex(0x3d3c40));
+      }
+    }
+    const roads = new THREE.Mesh(R.geometry(), this.vcOff);
+    roads.receiveShadow = this.Q.shadows;
+    this.group.add(roads);
+
+    // structures: highway + ramps, causeway, sea wall, tunnel hill, roundabout islands
+    const S = new GeoBuf();
+    for (const st of city.structs) this.structure(S, st);
+    for (const it of city.items) {
+      if (it.t === 'pillar') S.box(it.x, it.z, 0, 1.3, 1.3, it.y - 1, it.y + it.h, S.hex(0xb7b2aa));
+      if (it.t === 'rbIsland') { const y = city.base(it.x, it.z); for (let a = 0; a < 16; a++) { const a0 = a / 16 * Math.PI * 2, a1 = (a + 1) / 16 * Math.PI * 2; S.quad([it.x, y + 0.3, it.z], [it.x + Math.sin(a0) * 13.5, y + 0.3, it.z + Math.cos(a0) * 13.5], [it.x + Math.sin(a1) * 13.5, y + 0.3, it.z + Math.cos(a1) * 13.5], [it.x, y + 0.3, it.z], S.hex(0x5f9a3a)); S.quad([it.x + Math.sin(a0) * 13.5, y - 0.2, it.z + Math.cos(a0) * 13.5], [it.x + Math.sin(a1) * 13.5, y - 0.2, it.z + Math.cos(a1) * 13.5], [it.x + Math.sin(a1) * 13.5, y + 0.3, it.z + Math.cos(a1) * 13.5], [it.x + Math.sin(a0) * 13.5, y + 0.3, it.z + Math.cos(a0) * 13.5], S.hex(0xd8d2c4)); } }
+      if (it.t === 'hill') this.hill(S, it);
+      if (it.t === 'seawall') this.seawall(S);
+    }
+    this.structMesh = new THREE.Mesh(S.geometry(), this.vc);
+    this.structMesh.castShadow = this.Q.shadows; this.structMesh.receiveShadow = this.Q.shadows;
+    this.group.add(this.structMesh);
+  }
+
+  /** Ribbon along a road between lateral offsets a..b, raised dy above the ground (or the structure under it). */
+  ribbon(G, r, a, b, dy, hex, jitter = 0, skipOther = false) {
+    const P = r.pts, n = P.length / 2, city = this.city, rnd = this.rnd, g = {};
+    const N = (k) => {                                                 // averaged right vector at point k
+      const k0 = r.closed ? (k - 1 + n) % n : Math.max(0, k - 1), k1 = r.closed ? (k + 1) % n : Math.min(n - 1, k + 1);
+      const dx = P[k1 * 2] - P[k0 * 2], dz = P[k1 * 2 + 1] - P[k0 * 2 + 1], l = Math.hypot(dx, dz) || 1;
+      return [-dz / l, dx / l];
+    };
+    const yAt = (x, z) => city.groundAt(x, z, 60, g).h + dy;
+    const last = n - 1 + (r.closed ? 1 : 0);
+    for (let k = 0; k < last; k++) {
+      const j = (k + 1) % n, [rx0, rz0] = N(k), [rx1, rz1] = N(j);
+      const x0 = P[k * 2], z0 = P[k * 2 + 1], x1 = P[j * 2], z1 = P[j * 2 + 1];
+      if (skipOther) { const mx = (x0 + x1) / 2 + (rx0 + rx1) / 2 * (a + b) / 2, mz = (z0 + z1) / 2 + (rz0 + rz1) / 2 * (a + b) / 2; if (this.city.roadAt(mx, mz, r, 0.3)) continue; }
+      const A = [x0 + rx0 * a, 0, z0 + rz0 * a], B = [x0 + rx0 * b, 0, z0 + rz0 * b], Cc = [x1 + rx1 * b, 0, z1 + rz1 * b], D = [x1 + rx1 * a, 0, z1 + rz1 * a];
+      for (const p of [A, B, Cc, D]) p[1] = yAt(p[0], p[2]);
+      G.quad(A, B, Cc, D, G.hex(hex, jitter, rnd));
+    }
+  }
+  flatRect(G, x0, z0, x1, z1, dy, hex) {
+    const step = 20, city = this.city;
+    for (let x = x0; x < x1; x += step) for (let z = z0; z < z1; z += step) {
+      const xa = x, xb = Math.min(x1, x + step), za = z, zb = Math.min(z1, z + step);
+      G.quad([xa, city.base(xa, za) + dy, za], [xa, city.base(xa, zb) + dy, zb], [xb, city.base(xb, zb) + dy, zb], [xb, city.base(xb, za) + dy, za], G.hex(hex, 0.02, this.rnd));
+    }
+  }
+  structure(G, st) {
+    const yaw = Math.atan2(st.ux, st.uz), cx = (st.ax + st.bx) / 2, cz = (st.az + st.bz) / 2, hz = st.len / 2;
+    const top = (u) => lerp(st.y0, st.y1, u);
+    if (st.kind === 'deck') {
+      G.box(cx, cz, yaw, st.hw + 0.4, hz, st.y0 - 1.1, st.y0, G.hex(0xbdb8ae), st.y1, 63);
+      G.box(cx, cz, yaw, st.hw - 0.2, hz, st.y0, st.y0 + 0.04, G.hex(0x3d3c40), st.y1 + 0.04, 1);
+      for (let k = 0; k < Math.floor(st.len / 10); k++) {           // dashed lane line on the deck
+        const u = (k * 10 + 2) / st.len, x = st.ax + st.ux * u * st.len, z = st.az + st.uz * u * st.len;
+        G.box(x, z, yaw, 0.08, 2.5, st.y0 + 0.04, st.y0 + 0.07, G.hex(0xf2f2ee), st.y0 + 0.07, 1);
+      }
+    } else if (st.kind === 'ramp' || st.kind === 'causeway') {
+      const below = st.kind === 'causeway' ? -6 : Math.min(this.city.base(st.ax, st.az), this.city.base(st.bx, st.bz)) - 0.5;
+      G.box(cx, cz, yaw, st.hw + 0.4, hz, below, st.y0 - 0.02, G.hex(st.kind === 'causeway' ? 0xc9b48f : 0xbdb8ae), st.y1 - 0.02, 62);
+      if (st.kind === 'ramp') G.box(cx, cz, yaw, st.hw - 0.2, hz, st.y0, st.y0 + 0.05, G.hex(0x3d3c40), st.y1 + 0.05, 1);
+    } else if (st.kind === 'jump') {
+      G.box(cx, cz, yaw, st.hw, hz, st.y0 - 0.2, st.y0 + 0.02, G.hex(0xf2c230), st.y1 + 0.02, 63);
+      for (let k = 0; k < 5; k++) {                                   // warning chevrons
+        const u = (k + 0.5) / 5, x = st.ax + st.ux * u * st.len, z = st.az + st.uz * u * st.len;
+        G.box(x, z, yaw, st.hw * 0.9, 0.5, top(u) + 0.02, top(u) + 0.05, G.hex(0x1a1a1a), top(u) + 0.05, 1);
+      }
+    }
+    if (st.rails) for (const sd of [-1, 1]) {                         // parapets
+      const ox = -st.uz * sd * (st.hw + 0.6), oz = st.ux * sd * (st.hw + 0.6);
+      G.box(cx + ox, cz + oz, yaw, 0.35, hz, st.y0 - 0.3, st.y0 + 1.0, G.hex(0xe8e4dc), st.y1 + 1.0, 31);
+    }
+  }
+  seawall(G) {
+    const L = CONFIG.city.land, y = 2.6, c1 = G.hex(0xd9c9a6);
+    const side = (ax, az, bx, bz) => {
+      const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 40);
+      for (let k = 0; k < n; k++) {
+        const px = lerp(ax, bx, k / n), pz = lerp(az, bz, k / n), qx = lerp(ax, bx, (k + 1) / n), qz = lerp(az, bz, (k + 1) / n);
+        if (Math.abs((pz + qz) / 2 + 712) < 26 && (px + qx) / 2 > L.x1 - 40) continue;
+        const len = Math.hypot(qx - px, qz - pz);
+        G.box((px + qx) / 2, (pz + qz) / 2, Math.atan2(qx - px, qz - pz), 0.6, len / 2, -6, y + 0.9, c1);
+      }
+    };
+    const i = 3.2;
+    side(L.x0 + 40, L.z0 + i, L.x1 - 40, L.z0 + i); side(L.x0 + 40, L.z1 - i, L.x1 - 40, L.z1 - i);
+    side(L.x0 + i, L.z0 + 40, L.x0 + i, L.z1 - 40); side(L.x1 - i, L.z0 + 40, L.x1 - i, L.z1 - 40);
+  }
+  hill(G, it) {
+    const city = this.city, R = it.R, n = 36, H = city.hill.h, slot = 9.5, rnd = this.rnd;
+    const h = (x, z) => { const d = Math.hypot(x - it.x, z - it.z) / R; return d >= 1 ? -1 : H * Math.pow(1 - d * d, 1.4) + city.base(x, z) - 1; };
+    for (let j = 0; j < n; j++) for (let i = 0; i < n; i++) {
+      const xa = it.x - R + 2 * R * i / n, xb = it.x - R + 2 * R * (i + 1) / n, za = it.z - R + 2 * R * j / n, zb = it.z - R + 2 * R * (j + 1) / n;
+      if (Math.abs((xa + xb) / 2 - it.x) < slot) continue;              // the tunnel's cut
+      const ys = [h(xa, za), h(xa, zb), h(xb, zb), h(xb, za)];
+      if (ys.every(y => y < 0)) continue;
+      const base = city.base((xa + xb) / 2, (za + zb) / 2) - 1;
+      const c = G.hex(0x4f8a35, 0.08, rnd).clone();
+      G.quad([xa, Math.max(base, ys[0]), za], [xa, Math.max(base, ys[1]), zb], [xb, Math.max(base, ys[2]), zb], [xb, Math.max(base, ys[3]), za], c);
+    }
+    // the tube: walls, roof, portal faces; and the cut's side walls up to the hill surface
+    const z0 = it.z - R + 2, z1 = it.z + R - 2, by = city.base(it.x, it.z), roofY = by + 7.2;
+    for (const sd of [-1, 1]) {
+      G.box(it.x + sd * (slot - 0.6), it.z, 0, 0.6, (z1 - z0) / 2, by - 1, roofY, G.hex(0x9d978c));
+      for (let z = z0; z < z1; z += 2 * R / n) {
+        const ya = Math.max(roofY, h(it.x + sd * slot, z)), yb = Math.max(roofY, h(it.x + sd * slot, z + 2 * R / n));
+        const x = it.x + sd * slot;
+        G.quad([x, roofY, z], [x, roofY, z + 2 * R / n], [x, yb, z + 2 * R / n], [x, ya, z], G.hex(0x7d6f5b));
+      }
+    }
+    G.box(it.x, it.z, 0, slot, (z1 - z0) / 2, roofY, roofY + 1.2, G.hex(0x6c8f45));
+    for (const zz of [z0, z1]) {                                         // portals: a frame round the opening
+      G.box(it.x, zz, 0, slot + 2, 1.2, roofY - 0.2, roofY + 4, G.hex(0xc9b48f), roofY + 4, 63);
+      for (const sd of [-1, 1]) G.box(it.x + sd * (slot + 1), zz, 0, 1, 1.2, by - 1, roofY, G.hex(0xc9b48f));
+    }
+    // lights inside
+    for (let z = z0 + 6; z < z1; z += 14) G.box(it.x, z, 0, 0.5, 1.4, roofY - 0.25, roofY - 0.05, G.hex(0xfff2c0));
+  }
+
+  /* ---------- instanced near detail ---------- */
+  makeInstanced() {
+    const city = this.city, CQ = this.CQ, chunkItems = this.chunkItems = new Map();
+    const add = (t, x, z, m, c) => {
+      const k = this.chunkOf(x, z);
+      let ci = chunkItems.get(k); if (!ci) { ci = {}; chunkItems.set(k, ci); }
+      const it = { m, c: c === undefined || c === null ? 0xffffff : c };
+      (ci[t] || (ci[t] = [])).push(it);
+      return it;
+    };
+    // buildings + LOD boxes
+    this.lodItems = new Map();
+    for (const b of city.buildings) {
+      const st = b.stories || 0, k = b.kind;
+      let h = b.h, m;
+      if (k.startsWith('house')) {
+        h = 3.6 + (st - 1) * 3.4 + 0.8;
+        m = M(b.x, b.y, b.z, b.yaw, b.w / 10, 1, b.d / 10);
+        add('house' + st, b.x, b.z, m, b.c);
+        if (CQ.balconies) {
+          add('corn', b.x, b.z, M(b.x, b.y + h - 0.15, b.z, b.yaw, b.w / 10, 1, b.d / 10), 0xf3ede2);
+          if (b.balc) for (let f = 1; f < st; f++) { const fx = Math.sin(b.yaw), fz = Math.cos(b.yaw); add('balc', b.x, b.z, M(b.x + fx * b.d / 2, b.y + 3.6 + (f - 1) * 3.4, b.z + fz * b.d / 2, b.yaw, Math.min(1.6, b.w / 4), 1, 1), f % 2 ? 0xffffff : 0x3a3a3a); }
+        }
+      } else {
+        m = M(b.x, b.y - 1, b.z, b.yaw, b.w, h + 1, b.d);
+        add(k === 'tower' ? 'tower' : 'ware', b.x, b.z, m, b.c);
+        if (k === 'tower' && CQ.balconies) add('roof', b.x, b.z, M(b.x, b.y + h, b.z, b.yaw, b.w * 0.5, 2.5, b.d * 0.4), 0x8d9296);
+      }
+      const ck = this.chunkOf(b.x, b.z);
+      let li = this.lodItems.get(ck); if (!li) { li = []; this.lodItems.set(ck, li); }
+      li.push({ m: M(b.x, b.y - 1, b.z, b.yaw, b.w, h + 1, b.d), c: b.c });
+    }
+    for (const l of city.lamps) add(l.small ? 'lampS' : 'lamp', l.x, l.z, M(l.x, l.y, l.z, l.yaw));
+    for (const [x, z] of city.palms) add('palm', x, z, M(x, city.base(x, z), z, this.rnd() * 6.28, 1, 0.85 + this.rnd() * 0.3));
+    for (const [x, z] of city.trees) add('tree', x, z, M(x, city.base(x, z), z, this.rnd() * 6.28, 0.8 + this.rnd() * 0.5));
+    this.bulbIdx = [];
+    for (const tl of city.tlights) {
+      add('tpole', tl.x, tl.z, M(tl.x, tl.y, tl.z, tl.yaw));
+      for (let b = 0; b < 3; b++) {
+        const fx = Math.sin(tl.yaw), fz = Math.cos(tl.yaw);              // heads hang over the road, 4.5 m out
+        const hx = tl.x + fx * 4.5, hz = tl.z + fz * 4.5, y = tl.y + 5.6 - b * 0.42;
+        const it = add('bulb', tl.x, tl.z, M(hx - fx * 0.2, y, hz - fz * 0.2, tl.yaw));
+        it.bulb = { tl, b }; it.slot = { i: -1 }; this.bulbIdx.push(it);
+      }
+    }
+    for (const it of city.items) {
+      if (it.t === 'cont') add('cont', it.x, it.z, it.m, it.c);
+      if (it.t === 'rbIsland') for (let a = 0; a < 6; a++) add('palm', it.x, it.z, M(it.x + Math.sin(a) * 7, city.base(it.x, it.z) + 0.3, it.z + Math.cos(a) * 7, a, 0.9));
+      if (it.t === 'crane') add('crane', it.x, it.z, M(it.x, it.y, it.z, 0));
+    }
+    if (CQ.props) for (const p of city.props) {
+      p.ck = this.chunkOf(p.x, p.z);
+      const it = add(p.type, p.x, p.z, M(p.x, p.y, p.z, p.yaw));
+      it.prop = p; it.slot = { i: -1 }; p.item = it; p.home = it.m.clone();
+    }
+
+    // geometries + materials
+    const facade = {};
+    for (const st of [2, 3, 4]) { const f = Scenery.facade(st); facade[st] = { geo: f.geo, mat: new THREE.MeshLambertMaterial({ map: f.tex }) }; }
+    const box1 = new THREE.BoxGeometry(1, 1, 1); box1.translate(0, 0.5, 0);
+    const vc = this.vcI = new THREE.MeshLambertMaterial({ vertexColors: true });   // instanced only (never shared with plain meshes)
+    const lampGeo = mergeGeos([[new THREE.CylinderGeometry(0.1, 0.14, 8, 6), 0x2c3238, M(0, 4, 0)], [new THREE.BoxGeometry(0.12, 0.12, 2.2), 0x2c3238, M(0, 7.9, 1.0)], [new THREE.BoxGeometry(0.5, 0.18, 0.9), 0xfff0c8, M(0, 7.8, 2.0)]]);
+    const lampS = mergeGeos([[new THREE.CylinderGeometry(0.07, 0.1, 4, 6), 0x1e2226, M(0, 2, 0)], [new THREE.BoxGeometry(0.42, 0.55, 0.42), 0xfff0c8, M(0, 4.2, 0)], [new THREE.ConeGeometry(0.4, 0.3, 4), 0x1e2226, M(0, 4.6, 0, Math.PI / 4)]]);
+    const tpole = mergeGeos([[new THREE.CylinderGeometry(0.12, 0.15, 6, 6), 0x2c3238, M(0, 3, 0)], [new THREE.BoxGeometry(0.12, 0.12, 4.6), 0x2c3238, M(0, 6, 2.3)], [new THREE.BoxGeometry(0.42, 1.35, 0.3), 0x1d1f22, M(0, 5.4, 4.5)]]);
+    const cont = new THREE.BoxGeometry(2.6, 2.6, 12.2); cont.translate(0, 0, 0);
+    const crane = mergeGeos([
+      [new THREE.BoxGeometry(0.9, 34, 0.9), 0xe0a020, M(-6, 17, -7)], [new THREE.BoxGeometry(0.9, 34, 0.9), 0xe0a020, M(6, 17, -7)],
+      [new THREE.BoxGeometry(0.9, 34, 0.9), 0xe0a020, M(-6, 17, 7)], [new THREE.BoxGeometry(0.9, 34, 0.9), 0xe0a020, M(6, 17, 7)],
+      [new THREE.BoxGeometry(14, 2, 16), 0xd38f1a, M(0, 34, 0)], [new THREE.BoxGeometry(70, 2.4, 2.4), 0xe0a020, M(-20, 36, 0)],
+      [new THREE.BoxGeometry(4, 3, 4), 0x3a3f45, M(0, 37, 0)],
+    ]);
+    const cone = mergeGeos([[new THREE.ConeGeometry(0.28, 0.75, 8), 0xff6a1a, M(0, 0.42, 0)], [new THREE.BoxGeometry(0.55, 0.06, 0.55), 0x222222, M(0, 0.03, 0)], [new THREE.CylinderGeometry(0.17, 0.2, 0.12, 8), 0xffffff, M(0, 0.45, 0)]]);
+    const bin = mergeGeos([[new THREE.CylinderGeometry(0.3, 0.27, 0.95, 10), 0x2d6b4a, M(0, 0.48, 0)], [new THREE.CylinderGeometry(0.33, 0.33, 0.06, 10), 0x1f4a33, M(0, 0.98, 0)]]);
+    const sign = mergeGeos([[new THREE.BoxGeometry(0.6, 0.9, 0.05), 0x2b2b2b, M(0, 0.6, 0.15, 0, 1, 1, 1, -0.25)], [new THREE.BoxGeometry(0.6, 0.9, 0.05), 0xf2efe8, M(0, 0.6, -0.15, 0, 1, 1, 1, 0.25)]]);
+    const roundTree = mergeGeos([[new THREE.CylinderGeometry(0.22, 0.32, 3, 5), 0x6b4a2f, M(0, 1.5, 0)], [new THREE.IcosahedronGeometry(2.4, 0), 0x4c8a34, M(0, 4.2, 0)], [new THREE.IcosahedronGeometry(1.6, 0), 0x5c9c3f, M(0.9, 5.2, 0.4)]]);
+    const balc = mergeGeos([[new THREE.BoxGeometry(3.2, 0.14, 1.0), 0xf2efe8, M(0, 0, 0.5)], [new THREE.BoxGeometry(3.2, 0.06, 0.06), 0xffffff, M(0, 0.95, 1.0)], [new THREE.BoxGeometry(3.1, 0.7, 0.03), 0xd8d8d8, M(0, 0.5, 1.0)]]);
+    const bulb = new THREE.BoxGeometry(0.3, 0.3, 0.12);
+    const def = {
+      house2: [facade[2].geo, facade[2].mat, 1, true], house3: [facade[3].geo, facade[3].mat, 1, true], house4: [facade[4].geo, facade[4].mat, 1, true],
+      corn: [new THREE.BoxGeometry(10.5, 0.4, 10.5), new THREE.MeshLambertMaterial(), 0], balc: [balc, vc, 0],
+      tower: [box1, this.towerMaterial(), 1, true], roof: [box1, new THREE.MeshLambertMaterial(), 0], ware: [box1, this.wareMaterial(), 1, true],
+      lamp: [lampGeo, vc, 0], lampS: [lampS, vc, 0], palm: [Scenery.palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), 0],
+      tree: [roundTree, vc, 0], tpole: [tpole, vc, 0], bulb: [bulb, new THREE.MeshBasicMaterial(), 0],
+      cont: [cont, new THREE.MeshLambertMaterial(), 1], crane: [crane, vc, 1],
+      cone: [cone, vc, 0], bin: [bin, vc, 0], sign: [sign, vc, 0],
+    };
+    // capacity: the most of each type any set of near chunks could hold = all of them (cheap: matrices only)
+    const cap = {};
+    for (const ci of chunkItems.values()) for (const t in ci) cap[t] = (cap[t] || 0) + ci[t].length;
+    this.meshes = {};
+    for (const t in def) {
+      if (!cap[t]) continue;
+      const [geo, mat, cast, recv] = def[t];
+      const mesh = new THREE.InstancedMesh(geo, mat, cap[t]);
+      mesh.setColorAt(0, new THREE.Color(1, 1, 1));                 // (sized from count: before count = 0)
+      mesh.count = 0; mesh.frustumCulled = false; mesh.visible = false;
+      mesh.castShadow = this.Q.shadows && CQ.castShadow && cast > 0; mesh.receiveShadow = this.Q.shadows && !!recv;
+      this.group.add(mesh); this.meshes[t] = mesh;
+    }
+    let lodCap = 0; for (const li of this.lodItems.values()) lodCap += li.length;
+    this.lod = new THREE.InstancedMesh(box1, new THREE.MeshLambertMaterial(), lodCap);
+    this.lod.setColorAt(0, new THREE.Color(1, 1, 1)); this.lod.count = 0; this.lod.frustumCulled = false;
+    this.group.add(this.lod);
+    this.nearMesh = new THREE.Mesh(new THREE.BufferGeometry(), this.vcOff);
+    this.nearMesh.receiveShadow = this.Q.shadows; this.nearMesh.castShadow = this.Q.shadows && CQ.castShadow;
+    this.group.add(this.nearMesh);
+  }
+
+  /** Glass towers: one material, windows drawn in the shader from world position (no textures, any size). */
+  towerMaterial() {
+    const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
+        .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+          vec4 wpp = vec4(transformed, 1.0);
+          #ifdef USE_INSTANCING
+          wpp = instanceMatrix * wpp;
+          vWN = normalize(mat3(modelMatrix) * mat3(instanceMatrix) * objectNormal);
+          #else
+          vWN = normalize(mat3(modelMatrix) * objectNormal);
+          #endif
+          vWP = (modelMatrix * wpp).xyz;`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          if (abs(vWN.y) < 0.5) {
+            float u = dot(vWP.xz, normalize(vec2(-vWN.z, vWN.x)));
+            float cu = floor(u / 3.2), cv = floor(vWP.y / 3.6);
+            float fu = fract(u / 3.2), fv = fract(vWP.y / 3.6);
+            float win = step(0.12, fu) * step(fu, 0.88) * step(0.18, fv) * step(fv, 0.9);
+            float hsh = fract(sin(cu * 12.9898 + cv * 78.233 + floor(vWP.x * 0.01) * 3.1) * 43758.5453);
+            vec3 glass = mix(vec3(0.16, 0.24, 0.30), vec3(0.95, 0.70, 0.45), smoothstep(0.55, 1.0, hsh) * 0.65);
+            diffuseColor.rgb = mix(diffuseColor.rgb, glass, win * 0.85);
+          }`);
+    };
+    return m;
+  }
+  wareMaterial() {
+    const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    m.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
+        .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+          vec4 wpp = vec4(transformed, 1.0);
+          #ifdef USE_INSTANCING
+          wpp = instanceMatrix * wpp;
+          #endif
+          vWP = (modelMatrix * wpp).xyz;`);
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP;')
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          float rib = 0.88 + 0.12 * step(0.5, fract((vWP.x + vWP.z) * 0.9));
+          diffuseColor.rgb *= rib;`);
+    };
+    return m;
+  }
+
+  /* ---------- per-chunk static detail (sidewalks, markings, set pieces) ---------- */
+  chunkGeo(key) {
+    if (this.chunks.has(key)) return this.chunks.get(key);
+    const t0 = performance.now(), city = this.city, G = new GeoBuf(), S = CONFIG.city.chunk, B = city.bounds;
+    const cx0 = B.x0 + Math.floor(key / 64) * S, cz0 = B.z0 + (key % 64) * S;
+    const inChunk = (x, z) => x >= cx0 && x < cx0 + S && z >= cz0 && z < cz0 + S;
+    // sidewalks + curbs and lane markings for road pieces whose midpoint is in this chunk
+    for (const r of city.roads) {
+      const P = r.pts, n = P.length / 2;
+      const sub = { pts: [], hw: r.hw, closed: false };
+      for (let k = 0; k < n - 1 + (r.closed ? 1 : 0); k++) {
+        const j = (k + 1) % n, mx = (P[k * 2] + P[j * 2]) / 2, mz = (P[k * 2 + 1] + P[j * 2 + 1]) / 2;
+        if (!inChunk(mx, mz)) continue;
+        this.roadDetail(G, r, k, j);
+      }
+    }
+    for (const it of city.items) {
+      const x = it.x !== undefined ? it.x : it.ax;
+      const z = it.z !== undefined ? it.z : it.az;
+      if (x === undefined || !inChunk(x, z)) continue;
+      if (it.t === 'fountain') this.fountain(G, it);
+      if (it.t === 'cathedral') this.cathedral(G, it);
+    }
+    for (const tp of city.traps) if (inChunk(tp.x, tp.z)) this.trapGantry(G, tp);
+    for (const zn of city.zones) { const [x, z] = zn.circle ? zn.circle : [(zn.rect.x0 + zn.rect.x1) / 2, (zn.rect.z0 + zn.rect.z1) / 2]; if (inChunk(x, z)) this.zoneMarks(G, zn); }
+    const geo = G.pos.length ? G.geometry() : null;
+    const ms = performance.now() - t0;
+    this.stats.loads++; this.stats.loadMs.push(ms);
+    const ch = { geo, ms }; this.chunks.set(key, ch);
+    return ch;
+  }
+  roadDetail(G, r, k, j) {
+    const city = this.city, P = r.pts, g = {};
+    const x0 = P[k * 2], z0 = P[k * 2 + 1], x1 = P[j * 2], z1 = P[j * 2 + 1], l = Math.hypot(x1 - x0, z1 - z0);
+    if (l < 0.01) return;
+    const fx = (x1 - x0) / l, fz = (z1 - z0) / l, rx = -fz, rz = fx;
+    const yA = (x, z, dy) => city.groundAt(x, z, 60, g).h + dy;
+    const over = r === city.causeway;
+    // sidewalks with a curb (not where another road crosses, not on the causeway)
+    if (!over && r.kind !== 'roundabout') for (const sd of [-1, 1]) {
+      const a = r.hw, b = r.hw + 2.6, mx = (x0 + x1) / 2 + rx * sd * (a + b) / 2, mz = (z0 + z1) / 2 + rz * sd * (a + b) / 2;
+      if (city.roadAt(mx, mz, r, 0.2) || city.coast(mx, mz) > -6) continue;
+      const p = (x, z, o, dy) => [x + rx * sd * o, yA(x + rx * sd * o, z + rz * sd * o, dy), z + rz * sd * o];
+      const col = G.hex(r.surf === 'cobble' ? 0xc8b49a : 0xcfc8ba);
+      if (sd > 0) G.quad(p(x0, z0, a, 0.17), p(x0, z0, b, 0.17), p(x1, z1, b, 0.17), p(x1, z1, a, 0.17), col);
+      else G.quad(p(x0, z0, b, 0.17), p(x0, z0, a, 0.17), p(x1, z1, a, 0.17), p(x1, z1, b, 0.17), col);
+      const cc = G.hex(0xe6e1d6);
+      G.quad(p(x0, z0, a, 0.0), p(x1, z1, a, 0.0), p(x1, z1, a, 0.17), p(x0, z0, a, 0.17), cc);
+    }
+    // markings: dashes; avenues get a double yellow centre and dashed lane lines
+    const dash = (o, w, hex, every, on) => {
+      const n = Math.max(1, Math.round(l / every));
+      for (let q = 0; q < n; q++) {
+        const ta = q / n, tb = ta + on / l; if (tb > 1) continue;
+        const ax = lerp(x0, x1, ta) + rx * o, az = lerp(z0, z1, ta) + rz * o, bx = lerp(x0, x1, tb) + rx * o, bz = lerp(z0, z1, tb) + rz * o;
+        if (city.roadAt((ax + bx) / 2, (az + bz) / 2, r, 1.5)) continue;
+        const dy = 0.1 + r.rank * 0.012;
+        G.quad([ax - rx * w, yA(ax, az, dy), az - rz * w], [ax + rx * w, yA(ax, az, dy), az + rz * w], [bx + rx * w, yA(bx, bz, dy), bz + rz * w], [bx - rx * w, yA(bx, bz, dy), bz - rz * w], G.hex(hex));
+      }
+    };
+    if (r.surf === 'cobble' || r.surf === 'concrete') return;
+    if (r.lanes >= 4) { dash(-0.18, 0.07, 0xf2c230, l, l); dash(0.18, 0.07, 0xf2c230, l, l); dash(-r.hw / 2, 0.07, 0xf2f2ee, 12, 4); dash(r.hw / 2, 0.07, 0xf2f2ee, 12, 4); }
+    else if (r.kind !== 'roundabout') dash(0, 0.07, 0xf2f2ee, 10, 4);
+    dash(-r.hw + 0.35, 0.08, 0xf2f2ee, l, l); dash(r.hw - 0.35, 0.08, 0xf2f2ee, l, l);
+  }
+  fountain(G, it) {
+    const y = it.y, n = 16, col = G.hex(0xe2d6bf), water = G.hex(0x3fa7b8);
+    for (let a = 0; a < n; a++) {
+      const a0 = a / n * Math.PI * 2, a1 = (a + 1) / n * Math.PI * 2, P = (r, ang, yy) => [it.x + Math.sin(ang) * r, yy, it.z + Math.cos(ang) * r];
+      G.quad(P(6, a0, y), P(6, a1, y), P(6, a1, y + 0.9), P(6, a0, y + 0.9), col);
+      G.quad(P(6, a0, y + 0.9), P(6, a1, y + 0.9), P(5.4, a1, y + 0.9), P(5.4, a0, y + 0.9), col);
+      G.quad(P(5.4, a1, y + 0.7), P(5.4, a0, y + 0.7), P(0, a0, y + 0.7), P(0, a1, y + 0.7), water);
+    }
+    G.box(it.x, it.z, 0, 0.6, 0.6, y, y + 3.2, col); G.box(it.x, it.z, Math.PI / 4, 1.6, 1.6, y + 2.6, y + 2.9, col);
+    G.box(it.x, it.z, 0, 0.25, 0.25, y + 3.2, y + 4.2, water);
+  }
+  cathedral(G, it) {
+    const y = it.y, wall = G.hex(0xf1e6cf), roof = G.hex(0xb4553a), trim = G.hex(0xd8c8a8);
+    G.box(it.x, it.z + 4, 0, 29, 15, y - 2, y + 18, wall);                 // nave
+    G.box(it.x, it.z + 4, 0, 29.5, 15.5, y + 18, y + 19, trim);
+    // pitched roof (two sloping boxes)
+    G.box(it.x - 7.5, it.z + 4, 0, 8, 15, y + 19, y + 25, roof, y + 25, 1);
+    for (const sd of [-1, 1]) {
+      const c = Math.cos(0), P = (lx, lz, yy) => [it.x + lx, yy, it.z + 4 + lz];
+      G.quad(P(sd * 15, -15, y + 19), P(0, -15, y + 26), P(0, 15, y + 26), P(sd * 15, 15, y + 19), roof);
+    }
+    for (const sd of [-1, 1]) {                                          // twin bell towers facing the plaza
+      const tx = it.x + sd * 24, tz = it.z - 16;
+      G.box(tx, tz, 0, 6, 6, y - 2, y + 30, wall); G.box(tx, tz, 0, 6.4, 6.4, y + 30, y + 31, trim);
+      G.box(tx, tz, 0, 4.6, 4.6, y + 31, y + 37, wall);
+      for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2; G.box(tx + Math.sin(a) * 4.7, tz + Math.cos(a) * 4.7, a, 1.3, 0.1, y + 32.5, y + 35.5, G.hex(0x2a2a30)); }
+      // spire
+      G.quad([tx - 4.6, y + 37, tz - 4.6], [tx + 4.6, y + 37, tz - 4.6], [tx, y + 46, tz], [tx, y + 46, tz], roof);
+      G.quad([tx + 4.6, y + 37, tz - 4.6], [tx + 4.6, y + 37, tz + 4.6], [tx, y + 46, tz], [tx, y + 46, tz], roof);
+      G.quad([tx + 4.6, y + 37, tz + 4.6], [tx - 4.6, y + 37, tz + 4.6], [tx, y + 46, tz], [tx, y + 46, tz], roof);
+      G.quad([tx - 4.6, y + 37, tz + 4.6], [tx - 4.6, y + 37, tz - 4.6], [tx, y + 46, tz], [tx, y + 46, tz], roof);
+    }
+    G.box(it.x, it.z - 12, 0, 18, 1.2, y - 2, y + 22, wall);            // west front between the towers
+    G.box(it.x, it.z - 13.3, 0, 3, 0.2, y, y + 7, G.hex(0x5a3a2a));     // door
+    G.box(it.x, it.z - 13.3, 0, 2.5, 0.2, y + 12, y + 17, G.hex(0x2f5f86)); // rose window
+    // dome over the crossing
+    for (let a = 0; a < 12; a++) for (let b = 0; b < 4; b++) {
+      const a0 = a / 12 * Math.PI * 2, a1 = (a + 1) / 12 * Math.PI * 2, e0 = b / 4 * Math.PI / 2, e1 = (b + 1) / 4 * Math.PI / 2, R = 7;
+      const P = (az, el) => [it.x + Math.sin(az) * Math.cos(el) * R, y + 26 + Math.sin(el) * R * 1.2, it.z + 10 + Math.cos(az) * Math.cos(el) * R];
+      G.quad(P(a0, e0), P(a1, e0), P(a1, e1), P(a0, e1), G.hex(0xd9a441));
+    }
+    G.box(it.x, it.z + 10, 0, 7.2, 7.2, y + 18, y + 26, wall);
+  }
+  trapGantry(G, tp) {
+    const rx = -tp.uz, rz = tp.ux, span = tp.hw + 1.5, col = G.hex(0x1d1f24), band = G.hex(0xff7a1a);
+    for (const sd of [-1, 1]) G.box(tp.x + rx * sd * span, tp.z + rz * sd * span, Math.atan2(tp.ux, tp.uz), 0.3, 0.3, tp.y, tp.y + 7, col);
+    G.box(tp.x, tp.z, Math.atan2(rx, rz), 0.4, span, tp.y + 6.2, tp.y + 7.2, band);
+    G.box(tp.x, tp.z, Math.atan2(rx, rz), 0.45, span * 0.4, tp.y + 6.35, tp.y + 7.05, G.hex(0xffffff));
+  }
+  zoneMarks(G, zn) {
+    const col = G.hex(0xffffff), orange = G.hex(0xff7a1a), city = this.city;
+    if (zn.circle) {
+      const [x, z, r] = zn.circle;
+      for (let a = 0; a < 48; a += 2) {
+        const a0 = a / 48 * Math.PI * 2, a1 = (a + 1) / 48 * Math.PI * 2;
+        const P = (ang, rr) => [x + Math.sin(ang) * rr, city.base(x + Math.sin(ang) * rr, z + Math.cos(ang) * rr) + 0.2, z + Math.cos(ang) * rr];
+        G.quad(P(a0, r), P(a1, r), P(a1, r - 0.6), P(a0, r - 0.6), (a / 2) % 2 ? col : orange);
+      }
+    } else {
+      const R = zn.rect, y = (x, z) => city.base(x, z) + 0.09;
+      for (let x = R.x0 + 30; x < R.x1 - 20; x += 30) for (let z = R.z0 + 30; z < R.z1 - 20; z += 30) {
+        G.quad([x - 1.5, y(x, z), z - 0.1], [x + 1.5, y(x, z), z - 0.1], [x + 1.5, y(x, z), z + 0.1], [x - 1.5, y(x, z), z + 0.1], orange);
+        G.quad([x - 0.1, y(x, z), z - 1.5], [x + 0.1, y(x, z), z - 1.5], [x + 0.1, y(x, z), z + 1.5], [x - 0.1, y(x, z), z + 1.5], orange);
+      }
+      const edge = (ax, az, bx, bz) => { const n = Math.ceil(Math.hypot(bx - ax, bz - az) / 6); for (let k = 0; k < n; k += 2) { const a = k / n, b = Math.min(1, (k + 1) / n), px = lerp(ax, bx, a), pz = lerp(az, bz, a), qx = lerp(ax, bx, b), qz = lerp(az, bz, b), w = 0.3, dx = (qz - pz) / Math.hypot(qx - px, qz - pz) * w, dz = -(qx - px) / Math.hypot(qx - px, qz - pz) * w; G.quad([px - dx, y(px, pz), pz - dz], [px + dx, y(px, pz), pz + dz], [qx + dx, y(qx, qz), qz + dz], [qx - dx, y(qx, qz), qz - dz], (k / 2) % 2 ? col : orange); } };
+      edge(R.x0, R.z0, R.x1, R.z0); edge(R.x1, R.z0, R.x1, R.z1); edge(R.x1, R.z1, R.x0, R.z1); edge(R.x0, R.z1, R.x0, R.z0);
+    }
+  }
+
+  /* ---------- streaming ---------- */
+  /** Pick the near chunks for a position; rebuild the merged near mesh + instance buffers when the set changes. */
+  /** Chunks whose square comes within R of (x, z), nearest first. */
+  chunkSet(x, z, R) {
+    const S = CONFIG.city.chunk, B = this.city.bounds, out = [];
+    const i0 = Math.floor((x - R - B.x0) / S), i1 = Math.floor((x + R - B.x0) / S), j0 = Math.floor((z - R - B.z0) / S), j1 = Math.floor((z + R - B.z0) / S);
+    for (let i = Math.max(0, i0); i <= i1; i++) for (let j = Math.max(0, j0); j <= j1; j++) {
+      const cx = B.x0 + (i + 0.5) * S, cz = B.z0 + (j + 0.5) * S;
+      if (cx > B.x1 + S || cz > B.z1 + S) continue;
+      const dx = Math.max(0, Math.abs(x - cx) - S / 2), dz = Math.max(0, Math.abs(z - cz) - S / 2), d2 = dx * dx + dz * dz;
+      if (d2 <= R * R) out.push([i * 64 + j, d2]);
+    }
+    return out.sort((a, b) => a[1] - b[1]).map(a => a[0]);
+  }
+  update(x, z, force = false) {
+    const R = this.CQ.detail;
+    // spread the work: chunk detail is built ahead (120 m past the detail radius), at most one chunk per frame
+    if (!force) { const miss = this.chunkSet(x, z, R + 120).find(k => !this.chunks.has(k)); if (miss !== undefined) this.chunkGeo(miss); }
+    const set = this.chunkSet(x, z, R);
+    if (!force && set.some(k => !this.chunks.has(k))) return false;   // (not ready yet: next frame)
+    set.sort((a, b) => a - b);
+    const key = set.join(',');
+    if (key === this.nearKey && !force) return false;
+    const t0 = performance.now();
+    const was = this.near;
+    this.nearKey = key; this.near = new Set(set);
+    for (const k of was) if (!this.near.has(k)) {                   // knocked-over props come back once you have left
+      const ci = this.chunkItems.get(k);
+      if (ci) for (const t in ci) for (const it of ci[t]) if (it.prop && it.prop.down) { it.m.copy(it.prop.home); it.prop.down = false; it.prop.fly = null; }
+    }
+    // merged near static geometry
+    const parts = [];
+    for (const k of set) { const ch = this.chunkGeo(k); if (ch.geo) parts.push(ch.geo); }
+    let count = 0; for (const g of parts) count += g.attributes.position.count;
+    const pos = new Float32Array(count * 3), nor = new Float32Array(count * 3), col = new Float32Array(count * 3);
+    let o = 0;
+    for (const g of parts) { pos.set(g.attributes.position.array, o * 3); nor.set(g.attributes.normal.array, o * 3); col.set(g.attributes.color.array, o * 3); o += g.attributes.position.count; }
+    const ng = new THREE.BufferGeometry();
+    ng.setAttribute('position', new THREE.BufferAttribute(pos, 3)); ng.setAttribute('normal', new THREE.BufferAttribute(nor, 3)); ng.setAttribute('color', new THREE.BufferAttribute(col, 3));
+    ng.computeBoundingSphere();
+    this.nearMesh.geometry.dispose(); this.nearMesh.geometry = ng;
+    // instanced detail from the near chunks, LOD boxes for everything else
+    const C = new THREE.Color();
+    for (const t in this.meshes) this.meshes[t].count = 0;
+    for (const k of was) { const ci = this.chunkItems.get(k); if (ci) for (const t in ci) for (const it of ci[t]) if (it.slot) it.slot.i = -1; }
+    for (const k of set) {
+      const ci = this.chunkItems.get(k); if (!ci) continue;
+      for (const t in ci) {
+        const mesh = this.meshes[t]; if (!mesh) continue;
+        for (const it of ci[t]) {
+          const i = mesh.count++;
+          mesh.setMatrixAt(i, it.m); mesh.setColorAt(i, C.setHex(it.c === null ? 0xffffff : it.c));
+          if (it.slot) it.slot.i = i;
+        }
+      }
+    }
+    for (const t in this.meshes) { const m = this.meshes[t]; m.visible = m.count > 0; m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; }
+    this.lod.count = 0;
+    for (const [k, li] of this.lodItems) {
+      if (this.near.has(k)) continue;
+      for (const it of li) { const i = this.lod.count++; this.lod.setMatrixAt(i, it.m); this.lod.setColorAt(i, C.setHex(it.c)); }
+    }
+    this.lod.instanceMatrix.needsUpdate = true; if (this.lod.instanceColor) this.lod.instanceColor.needsUpdate = true;
+    this.stats.lastMs = performance.now() - t0;
+    this.refreshBulbs(true);
+    return true;
+  }
+
+  /** Traffic-light colours (phase from the clock) for the bulbs in the near chunks. */
+  refreshBulbs(force = false) {
+    const mesh = this.meshes.bulb; if (!mesh) return;
+    const ph = this.city.lightPhase(this.time || 0), key = ph.ns + ph.ew;
+    if (key === this.bulbKey && !force) return;
+    this.bulbKey = key;
+    const C = new THREE.Color(), on = [0xff3b2f, 0xffb21e, 0x3ee06a], off = [0x3a1512, 0x3a2a0e, 0x10301a];
+    for (const it of this.bulbIdx) {
+      if (it.slot.i < 0 || !this.near.has(this.chunkOf(it.bulb.tl.x, it.bulb.tl.z))) continue;
+      const st = ph[it.bulb.tl.axis], b = it.bulb.b, lit = (b === 0 && st === 'r') || (b === 1 && st === 'a') || (b === 2 && st === 'g');
+      it.c = lit ? on[b] : off[b];
+      mesh.setColorAt(it.slot.i, C.setHex(it.c));
+    }
+    if (mesh.instanceColor) mesh.instanceColor.needsUpdate = true;
+  }
+
+  /** Knocked props: fly, tumble, come to rest on their side. */
+  updateProps(dt) {
+    const fl = this.flying; if (!fl || !fl.length) return;
+    const e = this._e || (this._e = new THREE.Euler()), q = this._q || (this._q = new THREE.Quaternion()), P = this._p || (this._p = new THREE.Vector3()), S = this._s || (this._s = new THREE.Vector3(1, 1, 1));
+    for (let k = fl.length - 1; k >= 0; k--) {
+      const p = fl[k], f = p.fly;
+      if (!f) { fl.splice(k, 1); continue; }
+      f.t += dt; f.vy -= 18 * dt;
+      f.x += f.vx * dt; f.y += f.vy * dt; f.z += f.vz * dt; f.rx += f.wx * dt; f.rz += f.wz * dt;
+      const g = this.city.base(f.x, f.z) + 0.25;
+      if (f.y < g) { f.y = g; f.vy = 0; f.vx *= 0.6; f.vz *= 0.6; f.wx *= 0.5; f.wz *= 0.5; if (f.t > 0.4) { f.rx = Math.PI / 2; f.wx = f.wz = 0; } }
+      if (f.t > 2.5) { p.fly = null; fl.splice(k, 1); }
+      e.set(f.rx, f.yaw, f.rz, 'YXZ'); q.setFromEuler(e); P.set(f.x, f.y, f.z);
+      p.item.m.compose(P, q, S);
+      if (p.item.slot.i >= 0 && this.meshes[p.type]) { const m = this.meshes[p.type]; if (p.item.slot.i < m.count) { m.setMatrixAt(p.item.slot.i, p.item.m); m.instanceMatrix.needsUpdate = true; } }
+    }
+  }
+  knock(p, vx, vz) {
+    if (!p.item) return;
+    p.down = true;
+    const sp = Math.hypot(vx, vz);
+    p.fly = { t: 0, x: p.x, y: p.y + 0.3, z: p.z, vx: vx * 0.8, vz: vz * 0.8, vy: 2 + sp * 0.18, yaw: p.yaw, rx: 0, rz: 0, wx: 6 + sp * 0.2, wz: (Math.random() - 0.5) * 8 };
+    (this.flying || (this.flying = [])).push(p);
+  }
+
+  setVisible(v) { this.group.visible = v; }
+  /** Compile every city shader up front (hidden instanced meshes too), so the first drive into a district doesn't stall. */
+  warm(renderer, scene, camera, extra) {
+    const list = [...this.group.children, extra], vis = list.map(m => m.visible);
+    list.forEach(m => { m.visible = true; });
+    renderer.compile(scene, camera);
+    list.forEach((m, i) => { m.visible = vis[i]; });
+  }
+}
+
+/* =====================================================================
+ * CITY › FREE-ROAM PHYSICS
+ * Passed to Physics.step instead of the Track in Free Drive. On the circuit it is the circuit (same corridor and
+ * barriers; the sea wall opens where the causeway joins). In the city there is no corridor: the surface comes from
+ * the road / district under each wheel, the ground from the height field and the structures (ramps, the elevated
+ * highway, the causeway, jump ramps), walls from box / circle colliders. The ground can fall away under the car
+ * (jumps): then it flies with gravity and lands without a bounce.
+ * ===================================================================== */
+class FreeWorld {
+  constructor(track, city) {
+    this.T = track; this.city = city; this.free = true;
+    this.inCity = false; this.yRef = 50;
+    this.g = {}; this.gf = {}; this.gr = {}; this.gc = {};
+    this.n = track.n; this.length = track.length;
+    this.propsOn = true; this.view = null; this.traffic = null;
+    this.events = [];
+    const gp = city.gap, lane = city.structs.filter(st => st.kind === 'causeway').pop();
+    // a corner may pass the circuit's sea wall only inside the causeway's lane where it meets the corridor
+    this.pass = (cx, cz, wl, q) => {
+      if (Math.sign(wl) !== gp.side || !gp.samples.has(q.index)) return false;
+      const dx = cx - lane.bx, dz = cz - lane.bz;
+      return Math.abs(-dx * lane.uz + dz * lane.ux) < lane.hw - 0.2;
+    };
+  }
+  makeQuery() { return this.T.makeQuery(); }
+  sectionOf(i) { return this.T.sectionOf(i); }
+
+  /** The circuit's query, or a stand-in in the city (no corridor: the walls are boxes there). */
+  query(x, z, hint, out, win = 12) {
+    if (this.city.inRegion(x, z)) {
+      out.city = true; out.index = this.city.gap.index; out.lateral = 0; out.halfWidth = 1e6; out.offroad = 0;
+      out.height = this.city.groundAt(x, z, this.yRef, this.gc).h; out.grade = 0;
+      return out;
+    }
+    out.city = false;
+    return this.T.query(x, z, hint, out, win);
+  }
+
+  /** Per-wheel surface in the city → grip / drag / top-speed multipliers (like the circuit's road + off-road mix). */
+  surface(car, fx, fz, rx, rz) {
+    const c = car.cfg, s = car.state, SS = CONFIG.city.surfaces, road = CONFIG.surfaces.road, rec = c.offroadRecovery || 0;
+    const hx = c.trackWidth / 2, wf = c.frontAxle, wr = c.frontAxle - c.wheelbase;
+    let grip = 0, drag = 0, top = 0, shake = 0, off = 0, cob = 0;
+    for (let k = 0; k < 4; k++) {
+      const lz = k < 2 ? wf : wr, lx = (k & 1) ? hx : -hx;
+      const g = this.city.groundAt(s.x + fx * lz - rx * lx, s.z + fz * lz - rz * lx, s.y, this.g), S = SS[g.surf] || SS.tarmac;
+      let sg = S.grip, sd = S.drag, st = S.top;
+      if (S.off && rec) { sg = lerp(sg, 1, rec * 0.6); sd *= 1 - rec; st = lerp(st, 1, rec); }
+      grip += sg / 4; drag += sd / 4; top += st / 4; shake += S.shake / 4; off += S.off / 4;
+      if (g.surf === 'cobble') cob += 0.25;
+    }
+    s.cobble = cob;
+    const o = this._sf || (this._sf = {});
+    o.grip = road.grip * grip; o.drag = road.drag + drag; o.top = road.topSpeedMul * top; o.shake = shake; o.off = off;
+    return o;
+  }
+
+  /** After the move: barriers / colliders, then follow (or leave) the ground. */
+  afterMove(car, fx, fz, rx, rz, dt, shake) {
+    const s = car.state;
+    s.wall = false;
+    if (!this.city.inRegion(s.x, s.z)) {
+      const q = this.T.query(s.x, s.z, s.idx, Physics.q);
+      s.idx = q.index;
+      Physics.collideWalls(car, q, fx, fz, rx, rz, this.pass);
+    }
+    this.collide(car, fx, fz, rx, rz);
+    this.ground(car, fx, fz, dt);
+    s.surfaceShake = shake;
+  }
+
+  ground(car, fx, fz, dt) {
+    const s = car.state, c = car.cfg, city = this.city, hwb = c.wheelbase / 2;
+    if (!city.inRegion(s.x, s.z)) {
+      if (this.inCity) { this.inCity = false; this.events.push({ type: 'circuit' }); const q = this.T.queryGlobal(s.x, s.z, Physics.qf); s.idx = q.index; }
+      const qf = this.T.query(s.x + fx * hwb, s.z + fz * hwb, s.idx, Physics.qf);
+      const qr = this.T.query(s.x - fx * hwb, s.z - fz * hwb, s.idx, Physics.qr);
+      const q = this.T.query(s.x, s.z, s.idx, Physics.q);
+      s.idx = q.index;
+      const y = (qf.height + qr.height) * 0.5;
+      s.vyG = dt > 0 ? clamp((y - s.y) / dt, -30, 30) : 0;
+      s.y = y; s.grade = (qf.height - qr.height) / c.wheelbase; s.pitch = Math.atan(s.grade);
+      s.lateral = q.lateral; s.s = q.s; s.section = q.section;
+      return;
+    }
+    if (!this.inCity) { this.inCity = true; this.events.push({ type: 'city' }); }
+    s.idx = city.gap.index; s.lateral = 0;
+    const gf = city.groundAt(s.x + fx * hwb, s.z + fz * hwb, s.y, this.gf), gr = city.groundAt(s.x - fx * hwb, s.z - fz * hwb, s.y, this.gr);
+    const y = (gf.h + gr.h) * 0.5, sp = Math.hypot(s.vx, s.vz);
+    if (y < s.y - CONFIG.city.takeoff && sp > 6) {                  // the ground fell away faster than the springs follow: airborne
+      s.air = true; s.vy = s.vyG || 0; s.airT = 0; this.from = this.lastSt;   // (the ramp it left does not catch it again)
+      s.jump = { x: s.x, z: s.z, st: this.lastSt && this.lastSt.kind === 'jump' ? this.lastSt : null, kmh: sp * 3.6 };
+      this.events.push({ type: 'takeoff' });
+      return;
+    }
+    s.vyG = dt > 0 ? clamp((y - s.y) / dt, -30, 30) : 0;
+    s.y = y; s.grade = (gf.h - gr.h) / c.wheelbase; s.pitch = Math.atan(s.grade);
+    this.lastSt = gf.st || gr.st;
+    this.yRef = s.y + 1;
+  }
+
+  /** In the air: gravity, a little drag, the yaw it took off with fading; walls still count; land flat (no bounce). */
+  airStep(car, ctrl, dt) {
+    const s = car.state, c = car.cfg, G = CONFIG.physics.gravity;
+    s.airT += dt;
+    s.vy -= G * dt;
+    const sp = Math.hypot(s.vx, s.vz), k = Math.max(0, 1 - c.aeroDrag * sp * dt);
+    s.vx *= k; s.vz *= k;
+    s.yawRate *= Math.exp(-2 * dt);
+    s.h = wrapAngle(s.h + s.yawRate * dt);
+    s.x += s.vx * dt; s.z += s.vz * dt; s.y += s.vy * dt;
+    s.pitch = damp(s.pitch, clamp(Math.atan2(s.vy, Math.max(sp, 1)) * 0.7, -0.45, 0.45), 3, dt);
+    const fx = Math.sin(s.h), fz = Math.cos(s.h), rx = -fz, rz = fx;
+    s.wall = false;
+    if (!this.city.inRegion(s.x, s.z)) { const q = this.T.query(s.x, s.z, s.idx, Physics.q); s.idx = q.index; Physics.collideWalls(car, q, fx, fz, rx, rz, this.pass); }
+    this.collide(car, fx, fz, rx, rz);
+    const gy = this.city.inRegion(s.x, s.z) ? this.city.groundAt(s.x, s.z, s.y, this.g, this.from).h : this.T.query(s.x, s.z, s.idx, Physics.qf).height;
+    if (s.y <= gy) {                                                  // touchdown: wheels on the ground, vertical speed gone
+      const vy = s.vy;
+      s.y = gy; s.air = false; s.vy = 0; s.vyG = 0; s.pitch = 0; this.from = null;
+      s.impact = Math.max(s.impact, clamp(-vy / 30, 0, 0.45));
+      const vF = s.vx * fx + s.vz * fz, vS = s.vx * rx + s.vz * rz, keep = 0.75;   // tyres bite: some of the sideways speed goes
+      s.vx = fx * vF + rx * vS * keep; s.vz = fz * vF + rz * vS * keep;
+      const j = s.jump;
+      if (j) this.events.push({ type: 'land', dist: Math.hypot(s.x - j.x, s.z - j.z), air: s.airT, st: j.st, vy });
+      s.jump = null;
+      this.yRef = s.y + 1;
+    }
+    s.vF = s.vx * fx + s.vz * fz; s.vS = s.vx * rx + s.vz * rz;
+    s.latAccel = 0; s.offroad = 0; s.surfaceShake = 0; s.handbrake = false; s.braking = false; s.boosting = false; s.boostOver = Math.max(0, s.boostOver - CONFIG.nitro.overDecay * dt);
+    s.spinF = (s.spinF + s.vF / c.wheelRadius * dt) % (Math.PI * 2); s.spinR = s.spinF;
+    Physics.gearbox(car, dt);
+    Physics.engineRpm(car, ctrl.throttle, s.vF, dt);
+    s.impact = Math.max(0, s.impact - dt * 3);
+  }
+
+  /** Top of a structure at the point of it nearest to (x, z). */
+  structTop(st, x, z) { const u = clamp((x - st.ax) * st.ux + (z - st.az) * st.uz, 0, st.len); return lerp(st.y0, st.y1, u / st.len); }
+
+  /** Car (oriented box) against the city's colliders, knock-over props and the traffic. */
+  collide(car, fx, fz, rx, rz) {
+    const s = car.state, c = car.cfg, city = this.city, hl = c.length / 2, hw = c.width / 2, R = Math.hypot(hl, hw) + 0.6;
+    const i0 = Math.floor((s.x - R) / CITY_GRID), i1 = Math.floor((s.x + R) / CITY_GRID), j0 = Math.floor((s.z - R) / CITY_GRID), j1 = Math.floor((s.z + R) / CITY_GRID);
+    const stamp = ++city.stamp, up = CONFIG.city.stepUp;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const cell = city.cell(i, j, false); if (!cell) continue;
+      for (const col of cell.cols) {
+        if (col.stamp === stamp) continue; col.stamp = stamp;
+        let y1 = col.y1;
+        if (col.st) { y1 = this.structTop(col.st, s.x, s.z); if (y1 <= s.y + up) continue; }   // a ramp you can drive up is not a wall
+        if (s.y + 1.2 < col.y0 || s.y > y1) continue;
+        if (col.r !== undefined) this.hitCircle(car, col.x, col.z, col.r, fx, fz, rx, rz, hl, hw);
+        else this.hitBox(car, col, fx, fz, rx, rz, hl, hw);
+      }
+      if (this.propsOn) for (const p of cell.props) {
+        if (p.down || p.stamp === stamp) continue; p.stamp = stamp;
+        const dx = p.x - s.x, dz = p.z - s.z, u = dx * fx + dz * fz, v = dx * rx + dz * rz;
+        if (Math.abs(u) < hl + p.r && Math.abs(v) < hw + p.r && Math.abs(p.y - s.y) < 3) {
+          p.down = true;
+          if (this.view) this.view.knock(p, s.vx, s.vz);
+          s.vx *= 0.985; s.vz *= 0.985;
+          this.events.push({ type: 'prop', p });
+        }
+      }
+    }
+    if (this.traffic) this.traffic.collide(car, fx, fz, rx, rz, hl, hw);
+    s.vF = s.vx * fx + s.vz * fz; s.vS = s.vx * rx + s.vz * rz;
+  }
+
+  /** Separating-axis test, car box vs collider box; resolve along the axis of least overlap. */
+  hitBox(car, col, fx, fz, rx, rz, hl, hw) {
+    const s = car.state, ax = [fx, fz, rx, rz, col.s, col.c, col.c, -col.s];
+    const dx = s.x - col.x, dz = s.z - col.z;
+    let best = Infinity, nx = 0, nz = 0;
+    for (let k = 0; k < 4; k++) {
+      const a = ax[k * 2], b = ax[k * 2 + 1];
+      const d = dx * a + dz * b;
+      const e1 = hl * Math.abs(fx * a + fz * b) + hw * Math.abs(rx * a + rz * b);
+      const e2 = col.hz * Math.abs(col.s * a + col.c * b) + col.hx * Math.abs(col.c * a - col.s * b);
+      const o = e1 + e2 - Math.abs(d);
+      if (o <= 0) return;
+      if (o < best) { best = o; const sg = d >= 0 ? 1 : -1; nx = a * sg; nz = b * sg; }
+    }
+    // contact: the car corner deepest against the normal
+    let ox = 0, oz = 0, md = Infinity;
+    for (let k = 0; k < 4; k++) {
+      const lz = k < 2 ? hl : -hl, lx = (k & 1) ? hw : -hw;
+      const cx = fx * lz - rx * lx, cz = fz * lz - rz * lx, d = cx * nx + cz * nz;
+      if (d < md) { md = d; ox = cx; oz = cz; }
+    }
+    Physics.resolveContact(car, nx, nz, best, ox, oz, 1, 0);
+  }
+  hitCircle(car, x, z, r, fx, fz, rx, rz, hl, hw) {
+    const s = car.state, dx = x - s.x, dz = z - s.z, u = dx * fx + dz * fz, v = dx * rx + dz * rz;
+    const cu = clamp(u, -hl, hl), cv = clamp(v, -hw, hw);
+    let px = fx * cu + rx * cv, pz = fz * cu + rz * cv;          // closest point of the car box (relative to its centre)
+    let nx = px - dx, nz = pz - dz, d = Math.hypot(nx, nz), pen;
+    if (d > 1e-4) { if (d >= r) return; nx /= d; nz /= d; pen = r - d; }
+    else {                                                          // centre inside the box: out along the shorter way
+      const ou = hl - Math.abs(u), ov = hw - Math.abs(v);
+      if (ou < ov) { const sg = -Math.sign(u) || -1; nx = fx * sg; nz = fz * sg; pen = ou + r; } else { const sg = -Math.sign(v) || -1; nx = rx * sg; nz = rz * sg; pen = ov + r; }
+    }
+    Physics.resolveContact(car, nx, nz, pen, px, pz, 1, 0);
+  }
+
+  /** Nearest road (city) or the circuit, facing the way the car was pointing. */
+  resetPose(car) {
+    const s = car.state, city = this.city;
+    if (!city.inRegion(s.x, s.z)) return null;
+    const r = city.nearestRoad(s.x, s.z, s.y);
+    if (!r) return null;
+    let h = Math.atan2(r.dx, r.dz);
+    if (Math.cos(h - s.h) < 0) h = wrapAngle(h + Math.PI);
+    const y = r.deck ? city.hwy.top : city.groundAt(r.x, r.z, (r.r === city.causeway ? city.causewayY(r.x, r.z) : city.base(r.x, r.z)) + 0.5, this.g).h;
+    return { x: r.x, y, z: r.z, h };
+  }
+}
+
+/* =====================================================================
+ * CITY › TRAFFIC
+ * Light ambient cars on closed lane loops (ring road, downtown avenues, Old Town). They keep their distance, stop at
+ * red lights, give way to you, and get shoved aside when you hit them. Only cars near you exist: the far ones are
+ * moved to free spots on the loops around you. Drawn as one InstancedMesh.
+ * ===================================================================== */
+class CityTraffic {
+  constructor(city, scene, quality) {
+    this.city = city; this.cars = []; this.max = 0; this.time = 0;
+    const C = CONFIG.city.traffic, cap = Math.max(C.low, C.medium);
+    const geo = mergeGeos([
+      [new THREE.BoxGeometry(1.8, 0.7, 4.2), 0xffffff, M(0, 0.62, 0)],
+      [new THREE.BoxGeometry(1.6, 0.55, 2.1), 0xe6eef4, M(0, 1.22, -0.25)],
+      [new THREE.BoxGeometry(1.62, 0.42, 2.0), 0x26323c, M(0, 1.2, -0.25)],
+      [new THREE.BoxGeometry(1.9, 0.5, 0.8), 0x222222, M(0, 0.33, 1.35)], [new THREE.BoxGeometry(1.9, 0.5, 0.8), 0x222222, M(0, 0.33, -1.35)],
+      [new THREE.BoxGeometry(1.5, 0.16, 0.06), 0xfff2c8, M(0, 0.7, 2.11)], [new THREE.BoxGeometry(1.5, 0.14, 0.06), 0xc0201a, M(0, 0.72, -2.11)],
+    ]);
+    this.mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), cap);
+    this.mesh.setColorAt(0, new THREE.Color(1, 1, 1));
+    this.mesh.count = 0; this.mesh.frustumCulled = false; this.mesh.visible = false; this.mesh.castShadow = quality.shadows;
+    scene.add(this.mesh);
+    this.colors = [0xd8d8d8, 0x2a2d33, 0xb32a26, 0x2d5fa8, 0xe6c34a, 0x3d8a5a, 0xf2f2ee, 0x8a8f96, 0x5b3d8a, 0xe07b30];
+    this.rnd = mulberry32(4242);
+  }
+  setDensity(name) {
+    this.max = CONFIG.city.traffic[name] || 0;
+    this.cars.length = Math.min(this.cars.length, this.max);
+    this.mesh.count = this.cars.length;
+  }
+  clear() { this.cars.length = 0; this.mesh.count = 0; this.mesh.visible = false; }
+
+  /** Point + direction at distance d along a route (lane offset to the right). */
+  at(r, d, out) {
+    const P = r.pts, n = P.length, D = r.dist;
+    d = ((d % r.len) + r.len) % r.len;
+    let lo = 0, hi = n - 1;
+    while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (D[mid] <= d) lo = mid; else hi = mid - 1; }
+    const a = P[lo], b = P[(lo + 1) % n], l = D[lo + 1] - D[lo] || 1, t = (d - D[lo]) / l;
+    const dx = (b[0] - a[0]) / l, dz = (b[1] - a[1]) / l;
+    out.x = a[0] + (b[0] - a[0]) * t - dz * r.lane; out.z = a[1] + (b[1] - a[1]) * t + dx * r.lane;
+    out.dx = dx; out.dz = dz;
+    return out;
+  }
+  /** A free spot on a loop between rMin and rMax from (x, z), not too close to another car. */
+  place(car, x, z, rMin, rMax) {
+    const routes = this.city.routes, o = {};
+    for (let k = 0; k < 30; k++) {
+      const r = routes[Math.floor(this.rnd() * routes.length)], d = this.rnd() * r.len;
+      this.at(r, d, o);
+      const dist = Math.hypot(o.x - x, o.z - z);
+      if (dist < rMin || dist > rMax) continue;
+      if (this.cars.some(c => c !== car && c.r === r && Math.abs(((c.d - d + r.len * 1.5) % r.len) - r.len / 2) < 25)) continue;
+      Object.assign(car, { r, d, v: r.slow ? 7 : 10, x: o.x, z: o.z, h: Math.atan2(o.dx, o.dz), kx: 0, kz: 0, kvx: 0, kvz: 0, ky: 0, kw: 0, hold: 0 });
+      return true;
+    }
+    return false;
+  }
+  /** Fill / recycle around the player, then drive. */
+  update(dt, player, phase, active) {
+    this.time += dt;
+    if (!active || !this.max) { if (this.mesh.visible) { this.mesh.visible = false; } return; }
+    const ps = player.state, C = CONFIG.city.traffic, R = C.radius;
+    while (this.cars.length < this.max) {
+      const car = { col: this.colors[this.cars.length % this.colors.length], spd: C.speed[0] + this.rnd() * (C.speed[1] - C.speed[0]) };
+      if (!this.place(car, ps.x, ps.z, 40, R)) break;
+      this.cars.push(car);
+    }
+    const o = this._o || (this._o = {});
+    for (const c of this.cars) {
+      if (Math.hypot(c.x - ps.x, c.z - ps.z) > R + 40) { if (!this.place(c, ps.x, ps.z, R * 0.45, R)) { c.dead = true; continue; } }
+      // knocked: slide to a stop, then ease back into the lane
+      if (c.kvx || c.kvz || c.kw) {
+        c.kx += c.kvx * dt; c.kz += c.kvz * dt; c.ky += c.kw * dt;
+        const f = Math.exp(-3 * dt); c.kvx *= f; c.kvz *= f; c.kw *= f;
+        if (Math.abs(c.kvx) + Math.abs(c.kvz) + Math.abs(c.kw) < 0.05) { c.kvx = c.kvz = c.kw = 0; }
+        c.hold = 2.5;
+      } else if (c.hold > 0) c.hold -= dt;
+      else { const f = Math.exp(-1.2 * dt); c.kx *= f; c.kz *= f; c.ky *= f; }
+      // target speed: own pace, the car ahead, red lights, the player in front
+      const r = c.r, cap = r.slow ? Math.min(c.spd, 8) : c.spd;
+      let vT = c.hold > 0 ? 0 : cap;
+      for (const b of this.cars) if (b !== c && b.r === r) {
+        const gap = (b.d - c.d + r.len) % r.len;
+        if (gap < 30) vT = Math.min(vT, Math.max(0, (gap - 9) * 0.6));
+      }
+      if (r.lights) for (const st of r.stops) {
+        const gap = (st.d - c.d + r.len) % r.len, light = phase[st.axis];
+        if (gap < 34 && (light === 'r' || (light === 'a' && gap > 10))) vT = Math.min(vT, Math.max(0, (gap - 1.5) * 0.45));
+      }
+      const fx = Math.sin(c.h), fz = Math.cos(c.h), dx = ps.x - c.x, dz = ps.z - c.z, ahead = dx * fx + dz * fz;
+      if (ahead > 0 && ahead < 16 && Math.abs(-dx * fz + dz * fx) < 2.6 && Math.abs(ps.y - (c.y || 0)) < 4) vT = Math.min(vT, Math.max(0, (ahead - 6) * 0.5));
+      c.v = c.v < vT ? Math.min(vT, c.v + 2.5 * dt) : Math.max(vT, c.v - 7 * dt);
+      c.d = (c.d + c.v * dt) % r.len;
+      this.at(r, c.d, o);
+      c.x = o.x + c.kx; c.z = o.z + c.kz;
+      const hT = Math.atan2(o.dx, o.dz);
+      c.hr = c.hr === undefined ? hT : c.hr + wrapAngle(hT - c.hr) * (1 - Math.exp(-6 * dt));   // turns smoothly at the corners
+      c.h = c.hr + c.ky;
+      c.y = this.city.groundAt(c.x, c.z, this.city.base(c.x, c.z) + 0.5, this.city._tg || (this.city._tg = {})).h;
+    }
+    if (this.cars.some(c => c.dead)) this.cars = this.cars.filter(c => !c.dead);   // nowhere near you to go (you are on the circuit)
+    this.draw();
+  }
+  draw() {
+    const m = this.mesh, C = this._c || (this._c = new THREE.Color());
+    m.count = this.cars.length;
+    this.cars.forEach((c, i) => { m.setMatrixAt(i, M(c.x, c.y, c.z, c.h)); m.setColorAt(i, C.setHex(c.col)); });
+    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+    m.visible = m.count > 0;
+  }
+  /** Player box vs traffic boxes: a two-body impulse; the traffic car gets shoved (and spins a little). */
+  collide(car, fx, fz, rx, rz, hl, hw) {
+    const s = car.state, tm = 1300;
+    for (const c of this.cars) {
+      const dx = s.x - c.x, dz = s.z - c.z;
+      if (dx * dx + dz * dz > 49 || Math.abs(s.y - c.y) > 2.5) continue;
+      const tfx = Math.sin(c.h), tfz = Math.cos(c.h), trx = -tfz, trz = tfx;
+      const ax = [fx, fz, rx, rz, tfx, tfz, trx, trz];
+      let best = Infinity, nx = 0, nz = 0, hit = true;
+      for (let k = 0; k < 4 && hit; k++) {
+        const a = ax[k * 2], b = ax[k * 2 + 1], d = dx * a + dz * b;
+        const e1 = hl * Math.abs(fx * a + fz * b) + hw * Math.abs(rx * a + rz * b);
+        const e2 = 2.1 * Math.abs(tfx * a + tfz * b) + 0.9 * Math.abs(trx * a + trz * b);
+        const ov = e1 + e2 - Math.abs(d);
+        if (ov <= 0) hit = false; else if (ov < best) { best = ov; const sg = d >= 0 ? 1 : -1; nx = a * sg; nz = b * sg; }
+      }
+      if (!hit) continue;
+      let ox = 0, oz = 0, md = Infinity;
+      for (let k = 0; k < 4; k++) { const lz = k < 2 ? hl : -hl, lx = (k & 1) ? hw : -hw, cx = fx * lz - rx * lx, cz = fz * lz - rz * lx, d = cx * nx + cz * nz; if (d < md) { md = d; ox = cx; oz = cz; } }
+      const tvx = tfx * c.v + c.kvx, tvz = tfz * c.v + c.kvz;
+      const j = Physics.resolveContact(car, nx, nz, best * 0.6, ox, oz, car.cfg.mass / (car.cfg.mass + tm) * 2, 0.15, tvx, tvz);
+      c.kx -= nx * best * 0.4; c.kz -= nz * best * 0.4;
+      if (j > 0) { c.kvx -= nx * j / tm; c.kvz -= nz * j / tm; c.kw += (Math.random() - 0.5) * j / tm * 0.6; c.v *= 0.3; c.hold = 2.5; }
+    }
+  }
+}
+
+/* =====================================================================
+ * CITY › ACTIVITIES
+ * Speed traps (gantries: speed through the line), drift zones (points scored while inside), jumps (distance from
+ * take-off to touchdown). Bests are kept in localStorage and shown on the map.
+ * ===================================================================== */
+class CityActivities {
+  constructor(city, game) {
+    this.city = city; this.g = game;
+    this.rec = { trap: {}, zone: {}, jump: {} };
+    try { Object.assign(this.rec, JSON.parse(localStorage.getItem('islaRush.cityRecords') || '{}') || {}); } catch (e) { /* storage blocked */ }
+    this.run = null; this.prev = null; this.district = null;
+  }
+  save() { try { localStorage.setItem('islaRush.cityRecords', JSON.stringify(this.rec)); } catch (e) { /* storage blocked */ } }
+  /** Record a result; returns the old best (null if none) and whether it is a new one. */
+  post(kind, name, v) {
+    const old = this.rec[kind][name], better = old === undefined || v > old;
+    if (better) { this.rec[kind][name] = Math.round(v * 10) / 10; this.save(); }
+    return { old, better };
+  }
+  reset() { this.run = null; this.prev = null; }
+
+  update(dt, car, events) {
+    const s = car.state, hud = this.g.hud, snd = this.g.sound, city = this.city;
+    // ---- speed traps: speed at the moment the line is crossed ----
+    if (this.prev) for (const tp of city.traps) {
+      const a = (this.prev.x - tp.x) * tp.ux + (this.prev.z - tp.z) * tp.uz, b = (s.x - tp.x) * tp.ux + (s.z - tp.z) * tp.uz;
+      if ((a < 0) === (b < 0)) continue;
+      const lat = -(s.x - tp.x) * tp.uz + (s.z - tp.z) * tp.ux;
+      if (Math.abs(lat) > tp.hw + 2 || Math.abs(s.y - tp.y) > 4) continue;
+      const kmh = Math.round(Math.hypot(s.vx, s.vz) * 3.6);
+      if (kmh < 20) continue;
+      const r = this.post('trap', tp.name, kmh);
+      hud.popup(kmh + ' KM/H', tp.name.replace(' speed trap', '') + ' trap · ' + (r.better ? (r.old !== undefined ? 'NEW RECORD (was ' + r.old + ')' : 'NEW RECORD') : 'best ' + r.old), r.better ? 't2' : 't1');
+      snd.ui(r.better ? 'tier2' : 'bank');
+    }
+    this.prev = { x: s.x, z: s.z };
+    // ---- drift zones ----
+    const zone = city.zones.find(z => z.rect ? s.x > z.rect.x0 && s.x < z.rect.x1 && s.z > z.rect.z0 && s.z < z.rect.z1 : Math.hypot(s.x - z.circle[0], s.z - z.circle[1]) < z.circle[2]) || null;
+    if (zone && Math.abs(s.y - zone.y) > 4) { /* on the highway above: not in it */ }
+    else if (zone && !this.run) {
+      this.run = { zone, pts: 0, t: 0, still: 0 };
+      const b = this.rec.zone[zone.name];
+      hud.showBanner(zone.name, 'drift to score' + (b ? ' · best ' + fmtPts(b) : ''), 2.5);
+    }
+    if (this.run) {
+      const run = this.run, D = CONFIG.drift, kmh = Math.hypot(s.vx, s.vz) * 3.6, slip = Math.atan2(Math.abs(s.vS), Math.max(Math.abs(s.vF), 0.1));
+      if (s.vF > 0 && kmh >= D.minKmh && slip >= D.minSlip) run.pts += slip * 180 / Math.PI * kmh * D.pointsK * dt;
+      run.t += dt; run.still = kmh < 5 ? run.still + dt : 0;
+      hud.set('zonePts', fmtPts(run.pts));
+      if (zone !== run.zone || run.still > 3) {
+        this.run = null;
+        if (run.pts >= 1) {
+          const r = this.post('zone', run.zone.name, Math.round(run.pts));
+          hud.popup(fmtPts(run.pts) + ' PTS', run.zone.name + ' · ' + (r.better ? 'NEW RECORD' : 'best ' + fmtPts(r.old)), r.better ? 't3' : 't1');
+          snd.ui(r.better ? 'tier2' : 'bank');
+        }
+      }
+    }
+    document.body.classList.toggle('inzone', !!this.run);
+    // ---- jumps ----
+    for (const e of events) {
+      if (e.type !== 'land' || e.dist < 6) continue;
+      const name = e.st ? e.st.name : null;
+      if (name) {
+        const r = this.post('jump', name, e.dist);
+        hud.popup(e.dist.toFixed(1) + ' M', name + ' · air ' + e.air.toFixed(2) + 's · ' + (r.better ? 'NEW RECORD' : 'best ' + r.old.toFixed(1) + ' m'), r.better ? 't3' : 't1');
+        snd.ui(r.better ? 'tier2' : 'bank');
+      } else if (e.air > 0.5) { hud.popup(e.dist.toFixed(1) + ' M', 'air ' + e.air.toFixed(2) + 's', 't0'); }
+    }
+  }
+
+  /** Lines for the map screen. */
+  summary() {
+    const c = this.city, out = [];
+    for (const t of c.traps) out.push(['▶ ' + t.name, this.rec.trap[t.name] !== undefined ? this.rec.trap[t.name] + ' km/h' : '—']);
+    for (const z of c.zones) out.push(['◎ ' + z.name, this.rec.zone[z.name] !== undefined ? fmtPts(this.rec.zone[z.name]) + ' pts' : '—']);
+    for (const j of c.jumps) out.push(['↗ ' + j.name, this.rec.jump[j.name] !== undefined ? this.rec.jump[j.name].toFixed(1) + ' m' : '—']);
+    return out;
+  }
+}
+
+/* =====================================================================
+ * CITY › MAPS
+ * One pre-drawn top-down image (circuit + city streets); the minimap draws it rotated round the car (heading up),
+ * the pause-menu map draws it whole with the spawn points, activities and you.
+ * ===================================================================== */
+class CityMap {
+  constructor(city, track) {
+    this.city = city; this.T = track;
+    let x0 = city.bounds.x0, x1 = city.bounds.x1, z0 = city.bounds.z0, z1 = city.bounds.z1;
+    for (let i = 0; i < track.n; i++) { x0 = Math.min(x0, track.X[i]); x1 = Math.max(x1, track.X[i]); z0 = Math.min(z0, track.Z[i]); z1 = Math.max(z1, track.Z[i]); }
+    x0 -= 60; x1 += 60; z0 -= 60; z1 += 60;
+    this.b = { x0, x1, z0, z1 };
+    this.sc = 0.5;                                                   // px per metre
+    const cv = this.img = document.createElement('canvas');
+    cv.width = Math.ceil((x1 - x0) * this.sc); cv.height = Math.ceil((z1 - z0) * this.sc);
+    const g = cv.getContext('2d'), P = (x, z) => [(x - x0) * this.sc, (z - z0) * this.sc];
+    g.lineCap = 'round'; g.lineJoin = 'round';
+    // land
+    const L = CONFIG.city.land;
+    g.fillStyle = 'rgba(214,196,150,.55)';
+    const [lx, lz] = P(L.x0, L.z0);
+    if (g.roundRect) { g.beginPath(); g.roundRect(lx, lz, (L.x1 - L.x0) * this.sc, (L.z1 - L.z0) * this.sc, L.r * this.sc); g.fill(); } else g.fillRect(lx, lz, (L.x1 - L.x0) * this.sc, (L.z1 - L.z0) * this.sc);
+    const rect = (r, col) => { const [a, b] = P(r.x0, r.z0); g.fillStyle = col; g.fillRect(a, b, (r.x1 - r.x0) * this.sc, (r.z1 - r.z0) * this.sc); };
+    rect(city.plaza, 'rgba(240,225,200,.9)'); rect(city.yard, 'rgba(200,200,200,.7)');
+    g.fillStyle = 'rgba(70,120,60,.55)'; g.beginPath(); { const [hx, hz] = P(city.hill.cx, city.hill.cz); g.arc(hx, hz, city.hill.R * this.sc, 0, 6.283); } g.fill();
+    // streets
+    const line = (pts, closed, w, col) => {
+      g.strokeStyle = col; g.lineWidth = w; g.beginPath();
+      for (let k = 0; k < pts.length / 2; k++) { const [a, b] = P(pts[k * 2], pts[k * 2 + 1]); k ? g.lineTo(a, b) : g.moveTo(a, b); }
+      if (closed) g.closePath(); g.stroke();
+    };
+    for (const pass of [0, 1]) for (const r of city.roads) {
+      const w = Math.max(2, r.hw * 2 * this.sc);
+      line(r.pts, r.closed, pass ? w : w + 2.5, pass ? (r.surf === 'cobble' ? '#e9dcc6' : r.rank >= 3 ? '#ffffff' : '#e8e8e8') : 'rgba(0,0,0,.5)');
+    }
+    const H = city.hwy; line([H.xw, H.z, H.xe, H.z], false, Math.max(3, H.hw * 2 * this.sc), '#ffb36b');
+    // circuit
+    const cp = []; for (let i = 0; i <= track.n; i += 2) { const k = i % track.n; cp.push(track.X[k], track.Z[k]); }
+    line(cp, true, 7, 'rgba(0,0,0,.5)'); line(cp, true, 4, '#ffffff');
+    this.P = P;
+  }
+  /** Heading-up minimap round (x, z). */
+  drawMini(cv, x, z, h, view = 260) {
+    if (!cv.width || cv.offsetParent === null) return;
+    const g = cv.getContext('2d'), w = cv.width, ht = cv.height, k = Math.min(w, ht) / (view * 2) / this.sc;
+    g.clearRect(0, 0, w, ht);
+    g.save();
+    g.beginPath(); g.rect(0, 0, w, ht); g.clip();
+    g.translate(w / 2, ht * 0.6); g.rotate(-Math.PI / 2 - Math.atan2(Math.cos(h), Math.sin(h))); g.scale(k, k);
+    const [px, pz] = this.P(x, z);
+    g.drawImage(this.img, -px, -pz);
+    g.restore();
+    const d = w / 150;
+    g.fillStyle = '#ffb36b'; g.strokeStyle = '#000'; g.lineWidth = 1.5 * d;
+    g.beginPath(); g.moveTo(w / 2, ht * 0.6 - 8 * d); g.lineTo(w / 2 + 5 * d, ht * 0.6 + 5 * d); g.lineTo(w / 2, ht * 0.6 + 2 * d); g.lineTo(w / 2 - 5 * d, ht * 0.6 + 5 * d); g.closePath(); g.fill(); g.stroke();
+  }
+  /** The whole map: spawn points, activities, the car. */
+  drawFull(cv, car, spawns) {
+    const r = cv.getBoundingClientRect(), dpr = Math.min(2, window.devicePixelRatio || 1);
+    cv.width = Math.max(1, Math.round(r.width * dpr)); cv.height = Math.max(1, Math.round(r.height * dpr));
+    const g = cv.getContext('2d'), iw = this.img.width, ih = this.img.height, k = Math.min(cv.width / iw, cv.height / ih);
+    const ox = (cv.width - iw * k) / 2, oz = (cv.height - ih * k) / 2, Q = (x, z) => { const [a, b] = this.P(x, z); return [ox + a * k, oz + b * k]; };
+    g.clearRect(0, 0, cv.width, cv.height);
+    g.drawImage(this.img, ox, oz, iw * k, ih * k);
+    const dot = (x, z, col, rad, label) => {
+      const [a, b] = Q(x, z); g.fillStyle = col; g.strokeStyle = '#000'; g.lineWidth = 1.5 * dpr;
+      g.beginPath(); g.arc(a, b, rad * dpr, 0, 6.283); g.fill(); g.stroke();
+      if (label) { g.font = `700 ${11 * dpr}px system-ui, sans-serif`; g.fillStyle = '#fff'; g.strokeStyle = 'rgba(0,0,0,.7)'; g.lineWidth = 3 * dpr; g.strokeText(label, a + 8 * dpr, b + 4 * dpr); g.fillText(label, a + 8 * dpr, b + 4 * dpr); }
+    };
+    for (const t of this.city.traps) dot(t.x, t.z, '#ff7a1a', 4);
+    for (const z of this.city.zones) { const [x, zz] = z.circle ? z.circle : [(z.rect.x0 + z.rect.x1) / 2, (z.rect.z0 + z.rect.z1) / 2]; dot(x, zz, '#ff5ad1', 4); }
+    for (const j of this.city.jumps) dot(j.ax, j.az, '#f2c230', 4);
+    for (const sp of spawns) dot(sp.x, sp.z, '#6fc8ff', 6, sp.name);
+    const s = car.state, [a, b] = Q(s.x, s.z), ang = Math.atan2(Math.cos(s.h), Math.sin(s.h));
+    g.save(); g.translate(a, b); g.rotate(ang); g.fillStyle = '#ffb36b'; g.strokeStyle = '#000'; g.lineWidth = 1.5 * dpr;
+    g.beginPath(); g.moveTo(10 * dpr, 0); g.lineTo(-6 * dpr, 6 * dpr); g.lineTo(-2 * dpr, 0); g.lineTo(-6 * dpr, -6 * dpr); g.closePath(); g.fill(); g.stroke(); g.restore();
+  }
+}
+
+const CITY_DISTRICTS = { malecon: 'Malec\u00f3n', oldtown: 'Old Town', downtown: 'Downtown', port: 'Port', north: 'Barrio Norte' };
+
 class Minimap {
   constructor(canvas, T) {
     this.cv = canvas; this.g = canvas.getContext('2d'); this.T = T;
@@ -5418,6 +7345,7 @@ class Game {
     this.race = null; this.raceOpts = { mode: 'free' }; this.intro = 0; this.results = false; this.raceDrift = 0;
     this.resetStart(); this.lockPending = 0; this.startResult = null; this.wrongT = 0; this.skipReq = false; this.resultsT = 0;
     this.minimap = new Minimap(document.getElementById('minimap'), this.track);
+    this.city = null; this.freeOn = false; this.wasCity = false; this.cityClock = 0; this.district = null;   // Free Drive city: built on first use
     this.tags = [];
     const skip = () => { if (this.race && this.race.playerDone && !this.results) this.skipReq = true; };
     window.addEventListener('keydown', (e) => { if (e.code === 'Enter' || e.code === 'NumpadEnter') skip(); });
@@ -5427,15 +7355,18 @@ class Game {
     this.paused = false;
     this.state = 'menu';                                 // 'menu' | 'race'
     this.input.onDevice = (d, info) => this.hud.setDevice(d, info);
+    this.input.onTouchEnabled = () => this.refreshHandling(true);
     this.input.gamepad.onConnect = (info) => {
       this.hud.toast('Controller connected \u00b7 ' + info.name);
       this.input.setDevice('gamepad');
       this.hud.setDevice('gamepad', info);                // refresh hint icons (PS vs Xbox)
+      this.refreshHandling(true);
     };
     this.input.gamepad.onSwitch = (info) => { this.input.setDevice('gamepad'); this.hud.setDevice('gamepad', info); };   // no toast
     this.input.gamepad.onDisconnect = () => {
       this.hud.toast('Controller disconnected');
       this.input.setDevice(this.input.touchEnabled ? 'touch' : 'keyboard');
+      this.refreshHandling(true);
     };
     this.cameraRig = new CameraRig(this.camera, this.track);
     this.laps = new LapTimer(this.track.length);
@@ -5448,6 +7379,7 @@ class Game {
     this.showroom = new Showroom(this.world.envMap, Q);
     this.flyover = new Flyover(this.track, this.camera);
     this.menu = new Menu(this);
+    this.refreshHandling(false);
     this.post = Q.post ? new PostFX(this.renderer) : null;
     this.reflect = Q.carReflections ? new CarReflections(this.renderer, this.scene) : null;
     if (this.reflect) this.reflect.attach(this.car);
@@ -5487,7 +7419,77 @@ class Game {
     else this.renderer.render(this.scene, this.camera);
   }
 
+  /** Free Drive: build the city (layout, meshes, physics, traffic, activities, maps) the first time it is needed. */
+  ensureCity() {
+    if (this.city) return;
+    const t0 = performance.now();
+    this.city = new City(this.track);
+    const t1 = performance.now();
+    this.cityView = new CityView(this.city, this.scene, this.Q, this.qualityName);
+    this.cityView.setVisible(false);
+    this.free = new FreeWorld(this.track, this.city);
+    this.free.view = this.cityView; this.free.propsOn = this.cityView.CQ.props;
+    this.traffic = new CityTraffic(this.city, this.scene, this.Q);
+    this.free.traffic = this.traffic;
+    this.activities = new CityActivities(this.city, this);
+    this.cityMap = new CityMap(this.city, this.track);
+    this.cityStats = { layoutMs: t1 - t0, buildMs: performance.now() - t0 };
+  }
+
+  /** Free Drive on / off: city visible, the sea wall open at the causeway, traffic, the city HUD. */
+  setFree(on) {
+    if (on) this.ensureCity();
+    this.freeOn = on; this.wasCity = false; this.district = null;
+    if (this.cityView) this.cityView.setVisible(on);
+    if (on && !this.cityCompiled) { this.cityCompiled = true; this.cityView.warm(this.renderer, this.scene, this.camera, this.traffic.mesh); }
+    if (this.track.gate) this.track.gate.visible = !on;
+    if (this.traffic) { this.traffic.clear(); this.traffic.setDensity(on ? Settings.data.traffic : 'off'); }
+    if (this.free) { this.free.inCity = false; this.free.events.length = 0; }
+    if (this.activities) this.activities.reset();
+    this.cameraRig.track = on ? this.free : this.track;
+    document.body.classList.toggle('freeroam', on);
+    document.body.classList.remove('incity', 'inzone');
+    if (on) this.minimap.resize();
+  }
+
+  /** Free Drive start points / fast travel: the circuit grid or a spot in the city (no countdown). */
+  spawnFree(key) {
+    const car = this.car, sp = CONFIG.city.spawns[key];
+    if (!sp) { car.placeAt(this.track, this.track.n - 8); }
+    else {
+      const [x, z, h] = sp.at, y = this.city.groundAt(x, z, this.city.base(x, z) + 0.5, {}).h;
+      car.placeFree(x, y, z, h, this.city.gap.index);
+    }
+    this.laps.reset(); this.laps.sync(car.state.s);
+    this.free.inCity = false; this.free.events.length = 0; this.wasCity = false; this.district = null;
+    this.activities.reset(); this.traffic.clear();
+    this.countdown = 0; this.intro = 0; this.acc = 0; this.input.steer = 0;
+    this.cityView.update(car.state.x, car.state.z, true);
+    car.updateVisual(1, 0);
+    this.cameraRig.snap(car);
+    this.hud.showBanner(sp ? sp.name : 'Circuit', 'Free Drive \u00b7 pause \u2192 Map to fast travel', 2.5);
+  }
+
+  /** Pause → Map: the whole map + records. */
+  drawMap() {
+    if (!this.cityMap) return;
+    const C = CONFIG.city.spawns, sp = [{ name: 'Circuit start', x: this.track.X[0], z: this.track.Z[0] }];
+    for (const k in C) sp.push({ name: C[k].name, x: C[k].at[0], z: C[k].at[1] });
+    requestAnimationFrame(() => this.cityMap.drawFull(document.getElementById('mapcv'), this.car, sp));
+    const box = document.getElementById('maprec'); box.innerHTML = '<p class="note" style="margin:0 0 6px">Records</p>';
+    for (const [a, b] of this.activities.summary()) { const d = document.createElement('div'), x = document.createElement('span'), y = document.createElement('b'); x.textContent = a; y.textContent = b; d.append(x, y); box.append(d); }
+  }
+
   resetCar() {
+    if (this.freeOn) {                                              // in the city: back onto the nearest road, facing along it
+      const pose = this.free.resetPose(this.car);
+      if (pose) {
+        this.car.placeFree(pose.x, pose.y, pose.z, pose.h, this.city.gap.index);
+        this.activities.prev = null;
+        this.car.updateVisual(1, 0); this.cameraRig.snap(this.car);
+        return;
+      }
+    }
     const s = this.car.state;
     this.car.placeAt(this.track, s.idx);
     this.laps.sync(s.s);
@@ -5524,6 +7526,20 @@ class Game {
     this.hud.toast(Settings.data.muted ? 'Sound off (M)' : 'Sound on', 1.5);
   }
 
+  /** Which handling profile applies: a connected controller wins, else a touch screen, else the keyboard. */
+  handlingProfile() { return this.input.gamepad.pad ? 'pad' : (IS_TOUCH || this.input.touchEnabled) ? 'touch' : 'keyboard'; }
+
+  /** Apply the handling style saved for the current input type (on start, controller connect / disconnect). */
+  refreshHandling(announce = false) {
+    const prof = this.handlingProfile(), v = Settings.handlingFor(prof);
+    this._handlingProfile = prof;
+    if (Settings.data.handling === v) return;
+    Settings.data.handling = v; Settings.save();
+    if (this.car) this.car.handling = { style: v, assist: Settings.data.assist };
+    if (this.menu && this.menu.name === 'settings') this.menu.refreshSettings();
+    if (announce) this.hud.toast('Handling: ' + (v === 'grip' ? 'Grip' : 'Motorfest') + (prof === 'pad' ? ' (controller)' : prof === 'touch' ? ' (touch)' : ''), 2.5);
+  }
+
   /** Settings → live systems. */
   applySettings() {
     const d = Settings.data;
@@ -5534,6 +7550,7 @@ class Game {
     this.sound.applyVolume(d);
     const manual = d.transmission === 'manual';
     if (this.car && !(this.race && this.race.playerDone)) this.car.manual = manual;
+    if (this.traffic && this.freeOn && this.traffic.max !== CONFIG.city.traffic[d.traffic]) this.traffic.setDensity(d.traffic);
     if (this.car) this.car.handling = { style: d.handling, assist: d.assist };   // the AI always drives Motorfest with the high assist
     document.body.classList.toggle('manual', manual);
     this.input.keyBind = d.bindings.key; this.input.gamepad.bindings = d.bindings.pad;
@@ -5569,6 +7586,7 @@ class Game {
     this.results = false; this.finishDriver = null; this.skipReq = false; this.resultsT = 0;
     document.body.classList.remove('finished', 'wrongway');
     this.endRace();
+    this.setFree(this.raceOpts.mode === 'free');
     if (this.raceOpts.mode === 'race') {
       this.race = new Race(this, this.raceOpts);
       this.race.setup(this.carKey, this.carColor);
@@ -5577,6 +7595,8 @@ class Game {
       this.intro = CONFIG.race.introTime; this.countdown = 0;
       const n = this.raceOpts.laps;
       this.hud.showBanner(n + (n > 1 ? ' laps' : ' lap'), CONFIG.race.difficultyNames[this.raceOpts.difficulty] + ' \u00b7 6 cars \u00b7 you start 4th', CONFIG.race.introTime - 0.3);
+    } else if (Settings.data.spawn !== 'circuit' && CONFIG.city.spawns[Settings.data.spawn]) {
+      this.spawnFree(Settings.data.spawn);                          // Free Drive from a spot in the city
     } else {
       this.intro = 0; this.startCountdown();
     }
@@ -5666,7 +7686,7 @@ class Game {
   }
 
   toCarSelect() {
-    this.endRace();
+    this.endRace(); if (this.freeOn) this.setFree(false);
     this.paused = false; this.state = 'menu'; this.results = false;
     document.body.classList.remove('paused');
     this.rumble.stop(this.input.gamepad.pad);
@@ -5759,7 +7779,7 @@ class Game {
   }
 
   toMainMenu() {
-    this.endRace(); this.results = false;
+    this.endRace(); this.results = false; if (this.freeOn) this.setFree(false);
     this.paused = false; this.state = 'menu';
     document.body.classList.remove('paused');
     this.rumble.stop(this.input.gamepad.pad);
@@ -5804,8 +7824,15 @@ class Game {
     let steps = 0;
     while (this.acc >= P.dt && steps < P.maxSteps) {
       this.car.savePrev();
-      Physics.step(this.car, ctrl, this.track, P.dt);
-      this.laps.update(P.dt, this.car.state.s);
+      if (this.freeOn) {
+        Physics.step(this.car, ctrl, this.free, P.dt);
+        const ic = this.free.inCity;                                // laps count on the circuit only; a trip to the city voids the lap
+        if (ic !== this.wasCity) { this.wasCity = ic; this.laps.reset(); document.body.classList.toggle('incity', ic); }
+        if (!ic) this.laps.update(P.dt, this.car.state.s);
+      } else {
+        Physics.step(this.car, ctrl, this.track, P.dt);
+        this.laps.update(P.dt, this.car.state.s);
+      }
       if (race) race.step(P.dt);
       this.acc -= P.dt; steps++;
     }
@@ -5842,6 +7869,16 @@ class Game {
       }
     }
     this.laps.events.length = 0;
+    if (this.freeOn) {
+      this.activities.update(dt, this.car, this.free.events);
+      this.free.events.length = 0;
+      if (this.free.inCity) {                                       // district names as you drive in
+        const s = this.car.state, zn = this.city.zone(s.x, s.z), name = CITY_DISTRICTS[zn];
+        if (name && zn !== this.district) { this.district = zn; this.hud.showBanner(name, 'Puerto Brisa', 2); }
+        return;
+      }
+      if (this.district) { this.district = null; this.lastSection = -1; }
+    }
     const sec = this.car.state.section;
     if (sec !== this.lastSection) {
       if (this.lastSection !== -1 && this.hud.bannerTimer <= 0) this.hud.showBanner(this.track.sectionOf(this.car.state.idx).name, '', 2);
@@ -5876,11 +7913,19 @@ class Game {
       if (this.race) for (const r of this.race.racers) if (r.ai) r.car.updateVisual(alpha, live);
       if (this.intro > 0 && this.race) this.introCamera(dt); else this.cameraRig.update(live, this.car);
       if (this.race) { this.updateTags(); this.minimap.draw(this.race.racers); }
+      if (this.freeOn) {                                            // city: stream the near chunks, lights, props, traffic, minimap
+        const s = this.car.state, v = this.cityView;
+        this.cityClock += live; v.time = this.cityClock;
+        v.update(s.x, s.z);
+        v.refreshBulbs(false); v.updateProps(live);
+        if (live > 0) this.traffic.update(live, this.car, this.city.lightPhase(this.cityClock), true);
+        this.cityMap.drawMini(this.minimap.cv, this.car.renderPos.x, this.car.renderPos.z, this.car.renderH);
+      }
       this.world.update(live, this.camera);
       this.scenery.update(live, this.car);
       this.updateSun();
       if (this.reflect && !this.paused) this.reflect.update(this.car, 4, this.scenery.meshes);
-      this.rumble.update(dt, this.input.gamepad.pad, this.car, this.track, !this.paused && this.input.device === 'gamepad');
+      this.rumble.update(dt, this.input.gamepad.pad, this.car, this.freeOn && this.free.inCity ? null : this.track, !this.paused && this.input.device === 'gamepad');
       this.speedFx.update(dt, Math.abs(this.car.state.vF) * 3.6, !this.paused, this.cameraRig.boost);
       this.hud.update(dt, this);
       this.renderWorld();
