@@ -274,18 +274,19 @@ async function open(q, ctxOpts = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// 3. District drives per preset: frame cost (JS), draw calls, triangles, chunk loads (+ race baseline)
+// 3. District drives per preset: frame cost (JS), draw calls, triangles, chunk loads (+ race baseline). FRAMES=n caps each drive.
 // ---------------------------------------------------------------------------------------------
 console.log('\nDISTRICT DRIVES PER PRESET (autopilot through each district, traffic per default; 960x540, SwiftShader software GL)');
 console.log('  frame = whole frame incl. software rendering; js = frame minus render calls; calls / tris = per frame (avg / max)');
 for (const q of presets) {
   const { ctx, page, errors } = await open(q);
-  const r = await page.evaluate(() => {
+  const r = await page.evaluate((FRAMES) => {
     window.requestAnimationFrame = () => 0;
     const g = window.IslaRush, R = g.renderer;
     R.info.autoReset = false;
     let rT = 0; const origRender = R.render.bind(R); R.render = (a, b) => { const t = performance.now(); origRender(a, b); rT += performance.now() - t; };
     const runFrames = (n, pilot) => {
+      n = Math.min(n, FRAMES);
       const st = { frames: 0, ms: [], js: [], calls: [], tris: [] };
       let t = performance.now();
       g.input.update = function () { return Object.assign(this.ctrl, pilot()); };
@@ -338,7 +339,7 @@ for (const q of presets) {
     route('Ring road north + tunnel', [[-2300, 980], [-1800, 1040], [-1470, 950], [-1420, 855], [-1420, 505], [-1300, 330]], 180, 300);
     out.view = { chunks: g.cityView.chunks.size, detail: g.cityView.CQ.detail };
     return out;
-  });
+  }, +(process.env.FRAMES || 1e9));
   console.log(`  ${q.toUpperCase()}: city build ${r.build.buildMs.toFixed(0)} ms (layout ${r.build.layoutMs.toFixed(0)} ms), near-detail radius ${r.view.detail} m, ${r.view.chunks} chunks built in the run`);
   for (const x of r.rows) console.log(`    ${x.name.padEnd(36)} frame ${String(x.ms).padStart(5)} ms (max ${x.msMax})  js ${String(x.js).padStart(5)} ms (max ${x.jsMax})  calls ${String(x.calls).padStart(3)} (max ${x.callsMax})  tris ${String(x.tris).padStart(7)} (max ${x.trisMax})` + (x.chunkLoads !== undefined ? `  chunks loaded ${x.chunkLoads}, slowest ${x.chunkMs} ms, near rebuild ${x.rebuildMs} ms, traffic ${x.traffic}` : ''));
   if (errors.length) fail(q + ' page errors ' + errors.slice(0, 3));
