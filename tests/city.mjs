@@ -5,7 +5,7 @@ import { createRequire } from 'module'; import fs from 'fs'; import path from 'p
 const require = createRequire(import.meta.url);
 let pw; try { pw = require('playwright'); } catch { pw = require('/opt/node22/lib/node_modules/playwright'); }
 const file = path.resolve(process.argv[2] || new URL('../isla-rush.html', import.meta.url).pathname);
-const presets = (process.argv[3] || 'low,medium,high,ultra').split(',');
+const presets = (process.argv[3] || 'low,medium,high,ultra').split(',').filter(q => q !== 'none');
 const browser = await pw.chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 let ok = true;
 const fail = (msg) => { ok = false; console.log('  FAIL ' + msg); };
@@ -62,10 +62,11 @@ async function open(q, ctxOpts = {}) {
 }
 
 // ---------------------------------------------------------------------------------------------
-// 2. Physics: collisions at speed, jumps, tunnel + highway, the causeway link (Low preset; physics is preset-free)
+// 2. Physics: collisions at speed, jumps, tunnel + highway, the causeway link (Medium: physics is the same on every
+//    preset, except that Low has no knock-over props)
 // ---------------------------------------------------------------------------------------------
 {
-  const { ctx, page, errors } = await open('low');
+  const { ctx, page, errors } = await open('medium');
   const r = await page.evaluate(() => {
     window.requestAnimationFrame = () => 0;
     const g = window.IslaRush, DT = CONFIG.physics.dt;
@@ -167,7 +168,7 @@ async function open(q, ctxOpts = {}) {
     {
       put(-2770, 560, Math.PI / 2, 80);
       let knocked = 0;
-      for (let k = 0; k < 120 * 2.5; k++) { Physics.step(car, ctrl({ throttle: s.vF * 3.6 < 80 ? 1 : 0 }), W, DT); for (const e of W.events) if (e.type === 'prop') knocked++; W.events.length = 0; }
+      for (let k = 0; k < 120 * 6; k++) { Physics.step(car, ctrl({ throttle: s.vF * 3.6 < 80 ? 1 : 0 }), W, DT); for (const e of W.events) if (e.type === 'prop') knocked++; W.events.length = 0; }
       out.props = { cones: city.props.filter(p => p.type === 'cone' && Math.abs(p.z - 560) < 1).length, knocked, kmhAfter: Math.round(s.vF * 3.6), wallSteps: 0 };
       // traffic: one car stopped on the downtown loop, you hit it from behind at 90 km/h
       const T = g.traffic; T.setDensity('low'); T.clear(); T.max = 1;
@@ -187,7 +188,7 @@ async function open(q, ctxOpts = {}) {
       // a speed trap + a drift zone + a recorded jump through the real activity code
       const A = g.activities; A.reset();
       put(-2060, -712, Math.PI / 2, 200);
-      for (let k = 0; k < 120; k++) { Physics.step(car, ctrl(), W, DT); A.update(DT, car, W.events); W.events.length = 0; }
+      for (let k = 0; k < 240; k++) { Physics.step(car, ctrl(), W, DT); A.update(DT, car, W.events); W.events.length = 0; }
       out.records = JSON.parse(localStorage.getItem('islaRush.cityRecords') || '{}');
     }
 
@@ -223,7 +224,7 @@ async function open(q, ctxOpts = {}) {
         if (Math.hypot(dx, dz) < 10) { wp++; continue; }
         const err = wrapAngle(Math.atan2(dx, dz) - s.h), y0 = s.y;
         Physics.step(car, ctrl({ steer: clamp(-err * 2.5, -1, 1), stick: clamp(-err * 2.5, -1, 1), throttle: s.vF * 3.6 < (wp < 4 ? 60 : 140) ? 1 : 0 }), W, DT);
-        if (s.wall) wall++; if (Math.abs(s.y - y0) > maxDy) { maxDy = Math.abs(s.y - y0); out.dyAt = [Math.round(s.x), Math.round(s.z), +y0.toFixed(2), +s.y.toFixed(2), W.inCity, !!s.air]; } evs();
+        if (s.wall) wall++; if (Math.abs(s.y - y0) > maxDy) { maxDy = Math.abs(s.y - y0); out.dyAt = [+s.x.toFixed(2), +s.z.toFixed(2), +y0.toFixed(2), +s.y.toFixed(2), W.inCity, !!s.air, (out.ring || []).join(' | ')]; } (out.ring = out.ring || []).push([s.x.toFixed(1), s.z.toFixed(1), s.y.toFixed(2), W.inCity ? 'C' : 'T', s.air ? 'A' : '', s.wall ? 'W' : ''].join(',')); if (out.ring.length > 8) out.ring.shift(); evs();
       }
       out.link.push({ dir: 'circuit -> city', dyAt: out.dyAt, reached: wp >= back.length, transitions: trans.join(','), wallSteps: wall, maxStepDy: +maxDy.toFixed(3), endInCity: W.inCity, end: [Math.round(s.x), Math.round(s.z)] });
       // the gap is closed in races: the same run on the race Track (no city) is stopped by the sea wall

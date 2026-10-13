@@ -5632,7 +5632,7 @@ class City {
     for (let k = 1; k < n; k++) { total += Math.hypot(P[k * 2] - P[k * 2 - 2], P[k * 2 + 1] - P[k * 2 - 1]); dist.push(total); }
     const yAt = (d) => lerp(y0, yJ, smoothstep(0, total, d));
     for (let k = 0; k < n - 1; k++) {
-      this.struct(P[k * 2], P[k * 2 + 1], P[k * 2 + 2], P[k * 2 + 3], 7.6, yAt(dist[k]), yAt(dist[k + 1]), { solid: true, kind: 'causeway', rails: 1 });
+      this.struct(P[k * 2], P[k * 2 + 1], P[k * 2 + 2], P[k * 2 + 3], 8.6, yAt(dist[k]), yAt(dist[k + 1]), { solid: true, kind: 'causeway', rails: 1 });
       // side walls (parapets)
       const dx = P[k * 2 + 2] - P[k * 2], dz = P[k * 2 + 3] - P[k * 2 + 1], l = Math.hypot(dx, dz), rx = -dz / l, rz = dx / l;
       for (const sd of [-1, 1]) this.wall(P[k * 2] + rx * sd * 9, P[k * 2 + 1] + rz * sd * 9, P[k * 2 + 2] + rx * sd * 9, P[k * 2 + 3] + rz * sd * 9, 2.4);
@@ -6233,7 +6233,8 @@ class CityView {
       }
     }
     if (st.rails) for (const sd of [-1, 1]) {                         // parapets
-      const ox = -st.uz * sd * (st.hw + 0.6), oz = st.ux * sd * (st.hw + 0.6);
+      const ro = st.kind === 'causeway' ? 8.15 : st.hw + 0.6;     // (the causeway's deck is wider than its parapets: wheels never hang off it)
+      const ox = -st.uz * sd * ro, oz = st.ux * sd * ro;
       G.box(cx + ox, cz + oz, yaw, 0.35, hz, st.y0 - 0.3, st.y0 + 1.0, G.hex(0xe8e4dc), st.y1 + 1.0, 31);
     }
   }
@@ -6777,10 +6778,10 @@ class FreeWorld {
     }
     if (!this.inCity) { this.inCity = true; this.events.push({ type: 'city' }); }
     s.idx = city.gap.index; s.lateral = 0;
-    const gf = city.groundAt(s.x + fx * hwb, s.z + fz * hwb, s.y, this.gf), gr = city.groundAt(s.x - fx * hwb, s.z - fz * hwb, s.y, this.gr);
+    const gf = this.groundPt(s.x + fx * hwb, s.z + fz * hwb, s.y, this.gf, s.idx), gr = this.groundPt(s.x - fx * hwb, s.z - fz * hwb, s.y, this.gr, s.idx);
     const y = (gf.h + gr.h) * 0.5, sp = Math.hypot(s.vx, s.vz);
     if (y < s.y - CONFIG.city.takeoff && sp > 6) {                  // the ground fell away faster than the springs follow: airborne
-      s.air = true; s.vy = s.vyG || 0; s.airT = 0; this.from = this.lastSt;   // (the ramp it left does not catch it again)
+      s.air = true; s.vy = s.vyG || 0; s.airT = 0; this.from = this.lastSt && this.lastSt.kind === 'jump' ? this.lastSt : null;   // (the jump ramp it left does not catch it again)
       s.jump = { x: s.x, z: s.z, st: this.lastSt && this.lastSt.kind === 'jump' ? this.lastSt : null, kmh: sp * 3.6 };
       this.events.push({ type: 'takeoff' });
       return;
@@ -6789,6 +6790,13 @@ class FreeWorld {
     s.y = y; s.grade = (gf.h - gr.h) / c.wheelbase; s.pitch = Math.atan(s.grade);
     this.lastSt = gf.st || gr.st;
     this.yRef = s.y + 1;
+  }
+
+  /** Ground at one point: the city's, or the circuit's where the point is on the circuit side (at the causeway's end). */
+  groundPt(x, z, yRef, out, idx) {
+    if (this.city.inRegion(x, z)) return this.city.groundAt(x, z, yRef, out);
+    out.h = this.T.query(x, z, idx, this._tq || (this._tq = this.T.makeQuery())).height; out.st = null; out.surf = 'tarmac';
+    return out;
   }
 
   /** In the air: gravity, a little drag, the yaw it took off with fading; walls still count; land flat (no bounce). */
