@@ -123,19 +123,19 @@ async function open(q, ctxOpts = {}) {
     for (const j of city.jumps) for (const kmh of [90, 140, 200, 260]) {
       const h = Math.atan2(j.ux, j.uz), x = j.ax - j.ux * 60, z = j.az - j.uz * 60;
       put(x, z, h, kmh);
-      let air = 0, took = null, land = null, bounce = 0, maxH = 0, after = 0, vyLand = 0, wall = 0;
+      let air = 0, took = null, land = null, bounce = 0, maxH = 0, after = 0, vyLand = 0, wall = 0, landSurf = null, landRoad = false;
       for (let k = 0; k < 900; k++) {
         const wasAir = s.air;
         Physics.step(car, ctrl({ throttle: kmh / 3.6 > s.vF ? 1 : 0.2 }), W, DT);
         if (s.wall) wall++;
         if (s.air) { air += DT; maxH = Math.max(maxH, s.y - city.groundAt(s.x, s.z, s.y, {}).h); }
         if (!wasAir && s.air && !took) took = [s.x, s.z];
-        if (wasAir && !s.air && !land) { land = [s.x, s.z]; vyLand = W.events.filter(e => e.type === 'land').pop()?.vy || 0; }
+        if (wasAir && !s.air && !land) { land = [s.x, s.z]; vyLand = W.events.filter(e => e.type === 'land').pop()?.vy || 0; landSurf = city.groundAt(s.x, s.z, s.y, {}).surf; landRoad = !!city.roadAt(s.x, s.z); }
         if (land) { after++; if (s.air) bounce++; if (after > 180) break; }
       }
       const ev = W.events.filter(e => e.type === 'land' && e.st === j);
       g.activities.update(DT, car, W.events);
-      out.jumps.push({ name: j.name, kmh, air: +air.toFixed(2), dist: took && land ? +Math.hypot(land[0] - took[0], land[1] - took[1]).toFixed(1) : null, recorded: ev.length ? +ev[0].dist.toFixed(1) : null, maxHeight: +maxH.toFixed(2), vyLand: +vyLand.toFixed(1), bounceSteps: bounce, wallSteps: wall });
+      out.jumps.push({ name: j.name, kmh, air: +air.toFixed(2), dist: took && land ? +Math.hypot(land[0] - took[0], land[1] - took[1]).toFixed(1) : null, recorded: ev.length ? +ev[0].dist.toFixed(1) : null, maxHeight: +maxH.toFixed(2), vyLand: +vyLand.toFixed(1), bounceSteps: bounce, wallSteps: wall, landSurf, landRoad });
       W.events.length = 0;
     }
 
@@ -164,6 +164,66 @@ async function open(q, ctxOpts = {}) {
     drive('Tunnel S->N', [[-1300, 330], [-1380, 430], [-1420, 505], [-1420, 855], [-1470, 950]], 230, inTube);
     drive('Tunnel N->S', [[-1470, 950], [-1420, 855], [-1420, 505], [-1390, 440], [-1300, 330], [-1240, 150]], 230, inTube);
 
+    // ---- camera collision: Old Town corners and the tunnel (camera never inside a building, never above the bore's roof) ----
+    out.cam = [];
+    const camInside = (p) => {
+      const c = city.cell(Math.floor(p.x / CITY_GRID), Math.floor(p.z / CITY_GRID), false); if (!c) return false;
+      for (const col of c.cols) {
+        if (col.r !== undefined && col.r < 1.2) continue;
+        let y1 = col.y1; if (col.st) y1 = W.structTop(col.st, p.x, p.z);
+        if (p.y < col.y0 || p.y > y1) continue;
+        const dx = p.x - col.x, dz = p.z - col.z;
+        if (col.r !== undefined) { if (Math.hypot(dx, dz) < col.r) return true; continue; }
+        if (Math.abs(dx * col.c - dz * col.s) < col.hx && Math.abs(dx * col.s + dz * col.c) < col.hz) return true;
+      }
+      return false;
+    };
+    const camRun = (name, pts, kmh) => {
+      if (pts.length > 1) { const [x0, z0] = pts[0], [x1, z1] = pts[1]; put(x0, z0, Math.atan2(x1 - x0, z1 - z0), kmh * 0.6); }
+      const rig = g.cameraRig; rig.track = W; car.updateVisual(1, 0); rig.snap(car); rig.update(1 / 60, car);
+      let wp = 1, inside = 0, frames = 0, maxStep = 0, minK = 1, ceil = 0, maxDK = 0, prevK = 1, prev = g.camera.position.clone(), prevCar = car.renderPos.clone();
+      for (let f = 0; f < 60 * 40 && (wp < pts.length || (pts.length === 1 && f < 150)); f++) {
+        const [tx, tz] = pts.length === 1 ? [s.x + Math.sin(s.h) * 50, s.z + Math.cos(s.h) * 50] : pts[wp]; if (pts.length > 1 && Math.hypot(tx - s.x, tz - s.z) < 12) { wp++; continue; }
+        const err = wrapAngle(Math.atan2(tx - s.x, tz - s.z) - s.h);
+        for (let k = 0; k < 2; k++) { car.savePrev(); Physics.step(car, ctrl({ steer: clamp(-err * 2.5, -1, 1), stick: clamp(-err * 2.5, -1, 1), throttle: s.vF * 3.6 < kmh ? 1 : 0 }), W, DT); }
+        car.updateVisual(1, 1 / 60); rig.update(1 / 60, car); frames++;
+        const c = g.camera.position;
+        if (camInside(c)) inside++;
+        if (c.y > W.camCeil(c.x, c.z, s.y) + 0.01) ceil++;
+        maxStep = Math.max(maxStep, c.distanceTo(prev) - car.renderPos.distanceTo(prevCar));
+        minK = Math.min(minK, rig.pullK); maxDK = Math.max(maxDK, Math.abs(rig.pullK - prevK)); prevK = rig.pullK;
+        prev.copy(c); prevCar.copy(car.renderPos);
+      }
+      out.cam.push({ name, kmh, frames, reached: pts.length === 1 || wp >= pts.length, camInside: inside, aboveRoof: ceil, minPull: +minK.toFixed(2), maxPullChangePerFrame: +maxDK.toFixed(3), maxExtraMovePerFrame: +maxStep.toFixed(2) });
+    };
+    camRun('Old Town: right-angle corners', [[-2700, -560], [-2700, -390], [-2690, -380], [-2580, -380], [-2570, -370], [-2580, -270], [-2590, -260], [-2700, -260]], 50);
+    camRun('Old Town: hugging the houses', [[-2697, -560], [-2696, -300]], 60);
+    // backed up against a house (the chase camera would sit inside it), creeping away across the street
+    put(-2696.8, -470, -Math.PI / 2, 0); camRun('Old Town: backed up to a house', [[-2696.8, -470]], 6);
+    put(-1424, 640, Math.PI * 0.75, 0); camRun('Tunnel: facing the bore wall', [[-1424, 640]], 4);
+    camRun('Tunnel S->N', [[-1300, 330], [-1380, 430], [-1420, 505], [-1420, 855], [-1470, 950]], 150);
+    camRun('Tunnel N->S', [[-1470, 950], [-1420, 855], [-1420, 505], [-1390, 440], [-1300, 330]], 150);
+
+    // ---- traffic per density: cars kept round you, JS cost per frame, overlaps, stuck cars (no rendering) ----
+    out.trafficDens = [];
+    for (const dn of ['low', 'medium', 'high']) {
+      const T = g.traffic; T.setDensity(dn); T.clear(); T.stats = { respawns: 0, unstuck: 0 };
+      const pts = [[-2120, -540], [-1580, -540], [-1580, 200], [-2120, 200]];
+      put(-2120, -500, Math.PI, 50); let wp = 1, ms = 0, n = 0, ov = 0, ovS = 0, cnt = 0, stillMax = 0;
+      const secs = dn === 'high' ? 240 : 40;
+      for (let f = 0; f < 60 * secs; f++) {
+        let [tx, tz] = pts[wp % 4]; if (Math.hypot(tx - s.x, tz - s.z) < 14) { wp++; [tx, tz] = pts[wp % 4]; }
+        const err = wrapAngle(Math.atan2(tx - s.x, tz - s.z) - s.h);
+        for (let k = 0; k < 2; k++) Physics.step(car, ctrl({ steer: clamp(-err * 2.5, -1, 1), stick: clamp(-err * 2.5, -1, 1), throttle: s.vF * 3.6 < 55 ? 1 : 0 }), W, DT);
+        car.updateVisual(1, 1 / 60); g.cameraRig.update(1 / 60, car); g.camera.updateMatrixWorld();
+        const t0 = performance.now(); T.update(1 / 60, car, city.lightPhase(f / 60), true, g.camera); ms += performance.now() - t0; n++;
+        if (f % 30 === 0 && f > 120) { const o = T.overlaps(); ov += o; if (o) ovS++; cnt += T.cars.length; for (const c of T.cars) stillMax = Math.max(stillMax, c.still); }
+      }
+      const types = {}; for (const c of T.cars) types[c.type.name] = (types[c.type.name] || 0) + 1;
+      out.trafficDens.push({ density: dn, simSecs: secs, cars: T.cars.length, avgCars: +(cnt / Math.max(1, Math.floor((60 * secs - 120) / 30))).toFixed(1), jsMsPerFrame: +(ms / n).toFixed(3), overlapPairs: ov, samplesWithOverlap: ovS, samples: Math.floor((60 * secs - 120) / 30), longestStill: +stillMax.toFixed(1), unstuck: T.stats.unstuck, respawns: T.stats.respawns, types });
+      T.clear(); T.setDensity('off');
+    }
+
     // ---- knock-over props, traffic shove, activity records ----
     {
       put(-2770, 560, Math.PI / 2, 80);
@@ -172,7 +232,7 @@ async function open(q, ctxOpts = {}) {
       out.props = { cones: city.props.filter(p => p.type === 'cone' && Math.abs(p.z - 560) < 1).length, knocked, kmhAfter: Math.round(s.vF * 3.6), wallSteps: 0 };
       // traffic: one car stopped on the downtown loop, you hit it from behind at 90 km/h
       const T = g.traffic; T.setDensity('low'); T.clear(); T.max = 1;
-      const tc = { col: 0xffffff, spd: 0 }, rt = city.routes.find(r => r.lights), o = {};
+      const tc = { col: 0xffffff, spd: 0, id: 999, type: T.types[1], ti: 1, still: 0, wait: 0 }, rt = city.routes.find(r => r.lights), o = {};
       T.at(rt, 120, o); Object.assign(tc, { r: rt, d: 120, v: 0, x: o.x, z: o.z, h: Math.atan2(o.dx, o.dz), hr: Math.atan2(o.dx, o.dz), kx: 0, kz: 0, kvx: 0, kvz: 0, ky: 0, kw: 0, hold: 9, y: city.base(o.x, o.z) });
       T.cars.push(tc);
       put(o.x - o.dx * 40, o.z - o.dz * 40, Math.atan2(o.dx, o.dz), 90);
@@ -251,13 +311,25 @@ async function open(q, ctxOpts = {}) {
   }
   console.log('\nJUMPS (60 m run-up; distance take-off -> touchdown, landing vertical speed, steps airborne again within 1.5 s of landing)');
   for (const j of r.jumps) {
-    console.log(`  ${j.name.padEnd(16)} ${String(j.kmh).padStart(3)} km/h: air ${j.air}s, ${j.dist} m (recorded ${j.recorded}), peak ${j.maxHeight} m, landing vy ${j.vyLand} m/s, bounce ${j.bounceSteps}, wall ${j.wallSteps}`);
+    console.log(`  ${j.name.padEnd(16)} ${String(j.kmh).padStart(3)} km/h: air ${j.air}s, ${j.dist} m (recorded ${j.recorded}), peak ${j.maxHeight} m, landing vy ${j.vyLand} m/s, lands on ${j.landSurf}${j.landRoad ? ' (road)' : ''}, bounce ${j.bounceSteps}, wall ${j.wallSteps}`);
     if (j.bounceSteps) fail(j.name + ' bounced'); if (j.kmh >= 140 && !(j.air > 0.3)) fail(j.name + ' no air at ' + j.kmh);
+    if (j.kmh === 200 && !(j.dist >= 50 && j.dist <= 70)) fail(j.name + ' 200 km/h distance ' + j.dist);
+    if (j.kmh <= 200 && (!j.landRoad && j.name.startsWith('Ring') || j.wallSteps)) fail(j.name + ' landing not on open road at ' + j.kmh);
   }
   console.log('\nELEVATED HIGHWAY + TUNNEL (violations = steps below the deck / off the tunnel floor)');
   for (const l of r.levels) {
     console.log(`  ${l.name.padEnd(42)} ${l.kmh} km/h: reached ${l.reached}, ${l.steps} steps, wall ${l.wallSteps}, air ${l.airSteps}, violations ${l.violations} (worst ${l.worst} m), max height change/step ${l.maxStepDy} m`);
     if (!l.reached || l.violations) fail(l.name);
+  }
+  console.log('\nCAMERA COLLISION (chase camera driven frame by frame; pull = share of the normal distance kept)');
+  for (const c of r.cam) {
+    console.log(`  ${c.name.padEnd(30)} ${c.kmh} km/h: ${c.frames} frames, reached ${c.reached}, camera inside a building ${c.camInside} frames, above the tunnel roof ${c.aboveRoof}, closest pull ${c.minPull}, max pull change/frame ${c.maxPullChangePerFrame}, max extra camera move/frame ${c.maxExtraMovePerFrame} m`);
+    if (c.camInside || c.aboveRoof || !c.reached) fail('camera ' + c.name);
+  }
+  console.log('\nTRAFFIC PER DENSITY (downtown loop; High soaks 4 min)');
+  for (const t of r.trafficDens) {
+    console.log(`  ${t.density.padEnd(6)} cars ${t.cars} (avg ${t.avgCars}), traffic JS ${t.jsMsPerFrame} ms/frame, overlapping pairs ${t.overlapPairs} in ${t.samplesWithOverlap}/${t.samples} samples, longest still ${t.longestStill} s, recycled stuck ${t.unstuck}, respawns ${t.respawns}, types ${JSON.stringify(t.types)}`);
+    if (t.unstuck > 0 || t.longestStill > 25) fail('traffic stuck at ' + t.density);
   }
   console.log('\nPROPS, TRAFFIC, RECORDS');
   console.log('  cones in the yard line: ' + r.props.cones + ', knocked over at 80 km/h: ' + r.props.knocked + ', speed after ' + r.props.kmhAfter + ' km/h');
