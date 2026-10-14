@@ -299,6 +299,20 @@
   #maprec b { font-variant-numeric: tabular-nums; white-space: nowrap; }
   #scr-map .mbtns { flex-wrap: wrap; justify-content: center; }
   @media (max-width: 760px) { .mapwrap { flex-direction: column; height: auto; } #mapcv { height: 42vh; flex: none; } #maprec { width: auto; max-height: 18vh; } }
+  #adv-rows { max-height: 62vh; overflow-y: auto; }
+  #menu #scr-photo { pointer-events: none; align-items: flex-end; justify-content: flex-start; }
+  #scr-photo .photo-panel .lbl { font-size: 12px; white-space: nowrap; margin-right: 8px; }
+  #scr-photo .photo-panel .bar { width: 56px; }
+  #scr-photo .photo-panel { pointer-events: auto; width: min(390px, 92vw); padding: 10px 14px; background: rgba(10,16,28,.55); }
+  #scr-photo .photo-panel .opt { padding-top: 4px; padding-bottom: 4px; }
+  body.photo-hide #scr-photo .photo-panel { display: none; }
+  body.photo .navhint { display: none; }
+  #loading { position: fixed; inset: 0; z-index: 50; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+    background: radial-gradient(ellipse at 50% 60%, #f3a970 0%, #b4566a 45%, #2b1d3a 100%); color: #fff; transition: opacity .5s; }
+  body.loaded #loading { opacity: 0; pointer-events: none; }
+  #loading .lbar { width: min(70vw, 420px); height: 8px; border-radius: 4px; background: rgba(255,255,255,.2); overflow: hidden; }
+  #loading .lbar i { display: block; height: 100%; width: 0; background: linear-gradient(90deg, #ffd27a, #fff); transition: width .25s; }
+  #loadMsg { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; opacity: .85; margin: 0; }
   #err { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; color: #fff; background: #123; font-size: 16px; padding: 24px; text-align: center; }
 </style>
 </head>
@@ -392,6 +406,7 @@
     <div class="panelx">
       <div class="opt" data-nav data-kind="choice" data-key="quality"><span class="lbl">Graphics quality<br><span class="note" id="q-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt" data-nav data-kind="button" data-act="adv" id="opt-adv"><span class="lbl">Advanced graphics<br><span class="note">Extreme: turn each feature on or off</span></span><span class="ctl"><span class="val">&#9658;</span></span></div>
       <div class="opt" data-nav data-kind="choice" data-key="transmission" data-values="auto,manual" data-labels="Automatic,Manual"><span class="lbl">Transmission<br><span class="note" id="trans-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="choice" data-key="handling" data-values="motorfest,grip" data-labels="Motorfest,Grip"><span class="lbl">Handling style<br><span class="note" id="handling-note"></span></span>
@@ -460,11 +475,40 @@
       <button class="mbtn fr-only" data-nav data-act="map">Map</button>
       <button class="mbtn tt-only" data-nav data-act="ghost" id="btn-ghost">Ghost: on</button>
       <button class="mbtn tt-only" data-nav data-act="records">Leaderboard</button>
+      <button class="mbtn" data-nav data-act="photo">Photo mode</button>
       <button class="mbtn" data-nav data-act="restart">Restart</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
       <button class="mbtn" data-nav data-act="controls">Controls</button>
       <button class="mbtn" data-nav data-act="quit">Quit to menu</button>
     </div>
+  </div>
+
+  <div class="screen" id="scr-photo" data-back="photoExit">
+    <div class="panelx photo-panel">
+      <h2 class="mtitle" style="font-size:16px;margin:0 0 6px">Photo mode</h2>
+      <div class="opt" data-nav data-kind="range" data-key="p_fov" data-min="20" data-max="100" data-inc="5" data-unit="&deg;"><span class="lbl">Field of view</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt" data-nav data-kind="range" data-key="p_roll" data-min="-30" data-max="30" data-inc="2" data-unit="&deg;"><span class="lbl">Roll</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt" data-nav data-kind="range" data-key="p_exp" data-min="40" data-max="200" data-inc="10" data-unit="%"><span class="lbl">Exposure</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt" data-nav data-kind="range" data-key="p_dist" data-min="3" data-max="40" data-inc="1" data-unit=" m"><span class="lbl">Distance</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt dof-row" data-nav data-kind="range" data-key="p_focus" data-min="2" data-max="120" data-inc="2" data-unit=" m"><span class="lbl">Focus</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="opt dof-row" data-nav data-kind="range" data-key="p_blur" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Depth of field</span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
+      <div class="mbtns row" style="margin-top:8px;flex-wrap:wrap">
+        <button class="mbtn" data-nav data-act="photoShot">Save PNG</button><button class="mbtn" data-nav data-act="photoHide">Hide panel</button><button class="mbtn" data-nav data-act="photoExit">Exit</button>
+      </div>
+      <p class="note" id="photo-help" style="margin:8px 0 0;opacity:.8;font-size:11px"></p>
+    </div>
+  </div>
+
+  <div class="screen shade" id="scr-adv" data-back="back">
+    <h2 class="mtitle">Advanced graphics</h2>
+    <div class="panelx" id="adv-rows"></div>
+    <div class="mbtns row" style="margin-top:12px"><button class="mbtn" data-nav data-act="back">Back</button></div>
+  </div>
+
+  <div class="screen shade" id="scr-perf" data-back="perfKeep">
+    <h2 class="mtitle">Running slowly</h2>
+    <p class="tagline" style="max-width:420px;text-align:center">Extreme has been under 30 frames per second for 5 seconds. Switch to Ultra? (You can come back in Settings.)</p>
+    <div class="mbtns row" style="margin-top:12px"><button class="mbtn" data-nav data-act="perfUltra">Switch to Ultra</button><button class="mbtn" data-nav data-act="perfKeep">Keep Extreme</button></div>
   </div>
 
   <div class="screen shade" id="scr-records" data-back="back">
@@ -492,6 +536,7 @@
   </div>
 </div>
 
+<div id="loading"><h1 class="logo">ISLA RUSH</h1><div class="lbar"><i id="loadBar"></i></div><p id="loadMsg">Loading</p></div>
 <div id="err"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -1022,6 +1067,7 @@ const CONFIG = {
       medium: { detail: 380, props: true,  balconies: true,  castShadow: false, lampEvery: 1 },
       high:   { detail: 480, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
       ultra:  { detail: 640, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
+      extreme: { detail: 900, props: true, balconies: true,  castShadow: true,  lampEvery: 1 },
     },
     traffic: { off: 0, low: 12, medium: 26, high: 54, speed: [9, 14], radius: 340 },   // cars, m/s, m: kept around the player
     lights: { cycle: 18, amber: 2 },             // s: traffic-light phase (visual + traffic stops)
@@ -1070,6 +1116,11 @@ const CONFIG = {
     ultra:  { pixelRatio: 2,   antialias: false, shadows: true,  shadowMapSize: 4096, shadowRange: 110, shadowCasters: 3, allCast: true,
               density: 2.0,  terrainSegments: 256, seaSegments: 160, speedLines: 64,  envMap: true,  paint: 'physical', anisotropy: 16,
               post: true, carReflections: true, hdr: true, groundDetail: true, fogScale: 1.7, ultraWater: true },
+    // Extreme: the best this engine can do (PCs only, never auto-selected). Rendering features: ExtremeFX / ExtremePost,
+    // each switchable in Settings → Advanced graphics. pixelRatio is the cap; supersampling multiplies the screen's.
+    extreme: { pixelRatio: 3, antialias: false, shadows: true, shadowMapSize: 4096, shadowRange: 40, shadowCasters: 3, allCast: true,
+              density: 2.5, terrainSegments: 320, seaSegments: 220, speedLines: 64, envMap: true, paint: 'physical', anisotropy: 16,
+              post: true, carReflections: true, hdr: true, groundDetail: true, fogScale: 2.4, ultraWater: true, extreme: true },
   },
 };
 
@@ -1143,7 +1194,7 @@ function mergeGeos(parts, withUV = false) {
 }
 
 /* Graphics quality: ?q=low|medium|high, else the last choice, else Low on phones / High on desktop. */
-const QUALITY_KEYS = IS_TOUCH ? ['low', 'medium', 'high'] : ['low', 'medium', 'high', 'ultra'];   // Ultra: PCs only
+const QUALITY_KEYS = IS_TOUCH ? ['low', 'medium', 'high'] : ['low', 'medium', 'high', 'ultra', 'extreme'];   // Ultra, Extreme: PCs only
 const QUALITY_NAME = (() => {
   const p = new URLSearchParams(location.search).get('q');
   if (QUALITY_KEYS.includes(p)) return p;
@@ -1163,7 +1214,11 @@ const DEFAULT_BINDINGS = {
 const copyBindings = (b) => JSON.parse(JSON.stringify(b));
 
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high', spawn: 'circuit', traffic: IS_TOUCH ? 'low' : 'medium', ghost: 'on' },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high', spawn: 'circuit', traffic: IS_TOUCH ? 'low' : 'medium', ghost: 'on',
+          x_ssaa: true, x_msaa: true, x_aa: true, x_csm: true, x_pcss: true, x_contact: true, x_ssao: true, x_rays: true, x_flare: true, x_lamps: true,
+          x_carRefl: true, x_ocean: true, x_foam: true, x_wet: true, x_materials: true, x_grass: true, x_sway: true, x_clouds: true, x_bloom: true,
+          x_motion: true, x_dof: true, x_chroma: true, x_grain: true, x_grade: true, x_exposure: 100,
+          p_fov: 55, p_roll: 0, p_exp: 100, p_dist: 9, p_focus: 9, p_blur: 40 },
   load() {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem('islaRush.settings') || '{}') || {}; Object.assign(this.data, saved); } catch (e) { /* storage blocked / corrupt */ }
@@ -1721,8 +1776,9 @@ class World {
     geo.rotateX(-Math.PI / 2);
     geo.translate(W.terrainCenter[0], W.seaLevel, W.terrainCenter[1]);
     this.seaMat = new THREE.ShaderMaterial({
-      defines: this.Q.ultraWater ? { ULTRA: 1 } : {},
+      defines: Object.assign(this.Q.ultraWater ? { ULTRA: 1 } : {}, this.Q.extreme ? { EXTREME: 1 } : {}),
       uniforms: THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
+        tRefl: { value: null }, reflVP: { value: new THREE.Matrix4() }, reflOn: { value: 0 }, tHeight: { value: null }, hBox: { value: new THREE.Vector4() }, foamOn: { value: 0 },
         time: { value: 0 }, sunDir: { value: this.sunDir.clone() },
         hazeColor: { value: new THREE.Color(W.fogColor) }, sunColor: { value: new THREE.Color(W.sunColor) },
       }]),
@@ -1743,6 +1799,11 @@ class World {
         uniform float time;
         uniform vec3 sunColor;
         varying vec3 vWorld;
+        #ifdef EXTREME
+        uniform sampler2D tRefl, tHeight; uniform mat4 reflVP; uniform float reflOn, foamOn; uniform vec4 hBox;
+        float fHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+        float fNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f); return mix(mix(fHash(i), fHash(i + vec2(1, 0)), f.x), mix(fHash(i + vec2(0, 1)), fHash(i + vec2(1, 1)), f.x), f.y); }
+        #endif
         #include <fog_pars_fragment>
         ${SKY_GLSL}
         vec2 wave(vec2 p, vec2 dir, float freq, float speed, float amp) {
@@ -1763,6 +1824,12 @@ class World {
           float fres = 0.03 + 0.97 * pow(1.0 - max(dot(n, v), 0.0), 5.0);
           vec3 r = reflect(-v, n); r.y = abs(r.y);
           vec3 refl = skyBase(r);
+          #ifdef EXTREME
+          if (reflOn > 0.5) {                                            // planar reflection of the world (rippled by the waves)
+            vec4 rc = reflVP * vec4(vWorld.x, 0.0, vWorld.z, 1.0); vec2 ruv = rc.xy / rc.w * 0.5 + 0.5 + n.xz * 0.05;
+            refl = mix(refl, texture2D(tRefl, clamp(ruv, 0.002, 0.998)).rgb, smoothstep(0.0, 0.04, min(min(ruv.x, 1.0 - ruv.x), min(ruv.y, 1.0 - ruv.y))));
+          }
+          #endif
           vec3 deep = vec3(0.02, 0.20, 0.30), shallow = vec3(0.05, 0.42, 0.46);
           vec3 water = mix(shallow, deep, smoothstep(30.0, 400.0, dist));
           vec3 col = mix(water, refl, clamp(fres * 0.9 + 0.08, 0.0, 1.0));
@@ -1773,11 +1840,24 @@ class World {
           #else
           col += sunColor * (pow(s, 600.0) * 5.0 + pow(s, 60.0) * 0.45);
           #endif
+          #ifdef EXTREME
+          if (foamOn > 0.5) {                                            // foam where the seabed comes up to the surface
+            vec2 hu = (vWorld.xz - hBox.xy) / hBox.zw;
+            if (hu.x > 0.0 && hu.x < 1.0 && hu.y > 0.0 && hu.y < 1.0) {
+              float depth = -(texture2D(tHeight, hu).r * 24.0 - 12.0);
+              float shore = 1.0 - smoothstep(0.0, 3.0, depth);
+              float nz = fNoise(vWorld.xz * 0.35 + time * 0.3) * 0.6 + fNoise(vWorld.xz * 1.3 - time * 0.5) * 0.4;
+              float band = smoothstep(0.55, 0.85, fract(depth * 0.7 - time * 0.22) * 0.55 + nz * 0.6);
+              col = mix(col, vec3(0.93, 0.96, 0.95), clamp(shore * (band + smoothstep(0.75, 1.0, shore) * 0.6), 0.0, 1.0) * 0.85);
+            }
+          }
+          #endif
           gl_FragColor = vec4(col, 1.0);
           #include <fog_fragment>
         }`,
     });
-    scene.add(new THREE.Mesh(geo, this.seaMat));
+    this.seaMesh = new THREE.Mesh(geo, this.seaMat);
+    scene.add(this.seaMesh);
   }
 
   makeSkyMaterial() {
@@ -2035,7 +2115,8 @@ class Scenery {
       const s = 0.75 + r() * 0.8, g = 0.8 + r() * 0.2;
       items.push({ m: M(x, t.h - 0.3, z, r() * 6.28, s, s * (0.85 + r() * 0.4), s), c: new THREE.Color(g, 0.9 + r() * 0.1, g * (0.85 + r() * 0.2)).getHex() });
     }
-    this.instanced(Scenery.pineGeo(), this.vc, items, 2);
+    const pm = new THREE.MeshLambertMaterial({ vertexColors: true }); pm.userData.sway = true;   // (its own material: Extreme sways it)
+    this.instanced(Scenery.pineGeo(), pm, items, 2);
   }
 
   /* ---------- seafront boulevard ---------- */
@@ -2054,6 +2135,7 @@ class Scenery {
           const p = this.at(i, side * o, dy);
           lamps.push({ m: M(p.x, p.y, p.z, yawR) });
           heads.push({ m: M(p.x, p.y, p.z, yawR) });
+          (this.lampPoints || (this.lampPoints = [])).push([p.x + Math.sin(yawR) * 2.4, T.Y[i], p.z + Math.cos(yawR) * 2.4, 6]);   // (Extreme light pools)
           nextL = d + S.lampSpacing;
         }
         if (type !== SIDE.PROM) continue;
@@ -2211,7 +2293,8 @@ class Scenery {
         next = T.DIST[i] + CONFIG.scenery.roadsidePalmSpacing / Math.sqrt(this.Q.density);
       }
     }
-    this.instanced(Scenery.palmGeo(), this.vc2, palms, 1);
+    const palmMat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }); palmMat.userData.sway = true;
+    this.instanced(Scenery.palmGeo(), palmMat, palms, 1);
     const umb = mergeGeos([
       [new THREE.CylinderGeometry(0.035, 0.035, 2.5, 5), 0xdddddd, M(0, 1.25, 0)],
       [new THREE.ConeGeometry(1.5, 0.55, 8, 1, true), 0xffffff, M(0, 2.45, 0)],
@@ -2584,6 +2667,7 @@ function buildCarModel(cfg, env, quality, color = cfg.color) {
     if (barMat) barMat.color.multiplyScalar(2.6);
   }
   paint.userData.hex = new THREE.Color(color).getHexString();
+  if (quality.extreme) ExtremeFX.flakes(paint);
   return { root, body, wheels, tailMat, glow, paint, glass, flames, barMat };
 }
 
@@ -4676,6 +4760,8 @@ class Menu {
     if (name === 'controls') this.buildControls();
     if (name === 'map') this.g.drawMap();
     if (name === 'records') this.refreshRecords();
+    if (name === 'photo') this.refreshPhoto();
+    if (name === 'adv') { this.buildAdv(); this.advOpen = Object.fromEntries(XT_KEYS.map(([k]) => [k, Settings.data[k]])); }
     if (name === 'pause') this.refreshPause();
     const rows = this.rows();
     this.setFocus(focus !== null ? focus : (name === 'select' || name === 'mode') ? rows.length - 1 : 0);
@@ -4694,7 +4780,7 @@ class Menu {
     this.focus = clamp(i, 0, rows.length - 1);
     rows.forEach((r, k) => r.classList.toggle('focus', k === this.focus));
     if (this.name === 'controls') this.markBindCol();
-    if ((this.name === 'controls' || this.name === 'settings') && rows[this.focus].scrollIntoView) rows[this.focus].scrollIntoView({ block: 'nearest' });
+    if ((this.name === 'controls' || this.name === 'settings' || this.name === 'adv') && rows[this.focus].scrollIntoView) rows[this.focus].scrollIntoView({ block: 'nearest' });
   }
 
   move(d) { const n = this.rows().length; if (n) { this.setFocus((this.focus + d + n) % n); this.g.sound.ui('move'); } }
@@ -4709,7 +4795,7 @@ class Menu {
     else if (kind === 'color') this.setColor((Settings.colorIndex(this.selCar) + d + 4) % 4);
     else if (kind === 'range') {
       const k = row.dataset.key, v = clamp(Settings.data[k] + d * +row.dataset.inc, +row.dataset.min, +row.dataset.max);
-      Settings.data[k] = v; Settings.save(); this.g.applySettings(); this.refreshSettings();
+      Settings.data[k] = v; Settings.save(); this.g.applySettings(); this.refreshSettings(); if (this.name === 'adv') this.refreshAdv(); if (this.name === 'photo') this.refreshPhoto();
     } else if (kind === 'choice' && row.dataset.key !== 'quality') {
       const vals = row.dataset.values.split(','), k = row.dataset.key, cur = String(Settings.data[k]);
       const v = vals[(vals.indexOf(cur) + d + vals.length) % vals.length];
@@ -4729,7 +4815,7 @@ class Menu {
     this.g.sound.ui(row.dataset.act === 'back' ? 'back' : 'select');
     const kind = row.dataset.kind, act = row.dataset.act;
     if (kind === 'bind') { this.startCapture(row.dataset.action, this.bindCol || 'key'); return; }
-    if (kind === 'toggle') { const k = row.dataset.key; Settings.data[k] = !Settings.data[k]; Settings.save(); this.g.applySettings(); this.refreshSettings(); return; }
+    if (kind === 'toggle') { const k = row.dataset.key; Settings.data[k] = !Settings.data[k]; Settings.save(); this.g.applySettings(); this.refreshSettings(); if (this.name === 'adv') this.refreshAdv(); return; }
     if (kind === 'car' || kind === 'color') { this.go('race'); return; }
     if (kind === 'choice') { this.adjust(1); return; }
     if (act) this.go(act, gesture);
@@ -4772,8 +4858,16 @@ class Menu {
       case 'hid': this.enableHid(gesture); break;
       case 'map': this.show('map'); break;
       case 'tr-circuit': case 'tr-oldtown': case 'tr-downtown': case 'tr-port': g.setPaused(false); g.spawnFree(act.slice(3)); break;
+      case 'adv': this.show('adv'); break;
+      case 'photo': g.enterPhoto(); break;
+      case 'photoExit': g.exitPhoto(); break;
+      case 'photoHide': document.body.classList.add('photo-hide'); g.hud.toast('Panel hidden \u00b7 H, \u25b3 / Y or a tap brings it back', 2.5); break;
+      case 'photoShot': g.saveScreenshot(); break;
+      case 'perfUltra': g.reloadWithQuality('ultra', false); return;
+      case 'perfKeep': g.setPaused(false); break;
       case 'back': {
         if (this.name === 'settings' && this.pendingQuality !== QUALITY_NAME) { g.reloadWithQuality(this.pendingQuality); return; }
+        if (this.name === 'adv' && XT_KEYS.some(([k, , , rl]) => rl && Settings.data[k] !== this.advOpen[k])) { g.reloadWithQuality('extreme'); return; }
         const prev = this.stack.pop();
         if (prev) this.show(prev.name, false, prev.focus); else this.show('main', false);   // back to where you were
         break;
@@ -4921,6 +5015,43 @@ class Menu {
     }
   }
 
+  /** Settings → Advanced graphics (Extreme): one switch per feature + exposure. */
+  buildAdv() {
+    const box = document.getElementById('adv-rows');
+    if (!box.childElementCount) {
+      const ex = document.createElement('div'); ex.className = 'opt'; ex.dataset.nav = ''; ex.dataset.kind = 'range'; ex.dataset.key = 'x_exposure';
+      Object.assign(ex.dataset, { min: 50, max: 200, inc: 10, unit: '%' });
+      ex.innerHTML = '<span class="lbl">Exposure<br><span class="note">ACES tone mapping exposure</span></span><span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span>';
+      box.append(ex);
+      for (const [k, label, note, reload] of XT_KEYS) {
+        const r = document.createElement('div'); r.className = 'opt'; r.dataset.nav = ''; r.dataset.kind = 'toggle'; r.dataset.key = k;
+        const l = document.createElement('span'); l.className = 'lbl'; l.textContent = label;
+        const n = document.createElement('span'); n.className = 'note'; n.textContent = note + (reload ? ' \u00b7 applies on leaving (reloads)' : '');
+        l.append(document.createElement('br'), n);
+        const c = document.createElement('span'); c.className = 'ctl'; c.innerHTML = '<span class="val"></span>';
+        r.append(l, c); box.append(r);
+      }
+    }
+    this.refreshAdv();
+  }
+  refreshAdv() {
+    for (const row of this.el('adv').querySelectorAll('.opt[data-kind]')) {
+      const k = row.dataset.key, val = row.querySelector('.val');
+      if (row.dataset.kind === 'range') { const v = Settings.data[k], f = (v - row.dataset.min) / (row.dataset.max - row.dataset.min); val.textContent = v + row.dataset.unit; row.querySelector('.bar i').style.width = (f * 100) + '%'; }
+      else val.textContent = Settings.data[k] ? 'ON' : 'OFF';
+    }
+  }
+
+  refreshPhoto() {
+    for (const row of this.el('photo').querySelectorAll('.opt[data-kind=range]')) {
+      const k = row.dataset.key, v = Settings.data[k], f = (v - row.dataset.min) / (row.dataset.max - row.dataset.min);
+      row.querySelector('.val').textContent = v + row.dataset.unit.replace('&deg;', '\u00b0'); row.querySelector('.bar i').style.width = (f * 100) + '%';
+    }
+    for (const r of this.el('photo').querySelectorAll('.dof-row')) r.style.display = this.g.photoDof() ? '' : 'none';
+    document.getElementById('photo-help').textContent = IS_TOUCH ? 'Drag to orbit the car. Sliders: tap \u2212 / +.' :
+      'Orbit: drag the mouse, I J K L or the right stick \u00b7 zoom: wheel, U / O or R2 / L2 \u00b7 H hides the panel';
+  }
+
   refreshPause() { const b = document.getElementById('btn-ghost'); if (b) b.textContent = 'Ghost: ' + (Settings.data.ghost === 'on' ? 'on' : 'off'); }
 
   /** Records screen: best lap, its sectors, best sectors ever and the theoretical best, per car. */
@@ -4974,8 +5105,10 @@ class Menu {
     document.getElementById('assist-note').textContent = { off: 'No help: overdo it and you spin', low: 'Light countersteer help, up to ~65\u00b0', high: 'Auto countersteer, max ~55\u00b0' }[Settings.data.assist] || '';
     document.getElementById('trans-note').textContent = Settings.data.transmission === 'manual' ? 'Shift yourself: R1 / L1 (E / Q). Shift light shows the best moment' : 'The car shifts for you';
     document.getElementById('q-note').textContent = (this.pendingQuality === 'ultra' ? 'Ultra: for powerful PCs. May lag on tablets and phones. ' : '') +
+      (this.pendingQuality === 'extreme' ? 'Extreme: for high-end PCs only. ' : '') +
       (this.pendingQuality !== QUALITY_NAME ? 'Applies when you leave (reloads)' : (IS_TOUCH ? 'Low is recommended on phones' : ''));
-    document.getElementById('q-note').classList.toggle('warn', this.pendingQuality === 'ultra');
+    document.getElementById('q-note').classList.toggle('warn', this.pendingQuality === 'ultra' || this.pendingQuality === 'extreme');
+    document.getElementById('opt-adv').style.display = QUALITY_NAME === 'extreme' ? '' : 'none';
     const hid = this.g.hid, row = document.getElementById('opt-hid');
     row.style.display = hid.supported ? '' : 'none';
     document.getElementById('hid-val').textContent = hid.dev ? 'CONNECTED' : '►';
@@ -5014,6 +5147,763 @@ class Menu {
  * lights), and one composite pass adds bloom, ACES filmic tone mapping, a
  * light golden-hour grade and a soft vignette.
  * ===================================================================== */
+/* =====================================================================
+ * EXTREME › MATERIALS, SHADOWS, CLOUDS
+ * The Extreme preset (PCs only, never picked automatically). Every feature has its own switch in Settings →
+ * Advanced graphics (Settings.data.x_*). Three kinds of work happen here:
+ *  - shader chunk patches, installed once before anything compiles: cascaded shadow maps (three directional shadow
+ *    maps: near / mid / far, picked per pixel), PCSS-style soft shadows (blocker search + variable filter) and
+ *    moving cloud shadows on the sun light;
+ *  - a material upgrade: the world's per-vertex Lambert materials become per-pixel Standard ones with procedural
+ *    detail normal + roughness (asphalt, cobbles, sand, rock / concrete / walls: picked per pixel from the vertex
+ *    colour and the slope), a wet sheen on the port yard, glass on the towers' windows, glowing lamp heads, palms and
+ *    grass swaying in the wind, and metallic flakes under the car paint's clear coat;
+ *  - the shared time / wind uniforms.
+ * ===================================================================== */
+const XT_KEYS = [
+  // [key, label, note, reload]
+  ['x_ssaa', 'Supersampling 1.5×', 'Renders at up to 1.5× your screen resolution, then scales down', false],
+  ['x_msaa', 'MSAA 4×', 'Hardware multisampling on the scene', true],
+  ['x_aa', 'Edge anti-aliasing', 'Post-process edge smoothing (FXAA-quality pass)', false],
+  ['x_csm', 'Cascaded shadows', 'Sharp near, mid and far shadow maps', true],
+  ['x_pcss', 'Soft shadow edges (PCSS)', 'Shadows soften with distance from the caster', true],
+  ['x_contact', 'Contact shadows', 'Screen-space shadows where things touch the ground', false],
+  ['x_ssao', 'Ambient occlusion (SSAO)', 'Soft darkening in corners and under things', false],
+  ['x_rays', 'Sun rays', 'Screen-space light shafts through palms, buildings and cranes', false],
+  ['x_flare', 'Lens flare', 'When you look into the sun', false],
+  ['x_lamps', 'Streetlamp light', 'Pools of warm light under the lamps', false],
+  ['x_carRefl', 'Live car reflections', 'Car paint reflects the world, refreshed every frame', false],
+  ['x_ocean', 'Ocean reflections', 'Planar reflection of the island on the sea', false],
+  ['x_foam', 'Shoreline foam', 'White water where the sea meets the land', false],
+  ['x_wet', 'Wet port concrete', 'A glossy, wet look on the port yard', false],
+  ['x_materials', 'Detailed materials', 'Normal + roughness detail on roads, cobbles, sand, rock, walls; paint flakes', true],
+  ['x_grass', 'Grass', 'Grass blades on the land near you', false],
+  ['x_sway', 'Wind in palms', 'Palms, trees and grass sway', false],
+  ['x_clouds', 'Cloud shadows', 'Moving cloud shadows on the ground', false],
+  ['x_bloom', 'Bloom', 'High-quality glow on bright lights', false],
+  ['x_motion', 'Motion blur', 'Camera motion blur at speed', false],
+  ['x_dof', 'Depth of field', 'Subtle while driving, strong in photo mode', false],
+  ['x_chroma', 'Chromatic aberration', 'A touch of colour fringing at the edges', false],
+  ['x_grain', 'Film grain', 'Fine animated grain', false],
+  ['x_grade', 'Golden-hour grade', 'Colour grading + vignette', false],
+];
+
+const ExtremeFX = {
+  on: QUALITY_NAME === 'extreme',
+  U: { xtTime: { value: 0 }, xtCloud: { value: 1 }, xtSway: { value: 1 }, xtWet: { value: 1 }, xtWetRect: { value: new THREE.Vector4(-2962, 468, -2618, 812) },
+       xtWind: { value: new THREE.Vector2(6, 2.5) } },
+  flag(k) { return !!Settings.data[k]; },
+
+  /** Patch three's shader chunks (Extreme only, before the first compile). */
+  install() {
+    if (!this.on) return;
+    const C = THREE.ShaderChunk;
+    // cloud shadows: a moving fbm mask on the sun light (materials that carry a world position: XT_WORLD)
+    const cloud = `
+#ifdef XT_WORLD
+uniform float xtTime; uniform float xtCloud; uniform vec2 xtWind;
+varying vec3 vXtW;
+float xtHash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
+float xtNoise(vec2 p) { vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+  return mix(mix(xtHash(i), xtHash(i + vec2(1, 0)), f.x), mix(xtHash(i + vec2(0, 1)), xtHash(i + vec2(1, 1)), f.x), f.y); }
+float xtCloudShadow() {
+  if (xtCloud < 0.5) return 1.0;
+  vec2 p = (vXtW.xz + xtWind * xtTime * 3.0) * 0.0018;
+  float v = xtNoise(p) * 0.55 + xtNoise(p * 2.1 + 3.7) * 0.3 + xtNoise(p * 4.3 - 1.3) * 0.15;
+  return 1.0 - 0.55 * smoothstep(0.52, 0.72, v);
+}
+#endif
+`;
+    C.lights_pars_begin = C.lights_pars_begin + cloud;
+    // cascaded shadow maps: three directional shadow maps; the sun is light 0, lights 1 and 2 are dark carriers of
+    // the mid / far maps. Light 0 takes whichever cascade covers the pixel (blended at the edges).
+    if (this.flag('x_csm')) {
+      C.shadowmap_pars_fragment = C.shadowmap_pars_fragment.replace(/\n#endif\s*$/, `
+#if NUM_DIR_LIGHT_SHADOWS == 3
+float xtIn(vec4 sc) { vec3 c = sc.xyz / sc.w; vec2 e = min(c.xy, 1.0 - c.xy); return clamp(min(e.x, e.y) * 14.0, 0.0, 1.0) * step(c.z, 1.0); }
+float xtCascade() {
+  float w0 = xtIn(vDirectionalShadowCoord[0]), w1 = xtIn(vDirectionalShadowCoord[1]);
+  float s = getShadow(directionalShadowMap[2], directionalLightShadows[2].shadowMapSize, directionalLightShadows[2].shadowBias, directionalLightShadows[2].shadowRadius, vDirectionalShadowCoord[2]);
+  if (w1 > 0.0) s = mix(s, getShadow(directionalShadowMap[1], directionalLightShadows[1].shadowMapSize, directionalLightShadows[1].shadowBias, directionalLightShadows[1].shadowRadius, vDirectionalShadowCoord[1]), w1);
+  if (w0 > 0.0) s = mix(s, getShadow(directionalShadowMap[0], directionalLightShadows[0].shadowMapSize, directionalLightShadows[0].shadowBias, directionalLightShadows[0].shadowRadius, vDirectionalShadowCoord[0]), w0);
+  return s;
+}
+#endif
+#endif
+`);
+    }
+    const line = 'directLight.color *= all( bvec2( directLight.visible, receiveShadow ) ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;';
+    if (!C.lights_fragment_begin.includes(line)) { console.warn('Extreme: shadow chunk changed, cascades off'); return; }
+    C.lights_fragment_begin = C.lights_fragment_begin.replace(line, `
+		#if NUM_DIR_LIGHT_SHADOWS == 3 && defined( XT_CSM_ON )
+		directLight.color *= ( UNROLLED_LOOP_INDEX == 0 && receiveShadow ) ? xtCascade() : 1.0;
+		#else
+		${line}
+		#endif
+		#ifdef XT_WORLD
+		if ( UNROLLED_LOOP_INDEX == 0 ) directLight.color *= xtCloudShadow();
+		#endif`);
+    // PCSS: blocker search, then a filter as wide as the estimated penumbra (golden-angle spiral, per-pixel rotation)
+    if (this.flag('x_pcss')) {
+      const head = 'float getShadow( sampler2D shadowMap, vec2 shadowMapSize, float shadowBias, float shadowRadius, vec4 shadowCoord ) {';
+      C.shadowmap_pars_fragment = C.shadowmap_pars_fragment.replace(head, `
+	float xtPcss( sampler2D sm, vec2 size, vec3 c ) {
+		float rot = fract( sin( dot( c.xy, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 ) * 6.2832;
+		vec2 tx = 1.0 / size;
+		float search = 7.0, sum = 0.0, nb = 0.0;
+		for ( int i = 0; i < 12; i ++ ) {
+			float fi = float( i ), a = fi * 2.39996 + rot, r = sqrt( ( fi + 0.5 ) / 12.0 );
+			float d = unpackRGBAToDepth( texture2D( sm, c.xy + vec2( cos( a ), sin( a ) ) * r * search * tx ) );
+			if ( d < c.z ) { sum += d; nb += 1.0; }
+		}
+		if ( nb < 0.5 ) return 1.0;
+		float pen = clamp( ( c.z - sum / nb ) * 900.0, 1.0, 9.0 );
+		float s = 0.0;
+		for ( int i = 0; i < 16; i ++ ) {
+			float fi = float( i ), a = fi * 2.39996 + rot * 1.7, r = sqrt( ( fi + 0.5 ) / 16.0 );
+			s += texture2DCompare( sm, c.xy + vec2( cos( a ), sin( a ) ) * r * pen * tx, c.z );
+		}
+		return s / 16.0;
+	}
+	${head}
+		{
+			vec4 sc = shadowCoord; sc.xyz /= sc.w; sc.z += shadowBias;
+			if ( sc.x < 0.0 || sc.x > 1.0 || sc.y < 0.0 || sc.y > 1.0 || sc.z > 1.0 ) return 1.0;
+			return xtPcss( shadowMap, shadowMapSize, sc.xyz );
+		}`);
+    }
+  },
+
+  /* ---------- procedural detail textures (normal xy in RG, roughness / height in B) ---------- */
+  textures() {
+    if (this.tex) return this.tex;
+    const N = 256, rnd = mulberry32(77);
+    const make = (heightFn, strength) => {
+      const h = new Float32Array(N * N);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) h[y * N + x] = heightFn(x / N, y / N);
+      const data = new Uint8Array(N * N * 4);
+      for (let y = 0; y < N; y++) for (let x = 0; x < N; x++) {
+        const at = (u, v) => h[((v + N) % N) * N + ((u + N) % N)];
+        const dx = (at(x + 1, y) - at(x - 1, y)) * strength, dy = (at(x, y + 1) - at(x, y - 1)) * strength;
+        const l = Math.hypot(dx, dy, 1), i = (y * N + x) * 4;
+        data[i] = Math.round((-dx / l * 0.5 + 0.5) * 255); data[i + 1] = Math.round((-dy / l * 0.5 + 0.5) * 255);
+        data[i + 2] = Math.round(clamp(at(x, y), 0, 1) * 255); data[i + 3] = 255;
+      }
+      const t = new THREE.DataTexture(data, N, N, THREE.RGBAFormat);
+      t.wrapS = t.wrapT = THREE.RepeatWrapping; t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearMipmapLinearFilter; t.generateMipmaps = true;
+      t.anisotropy = 8; t.needsUpdate = true;
+      return t;
+    };
+    // tileable value noise
+    const grid = (g) => { const v = new Float32Array(g * g); for (let i = 0; i < v.length; i++) v[i] = rnd(); return (u, w) => {
+      const x = u * g, y = w * g, xi = Math.floor(x), yi = Math.floor(y), fx = x - xi, fy = y - yi, s = (t) => t * t * (3 - 2 * t);
+      const a = v[(yi % g) * g + (xi % g)], b = v[(yi % g) * g + ((xi + 1) % g)], c = v[((yi + 1) % g) * g + (xi % g)], d = v[((yi + 1) % g) * g + ((xi + 1) % g)];
+      return lerp(lerp(a, b, s(fx)), lerp(c, d, s(fx)), s(fy)); }; };
+    const n8 = grid(8), n32 = grid(32), n64 = grid(64), n128 = grid(128);
+    // cobbles: jittered cells (rounded stones with mortar gaps)
+    const cells = 10, pts = []; for (let j = 0; j < cells; j++) for (let i = 0; i < cells; i++) pts.push([(i + 0.2 + rnd() * 0.6) / cells, (j + 0.2 + rnd() * 0.6) / cells]);
+    const cob = (u, w) => {
+      let d1 = 9, d2 = 9;
+      for (const [px, py] of pts) for (const ox of [-1, 0, 1]) for (const oy of [-1, 0, 1]) {
+        const d = Math.hypot(u - px - ox, w - py - oy); if (d < d1) { d2 = d1; d1 = d; } else if (d < d2) d2 = d;
+      }
+      return smoothstep(0, 0.035, d2 - d1) * (0.8 + 0.2 * n64(u, w));
+    };
+    this.tex = {
+      asphalt: make((u, w) => 0.5 + 0.35 * n128(u, w) + 0.15 * n64(u, w) - 0.08 * (n8(u, w) > 0.82 ? 1 : 0), 2.2),
+      cobble: make(cob, 3.2),
+      sand: make((u, w) => 0.5 + 0.3 * Math.sin((u * 6 + n8(u, w) * 1.5) * Math.PI * 2) * 0.5 + 0.25 * n128(u, w), 1.6),
+      rock: make((u, w) => 0.6 * n8(u, w) + 0.25 * n32(u, w) + 0.15 * n128(u, w), 3.0),
+    };
+    return this.tex;
+  },
+
+  /**
+   * Lambert → Standard with the Extreme detail patch. kind: 'world' (detail by colour + slope), 'plain' (no detail,
+   * just per-pixel light + clouds), 'sway' (palms / trees), 'grass'. Keeps maps, vertex colours, sides, offsets and any
+   * existing onBeforeCompile patch (tower windows, warehouse ribs).
+   */
+  upgrade(L, kind = 'world', env = null) {
+    if (!this.on || !L || !L.isMeshLambertMaterial) return L;
+    const cacheKey = kind + '|' + (L.onBeforeCompile && L.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? L.onBeforeCompile.toString().length + (L.userData.glass ? 'g' : '') : '-') + (L.vertexColors ? 'v' : '') + (L.map ? 'm' : '');
+    const m = new THREE.MeshStandardMaterial({ color: L.color, map: L.map, vertexColors: L.vertexColors, side: L.side, transparent: L.transparent, opacity: L.opacity,
+      polygonOffset: L.polygonOffset, polygonOffsetFactor: L.polygonOffsetFactor, polygonOffsetUnits: L.polygonOffsetUnits, emissive: L.emissive, depthWrite: L.depthWrite,
+      roughness: 0.9, metalness: 0, envMap: env, envMapIntensity: env ? 0.45 : 1 });
+    m.userData = Object.assign({}, L.userData);
+    const prev = L.onBeforeCompile !== THREE.Material.prototype.onBeforeCompile ? L.onBeforeCompile : null;
+    const detail = kind === 'world' && this.flag('x_materials'), T = detail ? this.textures() : null;
+    m.defines = { XT_WORLD: '' };
+    if (this.flag('x_csm')) m.defines.XT_CSM_ON = '';
+    if (detail) m.defines.XT_DETAIL = '';
+    if (kind === 'sway') m.defines.XT_SWAY = '';
+    if (kind === 'grass') m.defines.XT_GRASS = '';
+    if (L.userData.glass) m.defines.XT_GLASS = '';
+    m.onBeforeCompile = (sh, r) => {
+      if (prev) prev(sh, r);
+      Object.assign(sh.uniforms, this.U);
+      if (T) { sh.uniforms.xtAsph = { value: T.asphalt }; sh.uniforms.xtCob = { value: T.cobble }; sh.uniforms.xtSand = { value: T.sand }; sh.uniforms.xtRock = { value: T.rock }; }
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vXtW; varying vec3 vXtN; uniform float xtTime; uniform float xtSway;')
+        .replace('#include <begin_vertex>', `#include <begin_vertex>
+          #if defined( XT_SWAY ) || defined( XT_GRASS )
+          {
+            vec3 ip = vec3(0.0);
+            #ifdef USE_INSTANCING
+            ip = (instanceMatrix * vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+            #endif
+            #ifdef XT_SWAY
+            float sh = smoothstep(2.5, 9.0, transformed.y) * xtSway;
+            transformed.x += sin(xtTime * 1.3 + ip.x * 0.37 + ip.z * 0.11) * 0.28 * sh * sh;
+            transformed.z += cos(xtTime * 1.05 + ip.z * 0.29) * 0.22 * sh * sh;
+            #else
+            float sh = clamp(transformed.y / 0.7, 0.0, 1.0) * xtSway;
+            transformed.x += sin(xtTime * 2.1 + ip.x * 0.9 + ip.z * 0.4) * 0.12 * sh;
+            transformed.z += cos(xtTime * 1.7 + ip.z * 0.8) * 0.08 * sh;
+            #endif
+          }
+          #endif`)
+        .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
+          {
+            vec4 xw = vec4(transformed, 1.0); vec3 xn = objectNormal;
+            #ifdef USE_INSTANCING
+            xw = instanceMatrix * xw; xn = mat3(instanceMatrix) * xn;
+            #endif
+            vXtW = (modelMatrix * xw).xyz; vXtN = normalize(mat3(modelMatrix) * xn);
+          }`);
+      let fs = sh.fragmentShader.replace('#include <common>', `#include <common>
+        varying vec3 vXtN; uniform float xtWet; uniform vec4 xtWetRect;
+        #ifdef XT_DETAIL
+        uniform sampler2D xtAsph, xtCob, xtSand, xtRock;
+        #endif
+        float xtGlass = 0.0;`);
+      fs = fs.replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+        {
+          vec3 xc = diffuseColor.rgb;
+          float lum = dot(xc, vec3(0.299, 0.587, 0.114)), sat = max(xc.r, max(xc.g, xc.b)) - min(xc.r, min(xc.g, xc.b));
+          vec3 wn = normalize(vXtN);
+          float dist = length(vViewPosition);
+          #ifdef XT_DETAIL
+          float flat_ = smoothstep(0.55, 0.8, abs(wn.y));
+          vec2 uv = flat_ > 0.5 ? vXtW.xz : (abs(wn.x) > abs(wn.z) ? vXtW.zy : vXtW.xy);
+          float wGrass = smoothstep(0.03, 0.09, xc.g - max(xc.r, xc.b) * 0.95);
+          float wAsph = (1.0 - smoothstep(0.24, 0.34, lum)) * (1.0 - smoothstep(0.06, 0.12, sat)) * flat_;
+          float wCob = smoothstep(0.035, 0.07, xc.r - xc.b) * (1.0 - smoothstep(0.5, 0.62, lum)) * (1.0 - wGrass) * flat_;
+          float wSand = smoothstep(0.12, 0.22, xc.r - xc.b) * smoothstep(0.55, 0.7, lum) * flat_;
+          float wRock = clamp(1.0 - wAsph - wCob - wSand - wGrass * flat_, 0.0, 1.0);
+          vec4 tA = texture2D(xtAsph, uv * 0.32), tC = texture2D(xtCob, uv * 0.42), tS = texture2D(xtSand, uv * 0.16), tR = texture2D(xtRock, uv * (flat_ > 0.5 ? 0.09 : 0.22));
+          vec2 dn = (tA.xy * 2.0 - 1.0) * wAsph + (tC.xy * 2.0 - 1.0) * wCob * 1.2 + (tS.xy * 2.0 - 1.0) * wSand + (tR.xy * 2.0 - 1.0) * wRock * (flat_ > 0.5 ? 0.9 : 0.45)
+                  + (tR.xy * 2.0 - 1.0) * wGrass * 0.6;
+          float fade = 1.0 - smoothstep(35.0, 170.0, dist);
+          vec3 t1 = flat_ > 0.5 ? vec3(1.0, 0.0, 0.0) : (abs(wn.x) > abs(wn.z) ? vec3(0.0, 0.0, 1.0) : vec3(1.0, 0.0, 0.0));
+          vec3 t2 = flat_ > 0.5 ? vec3(0.0, 0.0, 1.0) : vec3(0.0, 1.0, 0.0);
+          vec3 pn = normalize(wn + (t1 * dn.x + t2 * dn.y) * 0.9 * fade);
+          normal = normalize((viewMatrix * vec4(pn, 0.0)).xyz) * (gl_FrontFacing ? 1.0 : 1.0);
+          roughnessFactor = clamp(0.94 - 0.12 * wAsph + 0.05 * wSand - 0.1 * wCob + (tR.z - 0.5) * 0.12, 0.55, 1.0);
+          diffuseColor.rgb *= 0.92 + 0.16 * mix(tA.z, tC.z, wCob) * fade;
+          #endif
+          // the port yard: wet concrete (dark, glossy)
+          if (xtWet > 0.5 && wn.y > 0.85 && vXtW.x > xtWetRect.x && vXtW.x < xtWetRect.z && vXtW.z > xtWetRect.y && vXtW.z < xtWetRect.w && lum > 0.4) {
+            float puddle = 0.55 + 0.45 * sin(vXtW.x * 0.11) * sin(vXtW.z * 0.13);
+            roughnessFactor = mix(roughnessFactor, 0.06, puddle); diffuseColor.rgb *= mix(1.0, 0.62, puddle);
+          }
+          #ifdef XT_GLASS
+          roughnessFactor = mix(roughnessFactor, 0.04, xtGlass); metalnessFactor = mix(metalnessFactor, 0.85, xtGlass);
+          #endif
+          // lamp heads (the warm white of the lamp geometry): glow so the bloom picks them up
+          if (all(lessThan(abs(xc - vec3(1.0, 0.94, 0.78)), vec3(0.035)))) totalEmissiveRadiance += xc * 2.2;
+        }`);
+      // tower windows: keep the glass mask for the glass look above
+      fs = fs.replace('diffuseColor.rgb = mix(diffuseColor.rgb, glass, win * 0.85);', 'diffuseColor.rgb = mix(diffuseColor.rgb, glass, win * 0.85); xtGlass = win;');
+      sh.fragmentShader = fs;
+    };
+    m.customProgramCacheKey = () => 'xt|' + cacheKey + '|' + Object.keys(m.defines).join(',');
+    return m;
+  },
+
+  /** Car paint: metallic flakes under the clear coat (Extreme + detailed materials). */
+  flakes(paint) {
+    if (!this.on || !this.flag('x_materials') || !paint || !paint.isMeshPhysicalMaterial) return;
+    paint.defines = Object.assign(paint.defines || {}, { XT_FLAKES: '' });
+    if (this.flag('x_csm')) paint.defines.XT_CSM_ON = '';
+    paint.onBeforeCompile = (sh) => {
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vXtP;')
+        .replace('#include <begin_vertex>', '#include <begin_vertex>\nvXtP = position;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nvarying vec3 vXtP;')
+        .replace('#include <normal_fragment_maps>', `#include <normal_fragment_maps>
+          {
+            vec3 cell = floor(vXtP * 260.0);
+            vec3 h = fract(sin(vec3(dot(cell, vec3(127.1, 311.7, 74.7)), dot(cell, vec3(269.5, 183.3, 246.1)), dot(cell, vec3(113.5, 271.9, 124.6)))) * 43758.5453) - 0.5;
+            float k = 0.22 * (1.0 - smoothstep(3.0, 18.0, length(vViewPosition)));
+            normal = normalize(normal + h * k);
+            roughnessFactor = clamp(roughnessFactor - 0.12 * k, 0.05, 1.0);
+          }`);
+    };
+    paint.customProgramCacheKey = () => 'xt-flakes';
+    paint.needsUpdate = true;
+  },
+
+  /** Every Lambert material under root → upgraded (shared materials stay shared). */
+  upgradeTree(root, env, kindOf = null) {
+    if (!this.on) return;
+    const done = new Map();
+    root.traverse(o => {
+      if (!o.isMesh || !o.material || Array.isArray(o.material) || !o.material.isMeshLambertMaterial) return;
+      const L = o.material;
+      if (L.userData.noXt) return;
+      if (!done.has(L)) done.set(L, this.upgrade(L, kindOf ? kindOf(o, L) : (L.userData.sway ? 'sway' : 'world'), env));
+      o.material = done.get(L);
+    });
+  },
+};
+ExtremeFX.install();
+
+/* =====================================================================
+ * EXTREME › POST-PROCESSING
+ * Scene → HDR target (4× MSAA on WebGL2, with a depth texture) at up to 1.5× the screen's resolution. Then:
+ *  half res: SSAO (SAO-style, 12 taps, normals from depth) + screen-space contact shadows toward the sun, bilateral
+ *            blur; a blurred copy of the scene for depth of field and motion blur;
+ *  quarter res: sun-ray occlusion mask → 3 radial blur passes toward the sun;
+ *  bloom: a 4-level mip chain;
+ *  composite: AO, contact shadows, camera motion blur (reprojected with the previous view-projection), depth of
+ *            field, bloom, sun rays, lens flare, ACES filmic tone mapping with exposure, golden-hour grade;
+ *  final: edge AA (FXAA-quality), chromatic aberration, film grain, vignette.
+ * Each part has its switch (Settings → Advanced graphics). stats.ms has a CPU-side timing per stage.
+ * ===================================================================== */
+class ExtremePost {
+  constructor(renderer, camera) {
+    this.r = renderer; this.camera = camera;
+    const gl2 = renderer.capabilities.isWebGL2, half = gl2 && renderer.extensions.has('EXT_color_buffer_float');
+    this.type = half ? THREE.HalfFloatType : THREE.UnsignedByteType; this.hdr = half;
+    const lin = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBAFormat, type: this.type };
+    const msaa = gl2 && Settings.data.x_msaa;
+    this.scene = msaa ? new THREE.WebGLMultisampleRenderTarget(1, 1, Object.assign({ depthBuffer: true }, lin)) : new THREE.WebGLRenderTarget(1, 1, Object.assign({ depthBuffer: true }, lin));
+    if (msaa) this.scene.samples = 4;
+    this.scene.depthTexture = new THREE.DepthTexture(1, 1); this.scene.depthTexture.type = THREE.UnsignedIntType;
+    const rt = (o = {}) => new THREE.WebGLRenderTarget(1, 1, Object.assign({ depthBuffer: false }, lin, o));
+    this.ao = rt(); this.ao2 = rt(); this.blurA = rt(); this.blurB = rt();
+    this.rayA = rt(); this.rayB = rt();
+    this.bl = [rt(), rt(), rt(), rt()]; this.blT = [rt(), rt(), rt(), rt()];
+    this.comp = rt({ type: THREE.UnsignedByteType });
+    this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); this.quad.frustumCulled = false;
+    this.fsScene = new THREE.Scene(); this.fsScene.add(this.quad);
+    this.prevVP = new THREE.Matrix4(); this.vp = new THREE.Matrix4(); this.ivp = new THREE.Matrix4(); this.hasPrev = false;
+    this.sunUV = new THREE.Vector3(); this.photo = null; this.carDist = 7; this.speed = 0; this.time = 0;
+    this.stats = { ms: {} };
+    const sh = (frag, uniforms) => new THREE.ShaderMaterial({ uniforms, vertexShader: FS_VERT, fragmentShader: frag, depthTest: false, depthWrite: false, extensions: { derivatives: true } });
+    const DEPTH = `
+      uniform sampler2D tDepth; uniform float near, far; uniform mat4 projInv;
+      float viewZ(vec2 uv) { float d = texture2D(tDepth, uv).x * 2.0 - 1.0; return 2.0 * near * far / (far + near - d * (far - near)); }
+      vec3 viewPos(vec2 uv) { float d = texture2D(tDepth, uv).x; vec4 p = projInv * vec4(uv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0); return p.xyz / p.w; }`;
+    const depthU = () => ({ tDepth: { value: null }, near: { value: 0.2 }, far: { value: 4000 }, projInv: { value: new THREE.Matrix4() } });
+    // SSAO + contact shadows (half res): R = ambient occlusion, G = contact shadow
+    this.aoMat = sh(`${DEPTH}
+      uniform vec2 texel; uniform vec3 sunView; uniform float aoOn, contactOn; uniform mat4 proj; varying vec2 vUv;
+      void main() {
+        float d0 = texture2D(tDepth, vUv).x;
+        if (d0 >= 0.99999) { gl_FragColor = vec4(1.0); return; }
+        vec3 P = viewPos(vUv);
+        vec3 N = normalize(cross(dFdx(P), dFdy(P)));
+        float ao = 0.0;
+        if (aoOn > 0.5) {
+          float rot = fract(sin(dot(vUv, vec2(12.9898, 78.233))) * 43758.5453) * 6.2832;
+          float R = 1.6, rad = R * proj[0][0] / -P.z * 0.5;
+          for (int i = 0; i < 12; i++) {
+            float fi = float(i), a = fi * 2.39996 + rot, rr = (fi + 0.5) / 12.0;
+            vec2 uv = vUv + vec2(cos(a), sin(a)) * rr * rad;
+            vec3 S = viewPos(uv), v = S - P;
+            float vv = dot(v, v), vn = dot(v, N);
+            ao += max(0.0, vn - 0.02 * -P.z) / (vv + 0.05) * (1.0 - smoothstep(R * R * 0.5, R * R * 2.0, vv));
+          }
+          ao = clamp(1.0 - ao * 1.6 / 12.0, 0.0, 1.0);
+        } else ao = 1.0;
+        float cs = 1.0;
+        if (contactOn > 0.5 && -P.z < 60.0) {                          // march toward the sun, look for a closer surface
+          vec3 Q = P + N * 0.02;
+          for (int i = 1; i <= 10; i++) {
+            vec3 S = Q + sunView * (float(i) * 0.06);
+            vec4 c = proj * vec4(S, 1.0); vec2 uv = c.xy / c.w * 0.5 + 0.5;
+            if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) break;
+            float dz = viewZ(uv) - (-S.z);
+            if (dz < -0.02 && dz > -0.5) { cs = 0.45; break; }
+          }
+        }
+        gl_FragColor = vec4(ao, cs, 1.0, 1.0);
+      }`, Object.assign(depthU(), { texel: { value: new THREE.Vector2() }, sunView: { value: new THREE.Vector3() }, aoOn: { value: 1 }, contactOn: { value: 1 }, proj: { value: new THREE.Matrix4() } }));
+    this.bilat = sh(`${DEPTH}
+      uniform sampler2D tSrc; uniform vec2 dir; varying vec2 vUv;
+      void main() {
+        float z0 = viewZ(vUv); vec4 s = vec4(0.0); float w = 0.0;
+        for (int i = -3; i <= 3; i++) {
+          vec2 uv = vUv + dir * float(i);
+          float wi = exp(-float(i * i) / 6.0) * exp(-abs(viewZ(uv) - z0) / (0.05 * z0 + 0.1));
+          s += texture2D(tSrc, uv) * wi; w += wi;
+        }
+        gl_FragColor = s / w;
+      }`, Object.assign(depthU(), { tSrc: { value: null }, dir: { value: new THREE.Vector2() } }));
+    this.blur = sh(`
+      uniform sampler2D tDiffuse; uniform vec2 dir; varying vec2 vUv;
+      void main() {
+        vec3 s = texture2D(tDiffuse, vUv).rgb * 0.227027;
+        s += (texture2D(tDiffuse, vUv + dir * 1.384615).rgb + texture2D(tDiffuse, vUv - dir * 1.384615).rgb) * 0.316216;
+        s += (texture2D(tDiffuse, vUv + dir * 3.230769).rgb + texture2D(tDiffuse, vUv - dir * 3.230769).rgb) * 0.070270;
+        gl_FragColor = vec4(s, 1.0);
+      }`, { tDiffuse: { value: null }, dir: { value: new THREE.Vector2() } });
+    this.bright = sh(`
+      uniform sampler2D tDiffuse; uniform float threshold; varying vec2 vUv;
+      void main() { vec3 c = texture2D(tDiffuse, vUv).rgb; float l = max(c.r, max(c.g, c.b)); gl_FragColor = vec4(c * smoothstep(threshold, threshold + 0.6, l), 1.0); }`,
+      { tDiffuse: { value: null }, threshold: { value: half ? 1.1 : 0.9 } });
+    // sun rays: sky pixels near the sun, then radial blur toward it
+    this.rayMask = sh(`${DEPTH}
+      uniform sampler2D tScene; uniform vec3 sunUV; uniform float aspect; varying vec2 vUv;
+      void main() {
+        float sky = step(0.99999, texture2D(tDepth, vUv).x);
+        vec2 d = (vUv - sunUV.xy) * vec2(aspect, 1.0);
+        float fall = exp(-dot(d, d) * 9.0);
+        vec3 c = texture2D(tScene, vUv).rgb;
+        gl_FragColor = vec4(c * sky * fall * sunUV.z, 1.0);
+      }`, Object.assign(depthU(), { tScene: { value: null }, sunUV: { value: new THREE.Vector3() }, aspect: { value: 1 } }));
+    this.rayBlur = sh(`
+      uniform sampler2D tDiffuse; uniform vec2 sun; uniform float stepK; varying vec2 vUv;
+      void main() {
+        vec2 dl = (sun - vUv) * stepK / 16.0; vec2 uv = vUv; vec3 s = vec3(0.0); float w = 1.0, wt = 0.0;
+        for (int i = 0; i < 16; i++) { s += texture2D(tDiffuse, uv).rgb * w; wt += w; uv += dl; w *= 0.94; }
+        gl_FragColor = vec4(s / wt, 1.0);
+      }`, { tDiffuse: { value: null }, sun: { value: new THREE.Vector2() }, stepK: { value: 1 } });
+    // composite (to LDR)
+    this.compMat = sh(`${DEPTH}
+      uniform sampler2D tScene, tAO, tBlur, tRays, tB0, tB1, tB2, tB3;
+      uniform mat4 ivp, prevVP; uniform vec3 sunUV; uniform vec3 sunCol; uniform float aspect, exposure, time;
+      uniform float aoOn, contactOn, raysOn, flareOn, bloomOn, motionOn, dofOn, gradeOn, motionK, focus, aperture, carDist, sunVis, nearBlur;
+      varying vec2 vUv;
+      vec3 aces(vec3 x) { return clamp((x * (2.51 * x + 0.03)) / (x * (2.43 * x + 0.59) + 0.14), 0.0, 1.0); }
+      void main() {
+        float d = texture2D(tDepth, vUv).x, z = viewZ(vUv);
+        vec3 c = texture2D(tScene, vUv).rgb;
+        // camera motion blur (the car moves with the camera: nothing within its distance blurs)
+        if (motionOn > 0.5 && motionK > 0.001) {
+          vec4 w = ivp * vec4(vUv * 2.0 - 1.0, d * 2.0 - 1.0, 1.0); w /= w.w;
+          vec4 pc = prevVP * w; vec2 prev = pc.xy / pc.w * 0.5 + 0.5;
+          vec2 vel = (vUv - prev) * motionK * smoothstep(carDist + 2.0, carDist + 12.0, z);
+          float l = length(vel); if (l > 0.04) vel *= 0.04 / l;
+          if (l > 0.0006) { vec3 s = c; for (int i = 1; i < 8; i++) s += texture2D(tScene, vUv - vel * (float(i) / 7.0 - 0.5)).rgb; c = s / 8.0; }
+        }
+        // depth of field: blend toward the blurred copy by circle of confusion
+        if (dofOn > 0.5) {
+          float coc = clamp((nearBlur > 0.5 ? abs(z - focus) : max(0.0, z - focus)) / max(z, 0.1) * aperture, 0.0, 1.0);
+          c = mix(c, texture2D(tBlur, vUv).rgb, smoothstep(0.0, 1.0, coc));
+        }
+        vec4 ao = texture2D(tAO, vUv);
+        if (aoOn > 0.5) c *= mix(1.0, ao.r, 0.85);
+        if (contactOn > 0.5) c *= ao.g;
+        if (bloomOn > 0.5) c += texture2D(tB0, vUv).rgb * 0.35 + texture2D(tB1, vUv).rgb * 0.35 + texture2D(tB2, vUv).rgb * 0.45 + texture2D(tB3, vUv).rgb * 0.55;
+        if (raysOn > 0.5) c += texture2D(tRays, vUv).rgb * sunCol * 0.75 * sunVis;
+        if (flareOn > 0.5 && sunVis > 0.01) {                          // ghosts along the sun-centre line, a halo, a glow
+          vec2 sv = sunUV.xy, ax = vec2(0.5) - sv; vec3 f = vec3(0.0);
+          for (int i = 0; i < 6; i++) {
+            float t = 0.35 + float(i) * 0.33, r = 0.02 + 0.025 * mod(float(i) * 1.7, 3.0);
+            vec2 p = sv + ax * t * 2.0, q = (vUv - p) * vec2(aspect, 1.0);
+            vec3 tint = mix(vec3(1.0, 0.6, 0.3), vec3(0.4, 0.7, 1.0), fract(float(i) * 0.37));
+            f += tint * smoothstep(r, r * 0.6, length(q)) * 0.07;
+          }
+          vec2 q = (vUv - sv) * vec2(aspect, 1.0); float dl = length(q);
+          f += vec3(1.0, 0.75, 0.5) * smoothstep(0.32, 0.3, dl) * smoothstep(0.26, 0.3, dl) * 0.05;
+          f += vec3(1.0, 0.85, 0.6) * exp(-dl * 9.0) * 0.4;
+          c += f * sunVis;
+        }
+        // to linear, ACES filmic, back to display
+        c = pow(aces(pow(max(c, 0.0), vec3(2.2)) * exposure), vec3(1.0 / 2.2));
+        if (gradeOn > 0.5) {                                            // golden hour: warm highlights, teal shadows, a little contrast
+          float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          c = mix(vec3(l), c, 1.14);
+          c *= mix(vec3(0.95, 1.0, 1.05), vec3(1.07, 1.0, 0.9), smoothstep(0.1, 0.9, l));
+          c = c * c * (3.0 - 2.0 * c) * 0.25 + c * 0.75;
+        }
+        gl_FragColor = vec4(clamp(c, 0.0, 1.0), 1.0);
+      }`, Object.assign(depthU(), {
+        tScene: { value: null }, tAO: { value: null }, tBlur: { value: null }, tRays: { value: null }, tB0: { value: null }, tB1: { value: null }, tB2: { value: null }, tB3: { value: null },
+        ivp: { value: new THREE.Matrix4() }, prevVP: { value: new THREE.Matrix4() }, sunUV: { value: new THREE.Vector3() }, sunCol: { value: new THREE.Color(1.0, 0.82, 0.6) },
+        aspect: { value: 1 }, exposure: { value: 1 }, time: { value: 0 }, aoOn: { value: 1 }, contactOn: { value: 1 }, raysOn: { value: 1 }, flareOn: { value: 1 }, bloomOn: { value: 1 },
+        motionOn: { value: 1 }, dofOn: { value: 1 }, gradeOn: { value: 1 }, motionK: { value: 0 }, focus: { value: 8 }, aperture: { value: 0 }, carDist: { value: 7 }, sunVis: { value: 0 }, nearBlur: { value: 0 } }));
+    // final: edge AA, chromatic aberration, grain, vignette
+    this.finalMat = sh(`
+      uniform sampler2D tDiffuse; uniform vec2 texel; uniform float aaOn, chromaOn, grainOn, vigOn, time; varying vec2 vUv;
+      vec3 fxaa(vec2 uv) {
+        vec3 nw = texture2D(tDiffuse, uv + vec2(-1.0, -1.0) * texel).rgb, ne = texture2D(tDiffuse, uv + vec2(1.0, -1.0) * texel).rgb;
+        vec3 sw = texture2D(tDiffuse, uv + vec2(-1.0, 1.0) * texel).rgb, se = texture2D(tDiffuse, uv + vec2(1.0, 1.0) * texel).rgb;
+        vec3 m = texture2D(tDiffuse, uv).rgb, L = vec3(0.299, 0.587, 0.114);
+        float lnw = dot(nw, L), lne = dot(ne, L), lsw = dot(sw, L), lse = dot(se, L), lm = dot(m, L);
+        float lmin = min(lm, min(min(lnw, lne), min(lsw, lse))), lmax = max(lm, max(max(lnw, lne), max(lsw, lse)));
+        vec2 d = vec2(-((lnw + lne) - (lsw + lse)), (lnw + lsw) - (lne + lse));
+        float red = max((lnw + lne + lsw + lse) * 0.03125, 1.0 / 128.0);
+        d = clamp(d / (min(abs(d.x), abs(d.y)) + red), -8.0, 8.0) * texel;
+        vec3 a = 0.5 * (texture2D(tDiffuse, uv + d * (1.0 / 3.0 - 0.5)).rgb + texture2D(tDiffuse, uv + d * (2.0 / 3.0 - 0.5)).rgb);
+        vec3 b = a * 0.5 + 0.25 * (texture2D(tDiffuse, uv - d * 0.5).rgb + texture2D(tDiffuse, uv + d * 0.5).rgb);
+        float lb = dot(b, L);
+        return (lb < lmin || lb > lmax) ? a : b;
+      }
+      void main() {
+        vec3 c = aaOn > 0.5 ? fxaa(vUv) : texture2D(tDiffuse, vUv).rgb;
+        vec2 q = vUv - 0.5;
+        if (chromaOn > 0.5) { vec2 o = q * dot(q, q) * 0.012; c.r = texture2D(tDiffuse, vUv - o).r; c.b = texture2D(tDiffuse, vUv + o).b; }
+        if (grainOn > 0.5) { float n = fract(sin(dot(vUv * 937.0 + fract(time) * 17.0, vec2(12.9898, 78.233))) * 43758.5453); c += (n - 0.5) * 0.035 * (1.0 - dot(c, vec3(0.33))); }
+        if (vigOn > 0.5) c *= 1.0 - dot(q, q) * 0.7;
+        gl_FragColor = vec4(c, 1.0);
+      }`, { tDiffuse: { value: null }, texel: { value: new THREE.Vector2() }, aaOn: { value: 1 }, chromaOn: { value: 1 }, grainOn: { value: 1 }, vigOn: { value: 1 }, time: { value: 0 } });
+    this.size = new THREE.Vector2();
+    this.setSize();
+  }
+
+  setSize() {
+    this.r.getDrawingBufferSize(this.size);
+    const w = Math.max(1, this.size.x), h = Math.max(1, this.size.y);
+    this.scene.setSize(w, h);
+    for (const t of [this.ao, this.ao2, this.blurA, this.blurB]) t.setSize(w >> 1, h >> 1);
+    for (const t of [this.rayA, this.rayB]) t.setSize(w >> 2, h >> 2);
+    this.bl.forEach((t, i) => { t.setSize(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1))); this.blT[i].setSize(Math.max(1, w >> (i + 1)), Math.max(1, h >> (i + 1))); });
+    this.comp.setSize(w, h);
+    this.finalMat.uniforms.texel.value.set(1 / w, 1 / h);
+  }
+
+  pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.fsScene, this.cam); }
+  depthUniforms(U, camera) { U.tDepth.value = this.scene.depthTexture; U.near.value = camera.near; U.far.value = camera.far; U.projInv.value.copy(camera.projectionMatrixInverse); }
+
+  render(scene, camera) {
+    const r = this.r, D = Settings.data, t0 = performance.now(), ms = this.stats.ms;
+    let t = t0; const lap = (k) => { const n = performance.now(); ms[k] = (ms[k] || 0) * 0.9 + (n - t) * 0.1; t = n; };
+    camera.updateMatrixWorld();
+    this.vp.multiplyMatrices(camera.projectionMatrix, camera.matrixWorldInverse);
+    this.ivp.copy(this.vp).invert();
+    const cp = camera.position;
+    if (!this.hasPrev || (this.lastCam && this.lastCam.distanceToSquared(cp) > 400)) this.prevVP.copy(this.vp);   // first frame / teleport: no blur
+    this.hasPrev = true; (this.lastCam || (this.lastCam = new THREE.Vector3())).copy(cp);
+    r.setRenderTarget(this.scene); r.render(scene, camera); lap('scene');
+    const aspect = camera.aspect, photo = this.photo;
+    // sun on screen?
+    const sw = this._sw || (this._sw = new THREE.Vector3());
+    sw.copy(this.sunDir || new THREE.Vector3(0, 1, 0)).multiplyScalar(1000).add(camera.position).project(camera);
+    const facing = this._fw || (this._fw = new THREE.Vector3()); camera.getWorldDirection(facing);
+    const vis = Math.max(0, facing.dot(this.sunDir || facing)) > 0 ? smoothstep(1.4, 0.9, Math.max(Math.abs(sw.x), Math.abs(sw.y))) * (sw.z < 1 ? 1 : 0) : 0;
+    this.sunUV.set(sw.x * 0.5 + 0.5, sw.y * 0.5 + 0.5, vis);
+    // AO + contact shadows (half res) + bilateral blur
+    const A = this.aoMat.uniforms;
+    this.depthUniforms(A, camera); A.proj.value.copy(camera.projectionMatrix); A.texel.value.set(1 / this.ao.width, 1 / this.ao.height);
+    A.aoOn.value = D.x_ssao ? 1 : 0; A.contactOn.value = D.x_contact ? 1 : 0;
+    A.sunView.value.copy(this.sunDir || facing).transformDirection(camera.matrixWorldInverse);
+    if (D.x_ssao || D.x_contact) {
+      this.pass(this.aoMat, this.ao);
+      const B = this.bilat.uniforms; this.depthUniforms(B, camera);
+      B.tSrc.value = this.ao.texture; B.dir.value.set(1 / this.ao.width, 0); this.pass(this.bilat, this.ao2);
+      B.tSrc.value = this.ao2.texture; B.dir.value.set(0, 1 / this.ao.height); this.pass(this.bilat, this.ao);
+    }
+    lap('ssao');
+    // blurred copy (DOF + soft background)
+    const dof = D.x_dof || !!photo;
+    if (dof) {
+      const B = this.blur.uniforms;
+      B.tDiffuse.value = this.scene.texture; B.dir.value.set(1.5 / this.blurA.width, 0); this.pass(this.blur, this.blurB);
+      B.tDiffuse.value = this.blurB.texture; B.dir.value.set(0, 1.5 / this.blurA.height); this.pass(this.blur, this.blurA);
+      B.tDiffuse.value = this.blurA.texture; B.dir.value.set(3 / this.blurA.width, 0); this.pass(this.blur, this.blurB);
+      B.tDiffuse.value = this.blurB.texture; B.dir.value.set(0, 3 / this.blurA.height); this.pass(this.blur, this.blurA);
+    }
+    lap('dof');
+    // sun rays
+    if (D.x_rays && vis > 0.01) {
+      const M2 = this.rayMask.uniforms; this.depthUniforms(M2, camera);
+      M2.tScene.value = this.scene.texture; M2.sunUV.value.copy(this.sunUV); M2.aspect.value = aspect;
+      this.pass(this.rayMask, this.rayA);
+      const RB = this.rayBlur.uniforms; RB.sun.value.set(this.sunUV.x, this.sunUV.y);
+      RB.tDiffuse.value = this.rayA.texture; RB.stepK.value = 0.9; this.pass(this.rayBlur, this.rayB);
+      RB.tDiffuse.value = this.rayB.texture; RB.stepK.value = 0.45; this.pass(this.rayBlur, this.rayA);
+      RB.tDiffuse.value = this.rayA.texture; RB.stepK.value = 0.22; this.pass(this.rayBlur, this.rayB);
+    }
+    lap('rays');
+    // bloom mip chain
+    if (D.x_bloom) {
+      this.bright.uniforms.tDiffuse.value = this.scene.texture; this.pass(this.bright, this.bl[0]);
+      const B = this.blur.uniforms;
+      for (let i = 0; i < 4; i++) {
+        if (i > 0) { B.tDiffuse.value = this.bl[i - 1].texture; B.dir.value.set(0, 0); this.pass(this.blur, this.bl[i]); }
+        B.tDiffuse.value = this.bl[i].texture; B.dir.value.set(1 / this.bl[i].width, 0); this.pass(this.blur, this.blT[i]);
+        B.tDiffuse.value = this.blT[i].texture; B.dir.value.set(0, 1 / this.bl[i].height); this.pass(this.blur, this.bl[i]);
+      }
+    }
+    lap('bloom');
+    // composite
+    const C = this.compMat.uniforms; this.depthUniforms(C, camera);
+    C.tScene.value = this.scene.texture; C.tAO.value = this.ao.texture; C.tBlur.value = this.blurA.texture; C.tRays.value = this.rayB.texture;
+    C.tB0.value = this.bl[0].texture; C.tB1.value = this.bl[1].texture; C.tB2.value = this.bl[2].texture; C.tB3.value = this.bl[3].texture;
+    C.ivp.value.copy(this.ivp); C.prevVP.value.copy(this.prevVP); C.sunUV.value.copy(this.sunUV); C.aspect.value = aspect; C.sunVis.value = vis;
+    C.exposure.value = (photo ? photo.exposure : 1) * (D.x_exposure || 100) / 100 * 0.95;
+    C.aoOn.value = D.x_ssao ? 1 : 0; C.contactOn.value = D.x_contact ? 1 : 0; C.raysOn.value = D.x_rays && vis > 0.01 ? 1 : 0; C.flareOn.value = D.x_flare ? 1 : 0;
+    C.bloomOn.value = D.x_bloom ? 1 : 0; C.gradeOn.value = D.x_grade ? 1 : 0;
+    C.motionOn.value = D.x_motion && !photo ? 1 : 0; C.motionK.value = clamp((this.speed - 25) / 45, 0, 1) * 0.5; C.carDist.value = this.carDist;
+    C.dofOn.value = dof ? 1 : 0;
+    if (photo) { C.focus.value = photo.focus; C.aperture.value = photo.aperture; C.nearBlur.value = 1; }
+    else { C.focus.value = this.carDist * 8; C.aperture.value = 0.22; C.nearBlur.value = 0; }   // driving: only the far background softens
+    this.pass(this.compMat, this.comp);
+    lap('composite');
+    const F = this.finalMat.uniforms;
+    F.tDiffuse.value = this.comp.texture; F.aaOn.value = D.x_aa ? 1 : 0; F.chromaOn.value = D.x_chroma ? 1 : 0; F.grainOn.value = D.x_grain ? 1 : 0; F.vigOn.value = D.x_grade ? 1 : 0;
+    F.time.value = (this.time += 0.016);
+    this.pass(this.finalMat, null);
+    lap('final');
+    this.prevVP.copy(this.vp);
+  }
+}
+
+/** Extreme: three cascades (near / mid / far) following the camera; the sun keeps the near one. */
+class ShadowCascades {
+  constructor(scene, sun, sunDir) {
+    this.sun = sun; this.dir = sunDir;
+    const S = [[40, 4096], [170, 4096], [650, 2048]];
+    this.lights = [sun];
+    for (let i = 1; i < 3; i++) { const l = new THREE.DirectionalLight(0xffffff, 0); l.castShadow = true; scene.add(l, l.target); this.lights.push(l); }
+    this.lights.forEach((l, i) => {
+      const [r, size] = S[i], c = l.shadow.camera;
+      l.shadow.mapSize.set(size, size); c.left = -r; c.right = r; c.top = r; c.bottom = -r; c.near = 1; c.far = 1600;
+      l.shadow.bias = [-0.0002, -0.0004, -0.0008][i]; l.shadow.normalBias = [0.03, 0.08, 0.2][i];
+      c.updateProjectionMatrix(); l.shadow.needsUpdate = true;
+    });
+    this.range = S.map(s => s[0]);
+  }
+  /** Centre each cascade ahead of the camera (snapped to its texel grid: no shimmering). */
+  update(camera, focus) {
+    const f = this._f || (this._f = new THREE.Vector3()); camera.getWorldDirection(f); f.y = 0; f.normalize();
+    this.lights.forEach((l, i) => {
+      const r = this.range[i], p = (this._p || (this._p = new THREE.Vector3())).copy(focus).addScaledVector(f, r * 0.55);
+      const tex = 2 * r / l.shadow.mapSize.x; p.x = Math.round(p.x / tex) * tex; p.z = Math.round(p.z / tex) * tex;
+      l.position.copy(p).addScaledVector(this.dir, 800); l.target.position.copy(p); l.target.updateMatrixWorld();
+    });
+  }
+}
+
+/** Extreme: the sea mirrors the world (planar reflection, half res) and foams where it meets the land. */
+class OceanFX {
+  constructor(renderer, world, city) {
+    this.r = renderer; this.world = world;
+    this.rt = new THREE.WebGLRenderTarget(1, 1, { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+    this.cam = new THREE.PerspectiveCamera();
+    this.plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(world.cfg.seaLevel - 0.3));
+    this.vp = new THREE.Matrix4();
+    this.frame = 0;
+    // land height around the island + the city's land (for the foam line): 512 × 384 over x −3300…1600, z −1000…1680
+    const X0 = -3300, X1 = 1600, Z0 = -1000, Z1 = 1680, W = 512, H = 384, data = new Uint8Array(W * H * 4);
+    const cityBase = (x, z) => City.prototype.base.call({ C: CONFIG.city, coast: City.prototype.coast }, x, z);
+    const L = CONFIG.city.land;
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const x = X0 + (i + 0.5) / W * (X1 - X0), z = Z0 + (j + 0.5) / H * (Z1 - Z0);
+      let h = world.landMask(x, z) > 0.02 ? world.baseHeight(x, z) : -12;
+      if (x > L.x0 - 80 && x < L.x1 + 80 && z > L.z0 - 80 && z < L.z1 + 80) h = Math.max(h, cityBase(x, z));
+      const v = clamp((h + 12) / 24, 0, 1), k = (j * W + i) * 4;
+      data[k] = Math.round(v * 255); data[k + 3] = 255;
+    }
+    this.height = new THREE.DataTexture(data, W, H, THREE.RGBAFormat); this.height.magFilter = THREE.LinearFilter; this.height.needsUpdate = true;
+    const U = world.seaMat.uniforms;
+    U.tRefl.value = this.rt.texture; U.tHeight.value = this.height; U.hBox.value.set(X0, Z0, X1 - X0, Z1 - Z0);
+  }
+  setSize(w, h) { this.rt.setSize(Math.max(1, w >> 1), Math.max(1, h >> 1)); }
+  update(scene, camera, hide) {
+    const D = Settings.data, U = this.world.seaMat.uniforms;
+    U.reflOn.value = D.x_ocean ? 1 : 0; U.foamOn.value = D.x_foam ? 1 : 0;
+    if (!D.x_ocean) return;
+    const sea = this.world.cfg.seaLevel, c = this.cam;
+    // a proper camera below the water looking up at the mirrored target (no negative-scale matrix: culling stays right)
+    const p = camera.position, f = this._f || (this._f = new THREE.Vector3()), u = this._u || (this._u = new THREE.Vector3());
+    camera.getWorldDirection(f); u.set(0, 1, 0).applyQuaternion(camera.quaternion);
+    c.fov = camera.fov; c.aspect = camera.aspect; c.near = camera.near; c.far = camera.far;
+    c.position.set(p.x, 2 * sea - p.y, p.z); c.up.set(u.x, -u.y, u.z);
+    c.lookAt(p.x + f.x, 2 * sea - (p.y + f.y), p.z + f.z);
+    c.updateProjectionMatrix(); c.updateMatrixWorld();
+    this.vp.multiplyMatrices(c.projectionMatrix, c.matrixWorldInverse);
+    U.reflVP.value.copy(this.vp);
+    const r = this.r, auto = r.shadowMap.autoUpdate, clip = r.clippingPlanes;
+    r.shadowMap.autoUpdate = false; r.clippingPlanes = [this.plane];
+    for (const m of hide) m.visible = false;
+    r.setRenderTarget(this.rt); r.render(scene, c); r.setRenderTarget(null);
+    for (const m of hide) m.visible = true;
+    r.clippingPlanes = clip; r.shadowMap.autoUpdate = auto;
+  }
+}
+
+/** Extreme: grass blades on grassy land round the camera (40 m cells, rebuilt as you move), swaying. */
+class GrassField {
+  constructor(scene, world, track, quality) {
+    this.world = world; this.T = track; this.city = null; this.cells = new Map(); this.key = '';
+    const blade = new THREE.BufferGeometry(), P = [], C = [];
+    for (let k = 0; k < 5; k++) {                                       // a tuft: five bent blades
+      const a = k / 5 * Math.PI * 2 + 0.3, ox = Math.cos(a) * 0.12, oz = Math.sin(a) * 0.12, h = 0.45 + (k % 3) * 0.12, w = 0.05, lean = 0.18;
+      const bx = Math.cos(a + 1.57) * w, bz = Math.sin(a + 1.57) * w, tx = ox + Math.cos(a) * lean, tz = oz + Math.sin(a) * lean;
+      P.push(ox - bx, 0, oz - bz, ox + bx, 0, oz + bz, tx, h, tz);
+      C.push(0.25, 0.42, 0.13, 0.25, 0.42, 0.13, 0.62, 0.78, 0.3);
+    }
+    blade.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); blade.setAttribute('color', new THREE.Float32BufferAttribute(C, 3)); blade.computeVertexNormals();
+    const mat = ExtremeFX.upgrade(new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), 'grass', null);
+    this.cap = 14000;
+    this.mesh = new THREE.InstancedMesh(blade, mat, this.cap);
+    this.mesh.setColorAt(0, new THREE.Color(1, 1, 1)); this.mesh.count = 0; this.mesh.frustumCulled = false; this.mesh.receiveShadow = quality.shadows;
+    scene.add(this.mesh);
+    this.rnd = mulberry32(5150); this.C = new THREE.Color();
+  }
+  /** Is (x, z) grass (and how high is it)? Island: the terrain's grass rule; city: park / verge ground off the roads. */
+  at(x, z) {
+    if (this.city && this.city.inRegion(x, z)) {
+      const g = this.city.groundAt(x, z, this.city.base(x, z) + 0.5, this._g || (this._g = {}));
+      return g.surf === 'grass' && !g.st && !this.city.roadAt(x, z, null, 2.5) && this.city.coast(x, z) < -12 ? g.h : null;
+    }
+    const W = this.world, r = W.heightAt(x, z);
+    if (r.h < 3.6 || r.h > 58 || W.landMask(x, z) < 0.95 || r.d < 2.5 || r.type === SIDE.PROM || r.type === SIDE.BEACH_SEA || r.type === SIDE.BEACH_IN) return null;
+    const e = 1.5, gx = W.heightAt(x + e, z).h - r.h, gz = W.heightAt(x, z + e).h - r.h;
+    return Math.hypot(gx, gz) / e > 0.5 ? null : r.h;
+  }
+  cell(ci, cj) {
+    const k = ci * 100000 + cj; let c = this.cells.get(k);
+    if (c) return c;
+    c = [];
+    for (let n = 0; n < 70; n++) {
+      const x = (ci + this.rnd()) * 40, z = (cj + this.rnd()) * 40, h = this.at(x, z);
+      if (h === null) continue;
+      const s = 0.7 + this.rnd() * 0.7;
+      c.push({ m: M(x, h - 0.05, z, this.rnd() * 6.28, s, 0.8 + this.rnd() * 0.6, s), c: this.C.setHSL(0.24 + this.rnd() * 0.05, 0.45, 0.42 + this.rnd() * 0.12).getHex() });
+    }
+    this.cells.set(k, c);
+    if (this.cells.size > 900) { const first = this.cells.keys().next().value; this.cells.delete(first); }
+    return c;
+  }
+  update(x, z, on) {
+    this.mesh.visible = on;
+    if (!on) return;
+    const ci = Math.floor(x / 40), cj = Math.floor(z / 40), key = ci + ',' + cj;
+    if (key === this.key) return;
+    this.key = key;
+    const m = this.mesh, C = this.C; m.count = 0;
+    for (let i = ci - 3; i <= ci + 3; i++) for (let j = cj - 3; j <= cj + 3; j++) {
+      if ((i - ci) ** 2 + (j - cj) ** 2 > 11) continue;
+      for (const it of this.cell(i, j)) { if (m.count >= this.cap) break; m.setMatrixAt(m.count, it.m); m.setColorAt(m.count, C.setHex(it.c)); m.count++; }
+    }
+    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
+  }
+}
+
+/** Extreme: warm pools of light on the ground under streetlamps (additive decals; the lamp heads glow in the shader). */
+class LampPools {
+  constructor(scene) {
+    const tex = canvasTexture(128, 128, (g) => {
+      const gr = g.createRadialGradient(64, 64, 0, 64, 64, 64);
+      gr.addColorStop(0, 'rgba(255,214,150,0.9)'); gr.addColorStop(0.45, 'rgba(255,190,120,0.35)'); gr.addColorStop(1, 'rgba(255,170,100,0)');
+      g.fillStyle = gr; g.fillRect(0, 0, 128, 128);
+    });
+    const geo = new THREE.PlaneGeometry(1, 1); geo.rotateX(-Math.PI / 2);
+    this.mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -4, polygonOffsetUnits: -4, opacity: 0.55, fog: true });
+    this.mesh = new THREE.InstancedMesh(geo, this.mat, 4000); this.mesh.count = 0; this.mesh.frustumCulled = false;
+    scene.add(this.mesh);
+  }
+  set(points) {        // [x, y, z, radius]
+    const m = this.mesh; m.count = 0;
+    for (const [x, y, z, r] of points) { if (m.count >= 4000) break; m.setMatrixAt(m.count++, M(x, y + 0.08, z, 0, r * 2, 1, r * 2)); }
+    m.instanceMatrix.needsUpdate = true;
+  }
+}
+
 const FS_VERT = `varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
 
 class PostFX {
@@ -5094,7 +5984,7 @@ class PostFX {
 
   pass(mat, target) { this.quad.material = mat; this.r.setRenderTarget(target); this.r.render(this.fsScene, this.cam); }
 
-  render(scene, camera) {
+  render(scene, camera, target = null) {
     const r = this.r;
     r.setRenderTarget(this.scene); r.render(scene, camera);
     this.bright.uniforms.tDiffuse.value = this.scene.texture; this.pass(this.bright, this.a1);
@@ -5105,6 +5995,60 @@ class PostFX {
     B.tDiffuse.value = this.b2.texture; B.dir.value.set(0, 2 / h2); this.pass(this.blur, this.a2);
     const C = this.comp.uniforms;
     C.tScene.value = this.scene.texture; C.tBloom1.value = this.a1.texture; C.tBloom2.value = this.a2.texture;
+    this.pass(this.comp, target);
+  }
+}
+
+/**
+ * Photo mode (not Extreme, which does it in its own chain): exposure, and depth of field on Medium+ — the frame
+ * (through the Ultra chain when there is one) into a target, a depth pass, then a blur blended in by circle of confusion.
+ */
+class PhotoPost {
+  constructor(renderer, dof) {
+    this.r = renderer; this.dof = dof;
+    const o = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+    this.color = new THREE.WebGLRenderTarget(1, 1, o); this.depth = new THREE.WebGLRenderTarget(1, 1, o);
+    this.a = new THREE.WebGLRenderTarget(1, 1, o); this.b = new THREE.WebGLRenderTarget(1, 1, o);
+    this.depthMat = new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking });
+    this.cam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+    this.quad = new THREE.Mesh(new THREE.PlaneGeometry(2, 2)); this.quad.frustumCulled = false;
+    this.fs = new THREE.Scene(); this.fs.add(this.quad);
+    const sh = (frag, u) => new THREE.ShaderMaterial({ uniforms: u, vertexShader: FS_VERT, fragmentShader: frag, depthTest: false, depthWrite: false });
+    this.blur = sh(`uniform sampler2D tDiffuse; uniform vec2 dir; varying vec2 vUv;
+      void main() { vec3 s = texture2D(tDiffuse, vUv).rgb * 0.227027;
+        s += (texture2D(tDiffuse, vUv + dir * 1.384615).rgb + texture2D(tDiffuse, vUv - dir * 1.384615).rgb) * 0.316216;
+        s += (texture2D(tDiffuse, vUv + dir * 3.230769).rgb + texture2D(tDiffuse, vUv - dir * 3.230769).rgb) * 0.070270;
+        gl_FragColor = vec4(s, 1.0); }`, { tDiffuse: { value: null }, dir: { value: new THREE.Vector2() } });
+    this.comp = sh(`#include <packing>
+      uniform sampler2D tColor, tDepth, tBlur; uniform float near, far, focus, aperture, exposure, dofOn; varying vec2 vUv;
+      void main() {
+        vec3 c = texture2D(tColor, vUv).rgb;
+        if (dofOn > 0.5) {
+          float d = unpackRGBAToDepth(texture2D(tDepth, vUv)), z = perspectiveDepthToViewZ(d, near, far) * -1.0;
+          c = mix(c, texture2D(tBlur, vUv).rgb, smoothstep(0.0, 1.0, clamp(abs(z - focus) / max(z, 0.1) * aperture, 0.0, 1.0)));
+        }
+        gl_FragColor = vec4(c * exposure, 1.0);
+      }`, { tColor: { value: null }, tDepth: { value: null }, tBlur: { value: null }, near: { value: 0.2 }, far: { value: 4000 }, focus: { value: 8 }, aperture: { value: 1 }, exposure: { value: 1 }, dofOn: { value: 1 } });
+  }
+  pass(m, t) { this.quad.material = m; this.r.setRenderTarget(t); this.r.render(this.fs, this.cam); }
+  render(scene, camera, post, p) {
+    const r = this.r, v = r.getDrawingBufferSize(this._v || (this._v = new THREE.Vector2()));
+    if (this.color.width !== v.x || this.color.height !== v.y) { this.color.setSize(v.x, v.y); this.depth.setSize(v.x, v.y); this.a.setSize(v.x >> 1, v.y >> 1); this.b.setSize(v.x >> 1, v.y >> 1); }
+    if (post) post.render(scene, camera, this.color); else { r.setRenderTarget(this.color); r.render(scene, camera); }
+    const C = this.comp.uniforms;
+    C.dofOn.value = this.dof && p.aperture > 0.01 ? 1 : 0;
+    if (C.dofOn.value) {
+      const ov = scene.overrideMaterial, bg = scene.background; scene.overrideMaterial = this.depthMat; scene.background = null;
+      r.setRenderTarget(this.depth); r.setClearColor(0xffffff, 1); r.clear(); r.render(scene, camera); r.setClearColor(0x000000, 1);
+      scene.overrideMaterial = ov; scene.background = bg;
+      const B = this.blur.uniforms;
+      B.tDiffuse.value = this.color.texture; B.dir.value.set(1.5 / this.a.width, 0); this.pass(this.blur, this.b);
+      B.tDiffuse.value = this.b.texture; B.dir.value.set(0, 1.5 / this.a.height); this.pass(this.blur, this.a);
+      B.tDiffuse.value = this.a.texture; B.dir.value.set(3 / this.a.width, 0); this.pass(this.blur, this.b);
+      B.tDiffuse.value = this.b.texture; B.dir.value.set(0, 3 / this.a.height); this.pass(this.blur, this.a);
+    }
+    C.tColor.value = this.color.texture; C.tDepth.value = this.depth.texture; C.tBlur.value = this.a.texture;
+    C.near.value = camera.near; C.far.value = camera.far; C.focus.value = p.focus; C.aperture.value = p.aperture; C.exposure.value = p.exposure;
     this.pass(this.comp, null);
   }
 }
@@ -6543,8 +7487,8 @@ class CityView {
       house2: [facade[2].geo, facade[2].mat, 1, true], house3: [facade[3].geo, facade[3].mat, 1, true], house4: [facade[4].geo, facade[4].mat, 1, true],
       corn: [new THREE.BoxGeometry(10.5, 0.4, 10.5), new THREE.MeshLambertMaterial(), 0], balc: [balc, vc, 0],
       tower: [box1, this.towerMaterial(), 1, true], roof: [box1, new THREE.MeshLambertMaterial(), 0], ware: [box1, this.wareMaterial(), 1, true],
-      lamp: [lampGeo, vc, 0], lampS: [lampS, vc, 0], palm: [Scenery.palmGeo(), new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), 0],
-      tree: [roundTree, vc, 0], tpole: [tpole, vc, 0], bulb: [bulb, new THREE.MeshBasicMaterial(), 0],
+      lamp: [lampGeo, vc, 0], lampS: [lampS, vc, 0], palm: [Scenery.palmGeo(), Object.assign(new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }), { userData: { sway: true } }), 0],
+      tree: [roundTree, Object.assign(new THREE.MeshLambertMaterial({ vertexColors: true }), { userData: { sway: true } }), 0], tpole: [tpole, vc, 0], bulb: [bulb, new THREE.MeshBasicMaterial(), 0],
       cont: [cont, new THREE.MeshLambertMaterial(), 1], crane: [crane, vc, 1],
       cone: [cone, vc, 0], bin: [bin, vc, 0], sign: [sign, vc, 0],
     };
@@ -6573,6 +7517,7 @@ class CityView {
   /** Glass towers: one material, windows drawn in the shader from world position (no textures, any size). */
   towerMaterial() {
     const m = new THREE.MeshLambertMaterial({ color: 0xffffff });
+    m.userData.glass = true;                                        // (Extreme: the windows become reflective glass)
     m.onBeforeCompile = (sh) => {
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
         .replace('#include <worldpos_vertex>', `#include <worldpos_vertex>
@@ -7734,11 +8679,30 @@ class LapTimer {
 
 class Game {
   constructor() {
-    const Q = this.Q = QUALITY, W = CONFIG.world;
+    this.loadT0 = performance.now(); this.loadSteps = [];
+    this.init().catch((e) => {
+      console.error(e);
+      const el = document.getElementById('err'); el.style.display = 'flex'; el.textContent = 'Isla Rush could not start: ' + (e && e.message ? e.message : e);
+    });
+  }
+
+  /** Loading screen: progress bar + label, and a chance for the browser to paint between steps. */
+  async progress(f, label) {
+    const now = performance.now();
+    if (this.loadLabel) this.loadSteps.push([this.loadLabel, Math.round(now - this.loadStepT)]);
+    this.loadLabel = label; this.loadStepT = now;
+    document.getElementById('loadBar').style.width = Math.round(f * 100) + '%';
+    document.getElementById('loadMsg').textContent = label;
+    await new Promise((res) => { requestAnimationFrame(() => setTimeout(res, 0)); setTimeout(res, 120); });
+  }
+
+  async init() {
+    const Q = this.Q = QUALITY, W = CONFIG.world, X = !!Q.extreme;
     this.qualityName = QUALITY_NAME;
+    await this.progress(0.02, 'Starting the engine');
     const canvas = document.getElementById('game');
     this.renderer = new THREE.WebGLRenderer({ canvas, antialias: Q.antialias, powerPreference: 'high-performance' });
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.pixelRatio));
+    this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     if (Q.shadows) {
       this.renderer.shadowMap.enabled = true;
@@ -7747,12 +8711,13 @@ class Game {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(W.fogColor);
-    const fs = Q.fogScale || 1;                          // Ultra: thinner haze, longer draw distance
+    const fs = Q.fogScale || 1;                          // Ultra / Extreme: thinner haze, longer draw distance
     this.scene.fog = new THREE.Fog(W.fogColor, W.fogNear * fs, W.fogFar * fs);
     this.camera = new THREE.PerspectiveCamera(CONFIG.camera.chase.fov, window.innerWidth / window.innerHeight, CONFIG.camera.near, CONFIG.camera.far * fs);
 
-    // Golden-hour lighting: low warm sun + warm sky / green bounce
-    this.scene.add(new THREE.HemisphereLight(W.hemiSky, W.hemiGround, W.hemiIntensity));
+    // Golden-hour lighting: low warm sun + warm sky / green bounce (Extreme: a little more sky light, softer)
+    this.hemi = new THREE.HemisphereLight(W.hemiSky, W.hemiGround, W.hemiIntensity * (X ? 1.15 : 1));
+    this.scene.add(this.hemi);
     this.track = new Track(CONFIG.track);
     this.world = new World(this.track, W, Q);
     this.sun = new THREE.DirectionalLight(W.sunColor, W.sunIntensity);
@@ -7765,14 +8730,20 @@ class Game {
       sh.bias = -0.0004; sh.normalBias = 0.05;
     }
     this.scene.add(this.sun, this.sun.target);
+    this.cascades = X && Settings.data.x_csm ? new ShadowCascades(this.scene, this.sun, this.world.sunDir) : null;
 
     // World: roadside classification first (it styles the corridor), then meshes
+    await this.progress(0.1, 'Shaping the island');
     this.world.classify();
+    await this.progress(0.28, 'Laying the circuit');
     this.track.build(this.scene, this.renderer, Q);
+    await this.progress(0.38, 'Terrain, sea and sky');
     this.world.build(this.scene, this.renderer);
+    await this.progress(0.55, 'Towns, palms and forests');
     this.scenery = new Scenery(this.track, this.world, Q, this.scene);
     this.scenery.build();
     Physics.init(this.track);
+    await this.progress(0.7, 'Cars');
 
     this.carKey = Settings.data.car;
     this.car = new Car(CONFIG.cars[this.carKey], this.scene, this.world.envMap, Q, CONFIG.cars[this.carKey].colors[Settings.colorIndex(this.carKey)]);
@@ -7785,8 +8756,7 @@ class Game {
     this.drift = new DriftScore();
     this.nitro = new Nitro();
     this.countdown = 0; this.cdShown = 0; this.soundHint = false;
-    this.line = new RacingLine(this.track);
-    this.race = null; this.raceOpts = { mode: 'free' }; this.intro = 0; this.results = false; this.raceDrift = 0;
+    this.race = null; this.trial = null; this.raceOpts = { mode: 'free' }; this.intro = 0; this.results = false; this.raceDrift = 0;
     this.resetStart(); this.lockPending = 0; this.startResult = null; this.wrongT = 0; this.skipReq = false; this.resultsT = 0;
     this.minimap = new Minimap(document.getElementById('minimap'), this.track);
     this.city = null; this.freeOn = false; this.wasCity = false; this.cityClock = 0; this.district = null;   // Free Drive city: built on first use
@@ -7797,7 +8767,7 @@ class Game {
     this.hid = new DualSenseHid();
     if (Settings.data.hidRumble) this.hid.restore();
     this.paused = false;
-    this.state = 'menu';                                 // 'menu' | 'race'
+    this.state = 'menu';                                 // 'menu' | 'race' | 'photo'
     this.input.onDevice = (d, info) => this.hud.setDevice(d, info);
     this.input.onTouchEnabled = () => this.refreshHandling(true);
     this.input.gamepad.onConnect = (info) => {
@@ -7820,24 +8790,49 @@ class Game {
     this.car.updateVisual(1, 0);
     this.cameraRig.snap(this.car);
 
+    await this.progress(0.8, 'Menus');
     this.showroom = new Showroom(this.world.envMap, Q);
     this.flyover = new Flyover(this.track, this.camera);
     this.menu = new Menu(this);
     this.refreshHandling(false);
-    this.post = Q.post ? new PostFX(this.renderer) : null;
+    this.post = X ? new ExtremePost(this.renderer, this.camera) : Q.post ? new PostFX(this.renderer) : null;
+    if (X) this.post.sunDir = this.world.sunDir;
     this.reflect = Q.carReflections ? new CarReflections(this.renderer, this.scene) : null;
     if (this.reflect) this.reflect.attach(this.car);
+    if (X) {                                             // Extreme: per-pixel materials, sea reflections + foam, grass, lamp light
+      await this.progress(0.84, 'Extreme: materials');
+      ExtremeFX.upgradeTree(this.scene, this.world.envMap);
+      this.ocean = new OceanFX(this.renderer, this.world);
+      this.grass = new GrassField(this.scene, this.world, this.track, Q);
+      this.lampPools = new LampPools(this.scene);
+      this.lampPools.set(this.scenery.lampPoints || []);
+    }
     this.applySettings();
 
     this.acc = 0;
-    this.last = performance.now();
     this.lastSection = -1;
     window.addEventListener('resize', () => this.resize());
     document.addEventListener('visibilitychange', () => { this.last = performance.now(); });
+    this.line = new RacingLine(this.track);              // (last: the tests wait for it)
+    await this.progress(0.9, X ? 'Compiling Extreme shaders (can take a while)' : 'Compiling shaders');
+    this.resize();
+    this.renderer.compile(this.scene, this.camera);
+    if (this.post) this.renderWorld();
+    await this.progress(1, 'Ready');
+    this.loadSteps.push([this.loadLabel, Math.round(performance.now() - this.loadStepT)]);
+    this.loadMs = Math.round(performance.now() - this.loadT0);
+    document.body.classList.add('loaded');
     this.menu.show('main', false);
     if (location.hash === '#settings') { this.menu.show('settings'); history.replaceState(null, '', location.pathname + location.search); }
+    this.last = performance.now();
     this.loop = this.loop.bind(this);
     requestAnimationFrame(this.loop);
+  }
+
+  /** Render resolution: the preset's cap; Extreme supersamples (up to 1.5× the screen's own pixel ratio, max 3). */
+  pixelRatio() {
+    const dpr = window.devicePixelRatio || 1, Q = this.Q;
+    return Q.extreme ? Math.min(Q.pixelRatio, dpr * (Settings.data.x_ssaa ? 1.5 : 1)) : Math.min(dpr, Q.pixelRatio);
   }
 
   /** Low → Medium → High. Rebuilds everything, so it reloads the page. */
@@ -7852,9 +8847,103 @@ class Game {
   resize() {
     this.camera.aspect = window.innerWidth / window.innerHeight;
     this.camera.updateProjectionMatrix();
+    this.renderer.setPixelRatio(this.pixelRatio());
     this.renderer.setSize(window.innerWidth, window.innerHeight, false);
     if (this.post) this.post.setSize();
+    if (this.ocean) { const v = this.renderer.getDrawingBufferSize(new THREE.Vector2()); this.ocean.setSize(v.x, v.y); }
     this.minimap.resize();
+  }
+
+  /** Extreme, every rendered frame: shared shader clocks + switches, shadow cascades, grass, lamp light, sea reflection. */
+  extremeFrame(dt, focus) {
+    if (!this.Q.extreme) return;
+    const D = Settings.data, U = ExtremeFX.U;
+    U.xtTime.value += dt; U.xtCloud.value = D.x_clouds ? 1 : 0; U.xtSway.value = D.x_sway ? 1 : 0; U.xtWet.value = D.x_wet ? 1 : 0;
+    if (this.cascades) this.cascades.update(this.camera, focus);
+    if (this.grass) this.grass.update(this.camera.position.x, this.camera.position.z, D.x_grass);
+    if (this.lampPools) this.lampPools.mesh.visible = D.x_lamps;
+    if (this.post) { this.post.speed = this.state === 'race' ? Math.hypot(this.car.state.vx, this.car.state.vz) : 0; this.post.carDist = this.cameraRig.offset.length() || 7; }
+    if (this.ocean) this.ocean.update(this.scene, this.camera, [this.world.seaMesh].concat(this.grass ? [this.grass.mesh] : []));
+  }
+
+  /* ---------- photo mode (from pause) ---------- */
+  photoDof() { return this.qualityName !== 'low'; }
+  enterPhoto() {
+    if (this.state !== 'race') return;
+    const p = this.car.renderPos, c = this.camera.position;
+    this.photoOn = { yaw: Math.atan2(c.x - p.x, c.z - p.z), pitch: clamp(Math.asin(clamp((c.y - p.y - 1) / Math.max(1, c.distanceTo(p)), -1, 1)), -0.2, 1.3), keys: new Set(), drag: null };
+    Settings.data.p_dist = clamp(Math.round(c.distanceTo(p)), 3, 40); Settings.data.p_focus = Settings.data.p_dist; Settings.data.p_roll = 0;
+    Settings.data.p_fov = clamp(Math.round(this.camera.fov / 5) * 5, 20, 100);
+    document.body.classList.add('photo'); document.body.classList.remove('photo-hide');
+    this.menu.show('photo');
+    if (!this.photoBound) {                                          // orbit with the mouse / a finger, zoom with the wheel, keys
+      this.photoBound = true;
+      const cv = this.renderer.domElement;
+      cv.addEventListener('pointerdown', (e) => { if (this.photoOn) { this.photoOn.drag = [e.clientX, e.clientY]; document.body.classList.remove('photo-hide'); } });
+      window.addEventListener('pointermove', (e) => {
+        const P = this.photoOn; if (!P || !P.drag) return;
+        P.yaw -= (e.clientX - P.drag[0]) * 0.008; P.pitch = clamp(P.pitch + (e.clientY - P.drag[1]) * 0.006, -0.2, 1.35); P.drag = [e.clientX, e.clientY];
+      });
+      window.addEventListener('pointerup', () => { if (this.photoOn) this.photoOn.drag = null; });
+      cv.addEventListener('wheel', (e) => { if (!this.photoOn) return; e.preventDefault(); Settings.data.p_dist = clamp(Settings.data.p_dist + Math.sign(e.deltaY), 3, 40); this.menu.refreshPhoto(); }, { passive: false });
+      window.addEventListener('keydown', (e) => {
+        if (!this.photoOn) return;
+        if (e.code === 'KeyH') { document.body.classList.toggle('photo-hide'); return; }
+        this.photoOn.keys.add(e.code);
+      });
+      window.addEventListener('keyup', (e) => { if (this.photoOn) this.photoOn.keys.delete(e.code); });
+    }
+  }
+  exitPhoto() {
+    if (!this.photoOn) return;
+    this.photoOn = null;
+    document.body.classList.remove('photo', 'photo-hide');
+    this.cameraRig.snap(this.car);
+    this.menu.stack = []; this.menu.show('pause', false);
+  }
+  /** Orbit camera round the car (keys, right stick, triggers), then the frame through the photo pipeline. */
+  photoFrame(dt) {
+    const P = this.photoOn, D = Settings.data, K = P.keys, cam = this.camera;
+    const turn = 1.6 * dt;
+    if (K.has('KeyJ')) P.yaw += turn; if (K.has('KeyL')) P.yaw -= turn;
+    if (K.has('KeyI')) P.pitch = clamp(P.pitch + turn * 0.7, -0.2, 1.35); if (K.has('KeyK')) P.pitch = clamp(P.pitch - turn * 0.7, -0.2, 1.35);
+    if (K.has('KeyU') || K.has('KeyO')) { D.p_dist = clamp(D.p_dist + (K.has('KeyO') ? 8 : -8) * dt, 3, 40); this.menu.refreshPhoto(); }
+    const pad = this.input.gamepad.pad;
+    if (pad) {
+      const ax = (i) => { const v = pad.axes[i] || 0; return Math.abs(v) < 0.15 ? 0 : v; }, bt = (i) => (pad.buttons[i] ? pad.buttons[i].value : 0);
+      P.yaw -= ax(2) * turn * 1.4; P.pitch = clamp(P.pitch - ax(3) * turn, -0.2, 1.35);
+      const z = bt(7) - bt(6); if (Math.abs(z) > 0.05) { D.p_dist = clamp(D.p_dist - z * 10 * dt, 3, 40); this.menu.refreshPhoto(); }
+      const tri = !!(pad.buttons[3] && pad.buttons[3].pressed);
+      if (tri && !P.tri) document.body.classList.toggle('photo-hide');
+      P.tri = tri;
+    }
+    const t = this.car.renderPos, d = D.p_dist;
+    cam.position.set(t.x + Math.sin(P.yaw) * Math.cos(P.pitch) * d, t.y + 1 + Math.sin(P.pitch) * d, t.z + Math.cos(P.yaw) * Math.cos(P.pitch) * d);
+    if (this.freeOn || this.track) { const g = this.cameraRig.track.query(cam.position.x, cam.position.z, this.car.state.idx, this.cameraRig.q, 16); cam.position.y = Math.max(cam.position.y, g.height + 0.4); }
+    cam.lookAt(t.x, t.y + 0.9, t.z);
+    cam.rotateZ(D.p_roll * Math.PI / 180);
+    if (cam.fov !== D.p_fov) { cam.fov = D.p_fov; cam.updateProjectionMatrix(); }
+    const opt = { exposure: D.p_exp / 100, focus: D.p_focus, aperture: this.photoDof() ? D.p_blur / 100 * 1.2 : 0 };
+    this.extremeFrame(0, t);
+    if (this.Q.extreme) { this.post.photo = opt; this.post.render(this.scene, cam); this.post.photo = null; }
+    else { if (!this.photoPost) this.photoPost = new PhotoPost(this.renderer, true); this.photoPost.render(this.scene, cam, this.post, opt); }
+  }
+  /** Photo mode: the current frame as a PNG download (rendered again just before, so the buffer is fresh). */
+  saveScreenshot() {
+    this.photoFrame(0);
+    const url = this.renderer.domElement.toDataURL('image/png'), a = document.createElement('a'), d = new Date(), z = (n) => String(n).padStart(2, '0');
+    a.href = url; a.download = 'isla-rush-' + d.getFullYear() + z(d.getMonth() + 1) + z(d.getDate()) + '-' + z(d.getHours()) + z(d.getMinutes()) + z(d.getSeconds()) + '.png';
+    document.body.appendChild(a); a.click(); a.remove();
+    this.lastShot = url.length;
+    this.hud.toast('Screenshot saved', 2);
+  }
+
+  /** Extreme only: below 30 fps for 5 s while driving → offer Ultra (once per session). */
+  watchFps(dt) {
+    if (!this.Q.extreme || this.fpsDismissed || this.state !== 'race' || this.paused || dt <= 0) { this.fpsLowT = 0; return; }
+    this.fpsAvg = this.fpsAvg ? this.fpsAvg * 0.9 + dt * 0.1 : dt;
+    this.fpsLowT = 1 / this.fpsAvg < 30 ? (this.fpsLowT || 0) + dt : 0;
+    if (this.fpsLowT > 5) { this.fpsLowT = 0; this.fpsDismissed = true; this.setPaused(true); this.menu.show('perf'); }
   }
 
   /** World render: straight to the screen, or through the Ultra post chain. */
@@ -7877,6 +8966,13 @@ class Game {
     this.free.traffic = this.traffic;
     this.activities = new CityActivities(this.city, this);
     this.cityMap = new CityMap(this.city, this.track);
+    if (this.Q.extreme) {                                            // Extreme: the city's materials too, its lamps, its parks
+      ExtremeFX.upgradeTree(this.cityView.group, this.world.envMap);
+      const tm = ExtremeFX.upgrade(this.traffic.meshes[0].material, 'plain', this.world.envMap);
+      for (const m of this.traffic.meshes) m.material = tm;
+      if (this.grass) { this.grass.city = this.city; this.grass.key = ''; }
+      if (this.lampPools) this.lampPools.set((this.scenery.lampPoints || []).concat(this.city.lamps.map(l => [l.x + Math.sin(l.yaw) * 2.2, l.y, l.z + Math.cos(l.yaw) * 2.2, l.small ? 4 : 6])));
+    }
     this.cityStats = { layoutMs: t1 - t0, buildMs: performance.now() - t0 };
   }
 
@@ -7947,7 +9043,8 @@ class Game {
       if (a === 'mute') { this.toggleMute(); continue; }
       if (this.state !== 'race') continue;
       if (this.results) continue;
-      if (a === 'pause') this.setPaused(!this.paused);
+      if (a === 'pause' && this.photoOn) this.exitPhoto();
+      else if (a === 'pause') this.setPaused(!this.paused);
       else if (this.paused) continue;                        // other actions wait until resumed
       else if (a === 'reset') { if (this.trial) this.trial.voidLap(); this.resetCar(); }
       else if (a === 'camera') this.cameraRig.toggle();
@@ -7995,6 +9092,7 @@ class Game {
     const manual = d.transmission === 'manual';
     if (this.car && !(this.race && this.race.playerDone)) this.car.manual = manual;
     if (this.traffic && this.freeOn && this.traffic.max !== CONFIG.city.traffic[d.traffic]) this.traffic.setDensity(d.traffic);
+    if (this.Q.extreme && this.renderer.getPixelRatio() !== this.pixelRatio()) this.resize();   // supersampling switched
     if (this.car) this.car.handling = { style: d.handling, assist: d.assist };   // the AI always drives Motorfest with the high assist
     document.body.classList.toggle('manual', manual);
     this.input.keyBind = d.bindings.key; this.input.gamepad.bindings = d.bindings.pad;
@@ -8235,10 +9333,10 @@ class Game {
     this.menu.show('main', false);
   }
 
-  reloadWithQuality(q) {
+  reloadWithQuality(q, toSettings = true) {
     try { localStorage.setItem('islaRush.quality', q); } catch (e) { /* storage blocked: URL still carries it */ }
     const url = new URL(location.href);
-    url.searchParams.set('q', q); url.hash = 'settings';
+    url.searchParams.set('q', q); url.hash = toSettings ? 'settings' : '';
     location.href = url.toString();
   }
 
@@ -8364,7 +9462,7 @@ class Game {
 
   /** Keep the shadow camera centred on the car. */
   updateSun() {
-    if (!this.sun.castShadow) return;
+    if (!this.sun.castShadow || this.cascades) return;              // (Extreme: the cascades place the sun)
     const p = this.car.renderPos, d = this.world.sunDir;
     this.sun.position.set(p.x + d.x * 300, p.y + d.y * 300, p.z + d.z * 300);
     this.sun.target.position.copy(p);
@@ -8376,6 +9474,7 @@ class Game {
     const dt = Math.min(0.1, Math.max(0, (now - this.last) / 1000));
     this.last = now;
     this.simulate(dt);
+    this.watchFps(dt);
     this.menu.update(dt);
     // a controller press can start the sound only after the page has had a key press / click / tap
     if (this.input.gamepad.state.fresh && !this.sound.running && !this.sound.unlock() && !this.soundHint) {
@@ -8383,7 +9482,10 @@ class Game {
       this.hud.toast('Press any key or click once to turn on sound', 4);
     }
     this.sound.update(dt, this);
-    if (this.state === 'race') {
+    if (this.state === 'race' && this.photoOn) {                  // photo mode: the world frozen, our own camera + pipeline
+      this.photoFrame(dt);
+      this.hud.update(dt, this);
+    } else if (this.state === 'race') {
       const live = (this.paused || this.results) ? 0 : dt, alpha = this.acc / CONFIG.physics.dt;
       this.car.updateVisual(alpha, live);
       if (this.race) for (const r of this.race.racers) if (r.ai) r.car.updateVisual(alpha, live);
@@ -8401,7 +9503,8 @@ class Game {
       this.world.update(live, this.camera);
       this.scenery.update(live, this.car);
       this.updateSun();
-      if (this.reflect && !this.paused) this.reflect.update(this.car, 4, this.scenery.meshes);
+      this.extremeFrame(live, this.car.renderPos);
+      if (this.reflect && !this.paused) this.reflect.update(this.car, this.Q.extreme && Settings.data.x_carRefl ? 1 : 4, this.scenery.meshes);
       this.rumble.update(dt, this.input.gamepad.pad, this.car, this.freeOn && this.free.inCity ? null : this.track, !this.paused && this.input.device === 'gamepad');
       this.speedFx.update(dt, Math.abs(this.car.state.vF) * 3.6, !this.paused, this.cameraRig.boost);
       this.hud.update(dt, this);
@@ -8414,6 +9517,7 @@ class Game {
       this.world.update(dt, this.camera);
       this.sun.position.copy(this.flyover.look).addScaledVector(this.world.sunDir, 300);
       this.sun.target.position.copy(this.flyover.look); this.sun.target.updateMatrixWorld();
+      this.extremeFrame(dt, this.flyover.look);
       this.hud.update(dt, this);
       this.renderWorld();
     }
