@@ -65,6 +65,19 @@
   /* race HUD */
   #raceBox, #minimap { display: none; }
   body.racing #raceBox, body.racing #minimap { display: block; }
+  /* Time Trial: split deltas (green ahead / red behind / purple = best sector ever) */
+  #split { position: absolute; left: 50%; top: calc(18% + env(safe-area-inset-top)); transform: translateX(-50%); text-align: center; opacity: 0; transition: opacity .3s;
+    font-size: 30px; font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 2px 6px rgba(0,0,0,.6); pointer-events: none; }
+  #split small { display: block; font-size: 12px; font-weight: 800; letter-spacing: .2em; opacity: .85; color: #fff; }
+  #split.show { opacity: 1; } #split.ahead { color: #49e07a; } #split.behind { color: #ff5a4d; } #split.even { color: #fff; }
+  #split.purple small { color: #d58bff; }
+  body:not(.trial) .tt-only { display: none; }
+  .rec table { border-collapse: collapse; width: 100%; font-size: 13px; font-variant-numeric: tabular-nums; }
+  .rec th { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .7; text-align: left; padding: 0 8px 6px; }
+  .rec td { padding: 6px 8px; border-top: 1px solid rgba(255,255,255,.08); white-space: nowrap; }
+  .rec td.theo { color: #d58bff; }
+  @media (max-width: 560px) { .rec .cs { display: none; } .rec td, .rec th { padding: 4px 5px; font-size: 12px; } }
+  #car-best { font-size: 12px; letter-spacing: .06em; opacity: .9; margin: 4px 0 0; font-variant-numeric: tabular-nums; }
   #raceBox { position: absolute; right: calc(16px + env(safe-area-inset-right)); top: calc(12px + env(safe-area-inset-top)); text-align: right; min-width: 120px; }
   #racePos { font-size: 40px; font-weight: 900; font-style: italic; line-height: 1; font-variant-numeric: tabular-nums; }
   #racePos.flash { animation: posflash .7s ease-out; }
@@ -319,6 +332,7 @@
   <div id="dpop"></div>
   <div id="raceBox" class="panel"><div id="racePos">1/6</div><div class="gap" id="gapA"></div><div class="gap" id="gapB"></div></div>
   <canvas id="minimap"></canvas>
+  <div id="split"></div>
   <div id="zoneBox" class="panel"><small>DRIFT ZONE</small><span id="zonePts">0</span></div>
   <div id="wrongWay">WRONG WAY</div>
   <div id="draft">SLIPSTREAM</div>
@@ -348,6 +362,8 @@
     <p class="tagline">Golden-hour island racing</p>
     <div class="mbtns">
       <button class="mbtn" data-nav data-act="play">Play</button>
+      <button class="mbtn" data-nav data-act="trial">Time Trial</button>
+      <button class="mbtn" data-nav data-act="records">Records</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
       <button class="mbtn" data-nav data-act="controls">Controls</button>
     </div>
@@ -356,7 +372,7 @@
   <div class="screen" id="scr-select" data-back="back">
     <div class="sel-head opt" data-nav data-kind="car">
       <button class="arrow" data-step="-1" aria-label="Previous car">&#9664;</button>
-      <div class="mid"><span id="car-badge" class="badge"></span><h2 id="car-name">Brisa GT</h2><p id="car-tag"></p><div class="sel-dots" id="car-dots"></div></div>
+      <div class="mid"><span id="car-badge" class="badge"></span><h2 id="car-name">Brisa GT</h2><p id="car-tag"></p><p id="car-best"></p><div class="sel-dots" id="car-dots"></div></div>
       <button class="arrow" data-step="1" aria-label="Next car">&#9654;</button>
     </div>
     <div class="sel-bottom">
@@ -382,7 +398,7 @@
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="choice" data-key="assist" data-values="off,low,high" data-labels="Off,Low,High"><span class="lbl">Drift assist<br><span class="note" id="assist-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
-      <div class="opt" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium" data-labels="Off,Low,Medium"><span class="lbl">City traffic (Free Drive)<br><span class="note">Low is recommended on phones and tablets</span></span>
+      <div class="opt" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium,high" data-labels="Off,Low,Medium,High"><span class="lbl">City traffic (Free Drive)<br><span class="note traffic-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt" data-nav data-kind="range" data-key="sensitivity" data-min="50" data-max="150" data-inc="10" data-unit="%"><span class="lbl">Steering sensitivity</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
@@ -395,6 +411,7 @@
       <div class="opt" data-nav data-kind="range" data-key="sfxVolume" data-min="0" data-max="100" data-inc="10" data-unit="%"><span class="lbl">Effects volume</span>
         <span class="ctl"><button class="step" data-step="-1">&minus;</button><span class="bar"><i></i></span><span class="val"></span><button class="step" data-step="1">+</button></span></div>
       <div class="opt" data-nav data-kind="toggle" data-key="rumble"><span class="lbl">Controller rumble</span><span class="ctl"><span class="val"></span></span></div>
+      <div class="opt" data-nav data-kind="button" data-act="resetrec"><span class="lbl">Reset records<br><span class="note" id="resetrec-note">Best laps, ghosts, sectors, drifts and city records</span></span><span class="ctl"><span class="val">&#9658;</span></span></div>
       <div class="opt" data-nav data-kind="button" data-act="hid" id="opt-hid"><span class="lbl">Enable controller rumble (Windows)<br><span class="note" id="hid-note">DualSense via WebHID &mdash; click or tap to allow</span></span><span class="ctl"><span class="val" id="hid-val">&#9658;</span></span></div>
     </div>
     <div class="mbtns row" style="margin-top:14px"><button class="mbtn" data-nav data-act="back">Back</button></div>
@@ -403,11 +420,13 @@
   <div class="screen shade" id="scr-mode" data-back="back">
     <h2 class="mtitle">Race setup</h2>
     <div class="panelx">
-      <div class="opt" data-nav data-kind="choice" data-key="mode" data-values="race,free" data-labels="Race,Free Drive"><span class="lbl">Mode<br><span class="note" id="mode-note"></span></span>
+      <div class="opt" data-nav data-kind="choice" data-key="mode" data-values="race,free,trial" data-labels="Race,Free Drive,Time Trial"><span class="lbl">Mode<br><span class="note" id="mode-note"></span></span>
+        <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
+      <div class="opt trial-only" data-nav data-kind="choice" data-key="ghost" data-values="on,off" data-labels="Show,Hide"><span class="lbl">Ghost car<br><span class="note" id="ghost-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt free-only" data-nav data-kind="choice" data-key="spawn" data-values="circuit,oldtown,downtown,port" data-labels="Circuit start,Old Town plaza,Downtown,Port"><span class="lbl">Start at<br><span class="note" id="spawn-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
-      <div class="opt free-only" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium" data-labels="Off,Low,Medium"><span class="lbl">City traffic</span>
+      <div class="opt free-only" data-nav data-kind="choice" data-key="traffic" data-values="off,low,medium,high" data-labels="Off,Low,Medium,High"><span class="lbl">City traffic<br><span class="note traffic-note"></span></span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
       <div class="opt race-only" data-nav data-kind="choice" data-key="laps" data-values="1,3,5" data-labels="1,3,5"><span class="lbl">Laps</span>
         <span class="ctl"><button class="step" data-step="-1">&#8249;</button><span class="val"></span><button class="step" data-step="1">&#8250;</button></span></div>
@@ -439,11 +458,19 @@
     <div class="mbtns">
       <button class="mbtn" data-nav data-act="resume">Resume</button>
       <button class="mbtn fr-only" data-nav data-act="map">Map</button>
+      <button class="mbtn tt-only" data-nav data-act="ghost" id="btn-ghost">Ghost: on</button>
+      <button class="mbtn tt-only" data-nav data-act="records">Leaderboard</button>
       <button class="mbtn" data-nav data-act="restart">Restart</button>
       <button class="mbtn" data-nav data-act="settings">Settings</button>
       <button class="mbtn" data-nav data-act="controls">Controls</button>
       <button class="mbtn" data-nav data-act="quit">Quit to menu</button>
     </div>
+  </div>
+
+  <div class="screen shade" id="scr-records" data-back="back">
+    <h2 class="mtitle">Time Trial records</h2>
+    <div class="panelx rec"><table id="rec-table"></table><p class="note" id="rec-note" style="margin:8px 0 0;opacity:.8"></p></div>
+    <div class="mbtns row" style="margin-top:12px"><button class="mbtn" data-nav data-act="back">Back</button></div>
   </div>
 
   <div class="screen shade" id="scr-map" data-back="back">
@@ -628,7 +655,7 @@ const CONFIG = {
       slideMomentum: 0.8,
       powerOversteer: 0.4,    // loose rear end: throttle mid-corner steps the tail out (above the drift blend speed)
       lowSpeedOversteer: 0.3, // share of that kept below it: a wiggle on the throttle out of a hairpin, never a spin
-      lowSpeedGrip: 0.3,      // heavy and lazy: needs a bit more bite than the others to hold a hairpin on grip
+      lowSpeedGrip: 0.4,      // heavy and lazy: needs more bite than the others to hold a hairpin on grip (0.3 brushed hairpin 4 at 90 km/h)
       maxSteer: 0.5,
       highSpeedSteer: 0.5,
       understeer: 0.14,       // pushes wide in fast sweepers
@@ -996,7 +1023,7 @@ const CONFIG = {
       high:   { detail: 480, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
       ultra:  { detail: 640, props: true,  balconies: true,  castShadow: true,  lampEvery: 1 },
     },
-    traffic: { off: 0, low: 12, medium: 26, speed: [9, 14], radius: 340 },   // cars, m/s, m: kept around the player
+    traffic: { off: 0, low: 12, medium: 26, high: 54, speed: [9, 14], radius: 340 },   // cars, m/s, m: kept around the player
     lights: { cycle: 18, amber: 2 },             // s: traffic-light phase (visual + traffic stops)
     // spawn points: [x, z, heading (rad, 0 = +z)]
     spawns: {
@@ -1075,6 +1102,9 @@ function formatTime(t) {
 }
 const IS_TOUCH = (window.matchMedia && window.matchMedia('(hover: none) and (pointer: coarse)').matches) ||
                  (('ontouchstart' in window) && navigator.maxTouchPoints > 0 && !(window.matchMedia && window.matchMedia('(pointer: fine)').matches));
+// iPhone / iPad (iPadOS reports a Mac with touch): big canvases are limited there
+const IS_IOS = /iP(hone|ad|od)/.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1);
+const MAP_MAX_PX = IS_IOS || IS_TOUCH ? 2048 : 4096;
 
 const _e = new THREE.Euler(0, 0, 0, 'YXZ'), _q = new THREE.Quaternion(), _p = new THREE.Vector3(), _sc = new THREE.Vector3();
 /** Matrix from position, yaw, scale and optional tilt (rx about X, rz about Z); Euler order YXZ. */
@@ -1133,7 +1163,7 @@ const DEFAULT_BINDINGS = {
 const copyBindings = (b) => JSON.parse(JSON.stringify(b));
 
 const Settings = {
-  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high', spawn: 'circuit', traffic: IS_TOUCH ? 'low' : 'medium' },
+  data: { car: 'brisaGT', colors: {}, sensitivity: 100, speedFx: 100, volume: 80, engineVolume: 80, sfxVolume: 80, muted: false, rumble: true, hidRumble: false, mode: 'race', laps: 3, difficulty: 'normal', transmission: 'auto', handling: 'motorfest', assist: 'high', spawn: 'circuit', traffic: IS_TOUCH ? 'low' : 'medium', ghost: 'on' },
   load() {
     let saved = {};
     try { saved = JSON.parse(localStorage.getItem('islaRush.settings') || '{}') || {}; Object.assign(this.data, saved); } catch (e) { /* storage blocked / corrupt */ }
@@ -3147,6 +3177,15 @@ class CameraRig {
       this.offset.y = damp(this.offset.y, this.tmp.y, cc.offsetLag * 0.6, dt);
       this.offset.z = damp(this.offset.z, this.tmp.z, cc.offsetLag, dt);
       cam.position.copy(p).add(this.offset);
+      // camera collision (Free Drive city): pull in along the car→camera ray when a wall is in the way, ease back out
+      if (this.track.camRay) {
+        const fy = p.y + 1.3, hit = this.track.camRay(p.x, fy, p.z, cam.position.x, cam.position.y, cam.position.z);
+        const want = hit < 1 ? Math.max(0.12, hit - 0.6 / Math.max(1, this.offset.length())) : 1;
+        this.pullK = this.pullK === undefined ? want : this.pullK + (want - this.pullK) * (1 - Math.exp(-(want < this.pullK ? 14 : 2.2) * dt));
+        if (this.pullK < 0.999) { cam.position.x = p.x + (cam.position.x - p.x) * this.pullK; cam.position.y = fy + (cam.position.y - fy) * this.pullK; cam.position.z = p.z + (cam.position.z - p.z) * this.pullK; }
+        const ceil = this.track.camCeil(cam.position.x, cam.position.z, p.y);
+        if (cam.position.y > ceil) cam.position.y = ceil;
+      } else this.pullK = 1;
       const g = this.track.query(cam.position.x, cam.position.z, s.idx, this.q, 16);
       cam.position.y = Math.max(cam.position.y, g.height + 1.0);
       const shake = s.surfaceShake * 2 + s.impact * 0.25;
@@ -3852,8 +3891,60 @@ class Sound {
     const kb = this.kerb = { o: c.createOscillator(), f: c.createBiquadFilter(), g: c.createGain() };
     kb.o.type = 'square'; kb.o.frequency.value = 20; kb.f.type = 'lowpass'; kb.f.frequency.value = 420; kb.g.gain.value = 0;
     kb.o.connect(kb.f); kb.f.connect(kb.g); kb.g.connect(this.raceBus); kb.o.start();
+    // ---- Free Drive city ambience: traffic hum, fountain, and a tunnel reverb on the car's own sounds ----
+    this.cityBus = c.createGain(); this.cityBus.gain.value = 0; this.cityBus.connect(this.sfxBus);
+    this.hum = loop('lowpass', 170, 0.8, this.cityBus);
+    this.fountain = loop('highpass', 1900, 0.5, this.cityBus);
+    const irLen = Math.round(c.sampleRate * 1.6), ir = c.createBuffer(2, irLen, c.sampleRate), r2 = mulberry32(5);
+    for (let ch = 0; ch < 2; ch++) { const d2 = ir.getChannelData(ch); for (let i = 0; i < irLen; i++) d2[i] = (r2() * 2 - 1) * Math.pow(1 - i / irLen, 3.2) * (i < 40 ? i / 40 : 1); }
+    this.verb = c.createConvolver(); this.verb.buffer = ir;
+    this.verbWet = c.createGain(); this.verbWet.gain.value = 0;
+    this.engineBus.connect(this.verb); this.raceBus.connect(this.verb); this.verb.connect(this.verbWet); this.verbWet.connect(this.master);
+    this.hornT = 3; this.craneT = 2; this.gullT = 1;
     if (this.vol) this.applyVolume(this.vol);
     this.voices = [];
+  }
+
+  /** City sounds by where the car is: traffic hum + distant horns (by traffic density), the port (cranes, gulls, waves),
+   *  the plaza fountain, and the tunnel's echo. Returns the share of sea waves to keep. */
+  cityFrame(dt, g, now) {
+    const set = (param, v, tau) => param.setTargetAtTime(v, now, tau);
+    const inCity = g.freeOn && g.free && g.free.inCity && g.state === 'race' && !g.paused;
+    set(this.cityBus.gain, inCity ? 1 : 0, 0.4);
+    if (!inCity) { set(this.verbWet.gain, 0, 0.15); return 1; }
+    const city = g.city, s = g.car.state, tr = g.traffic, dens = tr.max / CONFIG.city.traffic.high;
+    let near = 0; for (const c of tr.cars) if (Math.abs(c.x - s.x) + Math.abs(c.z - s.z) < 160) near++;
+    set(this.hum.g.gain, 0.03 + 0.09 * Math.min(1, near / 14) + 0.04 * dens, 0.6);
+    this.hum.f.frequency.setTargetAtTime(150 + 60 * Math.sin(this.t * 0.4), now, 0.5);
+    // distant horns: a two-note honk somewhere off to one side, more often in heavy traffic
+    if (tr.max && (this.hornT -= dt) <= 0) {
+      this.hornT = 3 + Math.random() * 9 / (0.4 + dens);
+      const f = 330 + Math.random() * 140, a = 0.012 + Math.random() * 0.02;
+      this.tone('sawtooth', f, f, 0.16, a, this.cityBus); this.tone('sawtooth', f * 1.26, f * 1.26, 0.16, a * 0.8, this.cityBus);
+      if (Math.random() < 0.5) this.tone('sawtooth', f, f, 0.32, a, this.cityBus, 0.22);
+    }
+    // port: crane clanks + gulls near the quay
+    const port = clamp(1 - Math.hypot(s.x + 2780, s.z - 700) / 520, 0, 1);
+    if (port > 0.05) {
+      if ((this.craneT -= dt) <= 0) {
+        this.craneT = 2.5 + Math.random() * 6;
+        this.burst(0.25, 'bandpass', 900 + Math.random() * 500, 300, 6, 0.12 * port, this.cityBus);
+        this.tone('square', 95, 70, 0.22, 0.05 * port, this.cityBus);
+      }
+      if ((this.gullT -= dt) <= 0) {
+        this.gullT = 1.5 + Math.random() * 4;
+        const base = 1300 + Math.random() * 500, n = 2 + (Math.random() * 3 | 0);
+        for (let i = 0; i < n; i++) this.tone('sine', base * 1.25, base * 0.82, 0.18 + Math.random() * 0.1, 0.035 * port, this.cityBus, i * 0.24);
+      }
+    }
+    // the plaza fountain (Old Town)
+    const pl = city.plaza, fd = Math.hypot(s.x - pl.cx, s.z - pl.cz);
+    set(this.fountain.g.gain, 0.09 * clamp(1 - fd / 70, 0, 1), 0.3);
+    // tunnel echo: wet on the engine / tyres inside the bore
+    const H = city.hill, inT = Math.abs(s.x - H.cx) < 10 && Math.abs(s.z - H.cz) < H.R + 4 && s.y < city.base(s.x, s.z) + 3;
+    set(this.verbWet.gain, inT ? 0.55 : 0, inT ? 0.12 : 0.25);
+    // the sea: only near the coast and the quay
+    return clamp(1 - (-city.coast(s.x, s.z) - 30) / 120, 0, 1) * 0.8 + port * 0.4;
   }
 
   applyVolume(d) {
@@ -4021,7 +4112,8 @@ class Sound {
     this.seaMix = damp(this.seaMix, key === 'mountain' ? 0 : 1, 0.6, dt);
     this.mtnMix = damp(this.mtnMix, key === 'mountain' ? 1 : 0, 0.6, dt);
     const sw = 0.5 + 0.5 * Math.sin(this.t * 2 * Math.PI / 7.5), sw2 = 0.5 + 0.5 * Math.sin(this.t * 2 * Math.PI / 11 + 1);
-    set(this.waves.g.gain, amb * this.seaMix * (0.07 + 0.28 * sw * sw), 0.3);
+    const seaK = this.cityFrame(dt, g, now);
+    set(this.waves.g.gain, amb * this.seaMix * seaK * (0.07 + 0.28 * sw * sw), 0.3);
     set(this.waves.f.frequency, 320 + 520 * sw, 0.3);
     set(this.gust.g.gain, amb * this.mtnMix * (0.03 + 0.09 * sw2), 0.4);
     set(this.gust.f.frequency, 480 + 420 * sw2, 0.4);
@@ -4583,6 +4675,8 @@ class Menu {
     if (name === 'mode') this.refreshMode();
     if (name === 'controls') this.buildControls();
     if (name === 'map') this.g.drawMap();
+    if (name === 'records') this.refreshRecords();
+    if (name === 'pause') this.refreshPause();
     const rows = this.rows();
     this.setFocus(focus !== null ? focus : (name === 'select' || name === 'mode') ? rows.length - 1 : 0);
   }
@@ -4620,6 +4714,7 @@ class Menu {
       const vals = row.dataset.values.split(','), k = row.dataset.key, cur = String(Settings.data[k]);
       const v = vals[(vals.indexOf(cur) + d + vals.length) % vals.length];
       if (k === 'handling') Settings.setHandlingFor(this.g.handlingProfile(), v);   // remembered for this input type
+      if (k === 'traffic' && v === 'high' && (IS_TOUCH || IS_IOS)) this.g.hud.toast('High traffic is heavy on phones and tablets', 3);
       Settings.data[k] = k === 'laps' ? +v : v; Settings.save(); this.g.applySettings();
       if (this.name === 'mode') this.refreshMode(); else if (this.name === 'select') this.refreshChoices(this.el('select')); else this.refreshSettings();
     } else if (kind === 'choice') {
@@ -4649,6 +4744,17 @@ class Menu {
     const g = this.g;
     switch (act) {
       case 'play': this.show('select'); break;
+      case 'trial': Settings.data.mode = 'trial'; Settings.save(); this.show('select'); break;
+      case 'records': this.show('records'); break;
+      case 'ghost': Settings.data.ghost = Settings.data.ghost === 'on' ? 'off' : 'on'; Settings.save(); this.refreshPause(); break;
+      case 'resetrec': {
+        const note = document.getElementById('resetrec-note');
+        if (!this.resetArm || performance.now() - this.resetArm > 4000) { this.resetArm = performance.now(); note.textContent = 'Press again to delete every record'; note.classList.add('warn'); break; }
+        this.resetArm = 0; resetAllRecords(); if (g.activities) g.activities.rec = { trap: {}, zone: {}, jump: {} };
+        if (g.trial) g.trial.loadGhost();
+        note.textContent = 'All records deleted'; note.classList.remove('warn'); g.hud.toast('Records reset', 2);
+        break;
+      }
       case 'settings': this.show('settings'); break;
       case 'controls': this.show('controls'); break;
       case 'race': Settings.data.car = this.selCar; Settings.save(); this.show('mode'); break;
@@ -4711,6 +4817,8 @@ class Menu {
     const key = this.selCar, cfg = CONFIG.cars[key], order = CONFIG.carOrder;
     document.getElementById('car-name').textContent = cfg.name;
     document.getElementById('car-tag').textContent = cfg.tagline;
+    const bb = Bests.data[key] || {};
+    document.getElementById('car-best').textContent = 'Best lap ' + (bb.lap ? formatTime(bb.lap) : '\u2014') + '   \u00b7   Best drift ' + (bb.drift ? fmtPts(bb.drift) + ' pts' : '\u2014');
     const badge = document.getElementById('car-badge'); badge.textContent = cfg.badge || ''; badge.style.display = cfg.badge ? '' : 'none';
     document.getElementById('car-dots').textContent = order.map(k => (k === key ? '●' : '○')).join(' ');
     for (const k in this.statBars) [...this.statBars[k].children].forEach((seg, i) => seg.classList.toggle('on', i < Math.round(cfg.stats[k] * 2)));
@@ -4804,8 +4912,34 @@ class Menu {
     c.prev = now;
   }
 
+  /** City traffic hint; High on a phone / tablet gets a warning. */
+  trafficNote() {
+    const t = Settings.data.traffic, warn = t === 'high' && (IS_TOUCH || IS_IOS);
+    for (const el of document.querySelectorAll('.traffic-note')) {
+      el.textContent = warn ? 'High: heavy for phones and tablets, expect a lower frame rate' : t === 'high' ? 'Busy: about twice Medium, on every road' : IS_TOUCH ? 'Low is recommended on phones and tablets' : '';
+      el.classList.toggle('warn', warn);
+    }
+  }
+
+  refreshPause() { const b = document.getElementById('btn-ghost'); if (b) b.textContent = 'Ghost: ' + (Settings.data.ghost === 'on' ? 'on' : 'off'); }
+
+  /** Records screen: best lap, its sectors, best sectors ever and the theoretical best, per car. */
+  refreshRecords() {
+    const tbl = document.getElementById('rec-table'); tbl.innerHTML = '';
+    const tr = (cells, cls) => { const r = document.createElement('tr'); cells.forEach(([c, k]) => { const td = document.createElement(cls === 'h' ? 'th' : 'td'); td.textContent = c; if (k) td.className = k; r.append(td); }); tbl.append(r); };
+    tr([['Car'], ['Best lap'], ['S1', 'cs'], ['S2', 'cs'], ['S3', 'cs'], ['Theoretical'], ['Best drift', 'cs']], 'h');
+    const f = (x) => (x === null || x === undefined ? '\u2014' : formatTime(x)), fs = (x) => (x === null || x === undefined ? '\u2014' : x.toFixed(3));
+    for (const k of CONFIG.carOrder) {
+      const r = TrialStore.of(k) || {}, bs = r.bestSectors || [null, null, null], b = Bests.data[k] || {};
+      const theo = bs.every(x => x !== null && x !== undefined) ? bs.reduce((a, c) => a + c, 0) : null;
+      tr([[CONFIG.cars[k].name], [f(r.lap)], [fs(bs[0]), 'cs'], [fs(bs[1]), 'cs'], [fs(bs[2]), 'cs'], [f(theo), 'theo'], [b.drift ? fmtPts(b.drift) : '\u2014', 'cs']]);
+    }
+    document.getElementById('rec-note').textContent = 'S1-S3: your best time in each third of the lap (any lap). Theoretical = the three added up.';
+  }
+
   /* ---------- race setup ---------- */
   refreshMode() {
+    this.trafficNote();
     const scr = this.el('mode'), d = Settings.data;
     for (const row of scr.querySelectorAll('.opt[data-kind=choice]')) {
       const vals = row.dataset.values.split(','), labels = row.dataset.labels.split(',');
@@ -4813,7 +4947,10 @@ class Menu {
     }
     for (const row of scr.querySelectorAll('.race-only')) row.style.display = d.mode === 'race' ? '' : 'none';
     for (const row of scr.querySelectorAll('.free-only')) row.style.display = d.mode === 'free' ? '' : 'none';
-    document.getElementById('mode-note').textContent = d.mode === 'race' ? 'You vs 5 AI drivers from the grid' : 'Solo: the circuit (laps timed) and the city of Puerto Brisa';
+    for (const row of scr.querySelectorAll('.trial-only')) row.style.display = d.mode === 'trial' ? '' : 'none';
+    const tr = TrialStore.of(this.selCar);
+    document.getElementById('ghost-note').textContent = tr && tr.lap ? 'Your best: ' + formatTime(tr.lap) : 'Set a lap to race your ghost';
+    document.getElementById('mode-note').textContent = d.mode === 'race' ? 'You vs 5 AI drivers from the grid' : d.mode === 'trial' ? 'Solo laps against the clock and your ghost' : 'Solo: the circuit (laps timed) and the city of Puerto Brisa';
     document.getElementById('spawn-note').textContent = d.spawn === 'circuit' ? 'The city is west, over the Malec\u00f3n causeway' : 'Fast travel any time: pause \u2192 Map';
     document.getElementById('diff-note').textContent = d.difficulty === 'hard' ? 'Sharp rivals, few mistakes' : d.difficulty === 'easy' ? 'Relaxed rivals' : 'Rivals in the same class as your car';
     if (this.name === 'mode') this.setFocus(Math.min(this.focus, this.rows().length - 1));
@@ -4832,6 +4969,7 @@ class Menu {
       else if (row.dataset.kind === 'toggle') val.textContent = Settings.data[k] ? 'ON' : 'OFF';
     }
     const hp = { pad: 'controller', touch: 'touch', keyboard: 'keyboard' }[this.g.handlingProfile()];
+    this.trafficNote();
     document.getElementById('handling-note').textContent = (Settings.data.handling === 'grip' ? 'Pure grip: no steer-to-drift (handbrake still drifts)' : 'Full stick at speed drifts, like Motorfest') + ' \u00b7 saved for ' + hp;
     document.getElementById('assist-note').textContent = { off: 'No help: overdo it and you spin', low: 'Light countersteer help, up to ~65\u00b0', high: 'Auto countersteer, max ~55\u00b0' }[Settings.data.assist] || '';
     document.getElementById('trans-note').textContent = Settings.data.transmission === 'manual' ? 'Shift yourself: R1 / L1 (E / Q). Shift light shows the best moment' : 'The car shifts for you';
@@ -5039,24 +5177,43 @@ class RacingLine {
     if (this.cache[key]) return this.cache[key];
     const T = this.T, n = T.n, v = new Float32Array(n), P = CONFIG.physics, vMax = cfg.topSpeed / 3.6, driftAt = new Uint8Array(n);
     for (let i = 0; i < n; i++) {
-      let vi = vMax;
+      let vi = vMax, Rs = this.R[i];
+      for (let k = -3; k <= 3; k++) Rs = Math.min(Rs, this.R[(i + k + n) % n]);   // the tightest bit nearby (the line has kinks)
       for (let k = 0; k < 3; k++) {
         const kmh = vi * 3.6, gf = cfg.gripFade, ratio = Math.min(1, vi / vMax);
         const fade = gf ? lerp(1, gf[2], smoothstep(gf[0], gf[1], kmh)) : 1;
         const a = cfg.grip * P.lateralGripAccel * fade * (1 - cfg.understeer * ratio * ratio) * sk.gripUse;
-        vi = Math.min(vMax, Math.sqrt(a * this.R[i]));
+        vi = Math.min(vMax, Math.sqrt(a * Rs));
       }
       // tight corners: Motorfest drivers drift them, on the car's drift grip
       if (cfg.drift && sk.drift !== false && this.R[i] < 160) {
-        const vd = Math.min(vMax, Math.sqrt(cfg.drift.grip * sk.gripUse * this.R[i]));
+        const vd = Math.min(vMax, Math.sqrt(cfg.drift.grip * sk.gripUse * Rs));
         // only where a stick drift is at full strength: slower corners (hairpins) are taken on grip
         if (vd > vi * 1.03 && vd * 3.6 >= CONFIG.handling.drift.blend[1]) { vi = vd; driftAt[i] = 1; }
       }
       v[i] = vi;
     }
+    // no planned drift that ends while the road keeps bending (or turns back): the drift lets go sideways and the car runs
+    // wide into the rest of the bend (the long downhill left in the mountains) — take those on grip
+    const turn = (i) => { const a = (i - 6 + n) % n, b = (i + 6) % n; return Math.sign(T.RZ[a] * -T.RX[b] - -T.RX[a] * T.RZ[b]); };
+    for (let i = 0; i < n; i++) if (driftAt[i] && !driftAt[(i + 1) % n]) {            // end of a drift run
+      const dir = turn(i); let s0 = i; while (driftAt[(s0 - 1 + n) % n] && s0 !== (i + 1) % n) s0 = (s0 - 1 + n) % n;
+      let ess = false, run = 0;                                                         // the bend goes on (same way, 25 m+) or turns back
+      for (let k = 1; k <= 40 && !ess; k++) { const j = (i + k) % n; run = this.R[j] < 420 ? run + 1 : 0; if (this.R[j] < 420 && (turn(j) === -dir || run >= 10)) ess = true; }
+      if (ess) for (let j = s0; ; j = (j + 1) % n) {
+        driftAt[j] = 0;
+        let vi = vMax; for (let k = 0; k < 3; k++) { const kmh = vi * 3.6, gf = cfg.gripFade, ratio = Math.min(1, vi / vMax); const fade = gf ? lerp(1, gf[2], smoothstep(gf[0], gf[1], kmh)) : 1; vi = Math.min(vMax, Math.sqrt(cfg.grip * P.lateralGripAccel * fade * (1 - cfg.understeer * ratio * ratio) * sk.gripUse * this.R[j])); }
+        v[j] = Math.min(v[j], vi);
+        if (j === i) break;
+      }
+    }
     v.driftAt = driftAt;
     const dec = cfg.braking * sk.brakeUse, ds = T.cfg.sampleSpacing;
-    for (let pass = 0; pass < 2; pass++) for (let i = n - 1; i >= 0; i--) { const j = (i + 1) % n; v[i] = Math.min(v[i], Math.sqrt(v[j] * v[j] + 2 * dec * ds)); }
+    // braking zones: downhill the brakes do less (gravity pulls), so the AI brakes earlier there
+    for (let pass = 0; pass < 2; pass++) for (let i = n - 1; i >= 0; i--) {
+      const j = (i + 1) % n, down = Math.max(0, (T.Y[i] - T.Y[j]) / ds);
+      v[i] = Math.min(v[i], Math.sqrt(v[j] * v[j] + 2 * Math.max(dec * 0.5, dec - P.gravity * down * cfg.slopeEffect) * ds));
+    }
     return (this.cache[key] = v);
   }
 }
@@ -5146,6 +5303,9 @@ class AIDriver {
     // ---- speed: racing-line profile, following slower traffic ----
     let vt = this.profile[(i + 3) % n] * this.pace * pace;
     if (this.followV < vt) vt = this.followV;
+    // heading for the barrier (e.g. running wide out of a drift into the next bend): lift, and brake if it gets close
+    const latV = s.vx * T.RX[i] + s.vz * T.RZ[i], edge = T.HW[i] + T.OR[i] - 1.8, pred = s.lateral + latV * 0.8;
+    if (Math.abs(pred) > edge && latV * pred > 0) vt = Math.min(vt, v * (1 - 0.16 * clamp((Math.abs(pred) - edge) / 3, 0, 1)));
     this.vt = vt;
     const dv = vt - v;
     // Motorfest way to slow for a sweeper: lift early, so the brakes stay for the hairpins. If coasting can shed the speed a
@@ -5918,8 +6078,9 @@ class City {
       const y = this.base(sx, sz), st = this.struct(sx, sz, sx + ux * len, sz + uz * len, hw, y, y + h, { solid: true, kind: 'jump', surf: 'tarmac' });
       this.jumps.push(Object.assign(st, { name, best: 0 }));
     };
-    addJump('Ring road jump', ax, az, (bx - ax) / l * dir, (bz - az) / l * dir, 18, 3, 2.6);
-    addJump('Port jump', -2618, 640, -1, 0, 16, 5, 2.4);
+    // kickers, not launch ramps: 16 m long, 1.2 m high (a 200 km/h run lands ~60 m on)
+    addJump('Ring road jump', ax, az, (bx - ax) / l * dir, (bz - az) / l * dir, 16, 3, 1.2);
+    addJump('Port jump', -2618, 640, -1, 0, 16, 5, 1.2);
     // speed traps: Malecón, ring road east side, elevated highway
     this.traps.push({ name: 'Malecón speed trap', x: -2000, z: -712, ux: 1, uz: 0, hw: 9, y: this.base(-2000, -712) });
     this.traps.push({ name: 'Ring road speed trap', x: -1236, z: -300, ux: 0, uz: 1, hw: 7, y: this.base(-1236, -300) });
@@ -5931,29 +6092,46 @@ class City {
   ringDirAt(k) { const R = this.ring.pts; return Math.sign(R[(k + 1) * 2] - R[k * 2]) < 0 ? 1 : -1; }
 
   trafficRoutes() {
-    // closed loops of lane centre lines; cars drive on the right
-    const loop = (pts) => { const out = []; for (let k = 0; k < pts.length / 2; k++) out.push([pts[k * 2], pts[k * 2 + 1]]); return out; };
-    const ringLoop = loop(this.ring.pts);
-    for (let x = -2398; x < -1290; x += 10) ringLoop.push([x, -712]);   // back east along the Malecón
-    this.routes.push({ pts: ringLoop, lane: 5, lights: false });          // outer lanes: clear of the ring-road jump
-    this.routes.push({ pts: ringLoop.slice().reverse(), lane: 5, lights: false });
-    const rect = (x0, z0, x1, z1) => { const p = []; const add = (ax, az, bx, bz) => { const n = Math.round(Math.hypot(bx - ax, bz - az) / 10); for (let i = 0; i < n; i++) p.push([lerp(ax, bx, i / n), lerp(az, bz, i / n)]); }; add(x0, z0, x1, z0); add(x1, z0, x1, z1); add(x1, z1, x0, z1); add(x0, z1, x0, z0); return p; };
-    const dt = rect(-2120, -540, -1580, 200);
-    this.routes.push({ pts: dt, lane: 4, lights: true });
-    this.routes.push({ pts: dt.slice().reverse(), lane: 4, lights: true });
-    const ot = rect(-2940, -620, -2460, 160);
-    this.routes.push({ pts: ot, lane: 2, lights: false, slow: true });
+    // lane centre lines (cars drive on the right). Closed loops go round and round; open routes end where a car is
+    // recycled (out of sight) to a new spot. big: buses allowed; elev: follows ramps / decks (the highway, the causeway)
+    const pairs = (pts) => { const out = []; for (let k = 0; k < pts.length / 2; k++) out.push([pts[k * 2], pts[k * 2 + 1]]); return out; };
+    const line = (...pts) => { const p = []; for (let k = 0; k < pts.length - 1; k++) { const [ax, az] = pts[k], [bx, bz] = pts[k + 1], n = Math.max(1, Math.round(Math.hypot(bx - ax, bz - az) / 10)); for (let i = 0; i < n; i++) p.push([lerp(ax, bx, i / n), lerp(az, bz, i / n)]); } p.push(pts[pts.length - 1]); return p; };
+    const rect = (x0, z0, x1, z1) => { const p = line([x0, z0], [x1, z0], [x1, z1], [x0, z1], [x0, z0]); p.pop(); return p; };
+    const add = (pts, o) => { this.routes.push(Object.assign({ pts, lane: 4, lights: false, closed: true, big: false, elev: false }, o)); };
+    const both = (pts, o) => { add(pts, o); add(pts.slice().reverse(), o); };
+    // ring road + Malecón (closed), outer lanes: clear of the ring-road jump
+    const ring = pairs(this.ring.pts), ringLoop = ring.concat(line([-2398, -712], [-1300, -712]).slice(1, -1));
+    both(ringLoop, { lane: 5, big: true });
+    // the elevated highway as part of a loop: deck east, ring south, Malecón west, ring north back to the ramp (and reversed)
+    const near = (x, z) => { let b = 0, bd = Infinity; ring.forEach(([px, pz], i) => { const d = Math.hypot(px - x, pz - z); if (d < bd) { bd = d; b = i; } }); return b; };
+    const iE = near(-1236, -160), iW = near(-2400, -160), H = this.hwy;
+    const hwyLoop = line([H.xw, H.z], [H.xe, H.z]).slice(0, -1)
+      .concat(ring.slice(0, iE + 1).reverse()).concat(line([-1300, -712], [-2398, -712]).slice(1, -1)).concat(ring.slice(iW).reverse());
+    both(hwyLoop, { lane: 3.75, big: true, elev: true });
+    // downtown: the block loop with lights, plus the two outer avenues and two streets end to end
+    const dtl = rect(-2120, -540, -1580, 200);
+    both(dtl, { lights: true, big: true });
+    for (const x of [-2120, -1580]) both(line([x, -700], [x, 318]), { lights: true, big: true, closed: false });
+    for (const z of [-540, 200]) both(line([-2390, z], [-1246, z]), { lights: true, big: true, closed: false });
+    // the causeway: from the Malecón out to the circuit and back
+    const cw = pairs(this.causeway.pts);
+    both(line([-1700, -712], [-1205, -712]).concat(cw.slice(1, -2)), { lane: 3.5, elev: true, closed: false });
+    // port: round the yard (west of the cone lines), and the port road to / from the ring (stops short of the jump)
+    both(rect(-2940, 500, -2725, 790), { lane: 3, slow: true });
+    both(line([-2409, 640], [-2585, 640]), { lane: 6, closed: false });
+    // Old Town: a slow loop on the cobbles
+    add(rect(-2940, -620, -2460, 160), { lane: 2, slow: true });
     for (const r of this.routes) {
-      const P = r.pts, n = P.length; r.dist = [0];
-      for (let k = 1; k <= n; k++) r.dist.push(r.dist[k - 1] + Math.hypot(P[k % n][0] - P[k - 1][0], P[k % n][1] - P[k - 1][1]));
-      r.len = r.dist[n];
-      // stop lines: route positions 13 m before each signalled crossing it passes
+      const P = r.pts, n = P.length, m = r.closed ? n : n - 1; r.dist = [0];
+      for (let k = 1; k <= m; k++) r.dist.push(r.dist[k - 1] + Math.hypot(P[k % n][0] - P[k - 1][0], P[k % n][1] - P[k - 1][1]));
+      r.len = r.dist[m];
+      // stop lines: 14 m before each signalled crossing the route passes
       r.stops = [];
       if (r.lights) for (const sg of this.signals) for (let k = 0; k < n; k++) {
         const [x, z] = P[k], [x2, z2] = P[(k + 1) % n];
         if (Math.hypot(x - sg.x, z - sg.z) < 6) {
-          const axis = Math.abs(x2 - x) > Math.abs(z2 - z) ? 'ew' : 'ns';
-          r.stops.push({ d: (r.dist[k] - 14 + r.len) % r.len, axis });
+          const axis = Math.abs(x2 - x) > Math.abs(z2 - z) ? 'ew' : 'ns', d = r.dist[k] - 14;
+          if (r.closed || d > 0) r.stops.push({ d: (d + r.len) % r.len, axis });
         }
       }
     }
@@ -6684,7 +6862,7 @@ class CityView {
   setVisible(v) { this.group.visible = v; }
   /** Compile every city shader up front (hidden instanced meshes too), so the first drive into a district doesn't stall. */
   warm(renderer, scene, camera, extra) {
-    const list = [...this.group.children, extra], vis = list.map(m => m.visible);
+    const list = [...this.group.children, ...extra], vis = list.map(m => m.visible);
     list.forEach(m => { m.visible = true; });
     renderer.compile(scene, camera);
     list.forEach((m, i) => { m.visible = vis[i]; });
@@ -6903,6 +7081,55 @@ class FreeWorld {
     Physics.resolveContact(car, nx, nz, pen, px, pz, 1, 0);
   }
 
+  /**
+   * Camera ray from the car (a) to the chase camera (b): the fraction along it where the first wall / building is hit
+   * (1 = clear). Boxes are slab-tested in their own frame, padded 0.35 m; thin poles are ignored (no flicker).
+   */
+  camRay(ax, ay, az, bx, by, bz) {
+    const city = this.city;
+    if (!city.inRegion(ax, az) && !city.inRegion(bx, bz)) return 1;
+    const i0 = Math.floor(Math.min(ax, bx) / CITY_GRID), i1 = Math.floor(Math.max(ax, bx) / CITY_GRID);
+    const j0 = Math.floor(Math.min(az, bz) / CITY_GRID), j1 = Math.floor(Math.max(az, bz) / CITY_GRID);
+    const stamp = ++city.stamp, dx = bx - ax, dz = bz - az, dy = by - ay, pad = 0.35;
+    let tMin = 1;
+    for (let i = i0; i <= i1; i++) for (let j = j0; j <= j1; j++) {
+      const cell = city.cell(i, j, false); if (!cell) continue;
+      for (const col of cell.cols) {
+        if (col.stamp === stamp) continue; col.stamp = stamp;
+        let t0 = 0, t1 = 1;
+        if (col.r !== undefined) {
+          if (col.r < 1.2) continue;
+          const fx = ax - col.x, fz = az - col.z, A = dx * dx + dz * dz, B = 2 * (fx * dx + fz * dz), C = fx * fx + fz * fz - (col.r + pad) ** 2;
+          const D = B * B - 4 * A * C; if (D < 0 || A < 1e-9) continue;
+          t0 = (-B - Math.sqrt(D)) / (2 * A); t1 = (-B + Math.sqrt(D)) / (2 * A);
+        } else {
+          // local frame: lx along (c, −s), lz along (s, c)
+          const ox = ax - col.x, oz = az - col.z;
+          const la = [ox * col.c - oz * col.s, ox * col.s + oz * col.c], ld = [dx * col.c - dz * col.s, dx * col.s + dz * col.c], h = [col.hx + pad, col.hz + pad];
+          let ok = true;
+          for (let k = 0; k < 2 && ok; k++) {
+            if (Math.abs(ld[k]) < 1e-9) { if (Math.abs(la[k]) > h[k]) ok = false; continue; }
+            let u = (-h[k] - la[k]) / ld[k], v = (h[k] - la[k]) / ld[k]; if (u > v) { const w = u; u = v; v = w; }
+            t0 = Math.max(t0, u); t1 = Math.min(t1, v); if (t0 > t1) ok = false;
+          }
+          if (!ok) continue;
+        }
+        if (t1 < 0 || t0 > tMin || t0 <= 0) continue;                 // behind, beyond, or the car is inside it already
+        let top = col.y1; if (col.st) top = this.structTop(col.st, ax + dx * t0, az + dz * t0);
+        const y = ay + dy * t0;
+        if (y < col.y0 || y > top + 0.3) continue;                     // over a low wall / under the deck: not in the way
+        tMin = t0;
+      }
+    }
+    return tMin;
+  }
+  /** Highest the camera may go here: under the tunnel roof, else unlimited. */
+  camCeil(x, z, carY) {
+    const H = this.city.hill;
+    if (Math.abs(x - H.cx) < 9.5 && Math.abs(z - H.cz) < H.R - 1 && carY < this.city.base(x, z) + 4) return this.city.base(H.cx, H.cz) + 6.4;
+    return Infinity;
+  }
+
   /** Nearest road (city) or the circuit, facing the way the car was pointing. */
   resetPose(car) {
     const s = car.state, city = this.city;
@@ -6918,40 +7145,53 @@ class FreeWorld {
 
 /* =====================================================================
  * CITY › TRAFFIC
- * Light ambient cars on closed lane loops (ring road, downtown avenues, Old Town). They keep their distance, stop at
- * red lights, give way to you, and get shoved aside when you hit them. Only cars near you exist: the far ones are
- * moved to free spots on the loops around you. Drawn as one InstancedMesh.
+ * Ambient cars on lane routes: loops (ring road + Malecón, the elevated highway loop, downtown blocks, the port yard,
+ * Old Town) and open runs (downtown avenues, the causeway, the port road). They keep their distance from any car ahead,
+ * give way at crossings, queue at red lights, give way to you, and get shoved aside when you hit them. Only cars near
+ * you exist: far ones, finished runs and anything stuck are recycled to free spots out of the camera's view.
+ * Six vehicle types (hatchback, sedan, taxi, pickup, van, bus), one InstancedMesh each.
  * ===================================================================== */
 class CityTraffic {
   constructor(city, scene, quality) {
-    this.city = city; this.cars = []; this.max = 0; this.time = 0;
-    const C = CONFIG.city.traffic, cap = Math.max(C.low, C.medium);
-    const geo = mergeGeos([
-      [new THREE.BoxGeometry(1.8, 0.7, 4.2), 0xffffff, M(0, 0.62, 0)],
-      [new THREE.BoxGeometry(1.6, 0.55, 2.1), 0xe6eef4, M(0, 1.22, -0.25)],
-      [new THREE.BoxGeometry(1.62, 0.42, 2.0), 0x26323c, M(0, 1.2, -0.25)],
-      [new THREE.BoxGeometry(1.9, 0.5, 0.8), 0x222222, M(0, 0.33, 1.35)], [new THREE.BoxGeometry(1.9, 0.5, 0.8), 0x222222, M(0, 0.33, -1.35)],
-      [new THREE.BoxGeometry(1.5, 0.16, 0.06), 0xfff2c8, M(0, 0.7, 2.11)], [new THREE.BoxGeometry(1.5, 0.14, 0.06), 0xc0201a, M(0, 0.72, -2.11)],
-    ]);
-    this.mesh = new THREE.InstancedMesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true }), cap);
-    this.mesh.setColorAt(0, new THREE.Color(1, 1, 1));
-    this.mesh.count = 0; this.mesh.frustumCulled = false; this.mesh.visible = false; this.mesh.castShadow = quality.shadows;
-    scene.add(this.mesh);
-    this.colors = [0xd8d8d8, 0x2a2d33, 0xb32a26, 0x2d5fa8, 0xe6c34a, 0x3d8a5a, 0xf2f2ee, 0x8a8f96, 0x5b3d8a, 0xe07b30];
+    this.city = city; this.cars = []; this.max = 0; this.time = 0; this.nextId = 1;
+    this.stats = { respawns: 0, unstuck: 0 };
+    const C = CONFIG.city.traffic, cap = C.high + 4, mat = new THREE.MeshLambertMaterial({ vertexColors: true });
+    const wheel = (x, z, r = 0.34, w = 0.24) => [new THREE.CylinderGeometry(r, r, w, 10), 0x1b1b1d, M(x, r, z, 0, 1, 1, 1, 0, Math.PI / 2)];
+    const wheels = (hx, zf, zr, r) => [wheel(-hx, zf, r), wheel(hx, zf, r), wheel(-hx, zr, r), wheel(hx, zr, r)];
+    const lights = (hw, hl, y) => [[new THREE.BoxGeometry(hw * 1.6, 0.14, 0.06), 0xfff2c8, M(0, y, hl + 0.01)], [new THREE.BoxGeometry(hw * 1.6, 0.13, 0.06), 0xc0201a, M(0, y, -hl - 0.01)]];
+    // low-poly bodies; the instance colour tints the white parts (paint), dark parts stay dark
+    const T = this.types = [
+      { name: 'hatchback', hl: 1.95, hw: 0.86, weight: 4, geo: [[new THREE.BoxGeometry(1.72, 0.66, 3.9), 0xffffff, M(0, 0.62, 0)], [new THREE.BoxGeometry(1.56, 0.58, 2.0), 0xe8eef2, M(0, 1.22, -0.35)], [new THREE.BoxGeometry(1.58, 0.42, 1.9), 0x26323c, M(0, 1.2, -0.35)], ...wheels(0.78, 1.25, -1.2, 0.32), ...lights(0.86, 1.95, 0.72)] },
+      { name: 'sedan', hl: 2.3, hw: 0.9, weight: 5, geo: [[new THREE.BoxGeometry(1.8, 0.66, 4.6), 0xffffff, M(0, 0.62, 0)], [new THREE.BoxGeometry(1.6, 0.55, 2.2), 0xe8eef2, M(0, 1.2, -0.2)], [new THREE.BoxGeometry(1.62, 0.4, 2.1), 0x26323c, M(0, 1.18, -0.2)], ...wheels(0.8, 1.45, -1.45, 0.34), ...lights(0.9, 2.3, 0.72)] },
+      { name: 'taxi', hl: 2.3, hw: 0.9, weight: 2, color: 0xf2c230, geo: [[new THREE.BoxGeometry(1.8, 0.66, 4.6), 0xffffff, M(0, 0.62, 0)], [new THREE.BoxGeometry(1.6, 0.55, 2.2), 0xf4f0e0, M(0, 1.2, -0.2)], [new THREE.BoxGeometry(1.62, 0.4, 2.1), 0x26323c, M(0, 1.18, -0.2)], [new THREE.BoxGeometry(0.7, 0.24, 0.3), 0xfafafa, M(0, 1.6, -0.2)], [new THREE.BoxGeometry(1.82, 0.12, 4.0), 0x222222, M(0, 0.7, 0)], ...wheels(0.8, 1.45, -1.45, 0.34), ...lights(0.9, 2.3, 0.72)] },
+      { name: 'pickup', hl: 2.65, hw: 0.95, weight: 2, geo: [[new THREE.BoxGeometry(1.9, 0.78, 5.3), 0xffffff, M(0, 0.78, 0)], [new THREE.BoxGeometry(1.75, 0.7, 1.7), 0xe8eef2, M(0, 1.5, 0.75)], [new THREE.BoxGeometry(1.77, 0.5, 1.6), 0x26323c, M(0, 1.48, 0.75)], [new THREE.BoxGeometry(1.7, 0.3, 2.3), 0x2a2a2a, M(0, 1.05, -1.4)], ...wheels(0.86, 1.7, -1.7, 0.4), ...lights(0.95, 2.65, 0.9)] },
+      { name: 'van', hl: 2.5, hw: 0.98, weight: 2, geo: [[new THREE.BoxGeometry(1.96, 1.85, 5.0), 0xffffff, M(0, 1.25, -0.1)], [new THREE.BoxGeometry(1.98, 0.6, 0.9), 0x26323c, M(0, 1.6, 2.2)], [new THREE.BoxGeometry(2.0, 0.5, 3.4), 0x26323c, M(0, 1.75, -0.6, 0, 1.0, 1, 1)], ...wheels(0.88, 1.6, -1.6, 0.36), ...lights(0.98, 2.5, 0.8)] },
+      { name: 'bus', hl: 5.8, hw: 1.27, weight: 1, big: true, geo: [[new THREE.BoxGeometry(2.55, 2.6, 11.6), 0xffffff, M(0, 1.75, 0)], [new THREE.BoxGeometry(2.57, 0.9, 10.4), 0x26323c, M(0, 2.25, -0.3)], [new THREE.BoxGeometry(2.4, 1.3, 0.1), 0x26323c, M(0, 2.0, 5.81)], [new THREE.BoxGeometry(2.57, 0.18, 11.62), 0xf2f2ee, M(0, 1.5, 0)], ...wheels(1.12, 4.0, -3.6, 0.5), ...lights(1.27, 5.8, 0.9)] },
+    ];
+    this.meshes = T.map(t => {
+      const m = new THREE.InstancedMesh(mergeGeos(t.geo), mat, cap);
+      m.setColorAt(0, new THREE.Color(1, 1, 1));                     // (sized from count: before count = 0)
+      m.count = 0; m.frustumCulled = false; m.visible = false; m.castShadow = quality.shadows;
+      scene.add(m); return m;
+    });
+    this.mesh = this.meshes[0];                                      // (warm-up / tests: any one of them)
+    this.colors = [0xd8d8d8, 0x2a2d33, 0xb32a26, 0x2d5fa8, 0xe6c34a, 0x3d8a5a, 0xf2f2ee, 0x8a8f96, 0x5b3d8a, 0xe07b30, 0x7a1f2b, 0x9fc3d6];
+    this.busColors = [0x2f7ad9, 0xe03d30, 0xf2f2ee, 0x2fa36b];
     this.rnd = mulberry32(4242);
+    this.frustum = new THREE.Frustum(); this._m = new THREE.Matrix4(); this._v = new THREE.Vector3(); this._o = {};
   }
   setDensity(name) {
     this.max = CONFIG.city.traffic[name] || 0;
-    this.cars.length = Math.min(this.cars.length, this.max);
-    this.mesh.count = this.cars.length;
+    if (this.cars.length > this.max) this.cars.length = this.max;
+    this.draw();
   }
-  clear() { this.cars.length = 0; this.mesh.count = 0; this.mesh.visible = false; }
+  clear() { this.cars.length = 0; this.draw(); }
 
-  /** Point + direction at distance d along a route (lane offset to the right). */
+  /** Point + direction at distance d along a route (lane offset to the right); open routes stop at their end. */
   at(r, d, out) {
     const P = r.pts, n = P.length, D = r.dist;
-    d = ((d % r.len) + r.len) % r.len;
-    let lo = 0, hi = n - 1;
+    d = r.closed ? ((d % r.len) + r.len) % r.len : clamp(d, 0, r.len - 1e-6);
+    let lo = 0, hi = D.length - 2;
     while (lo < hi) { const mid = (lo + hi + 1) >> 1; if (D[mid] <= d) lo = mid; else hi = mid - 1; }
     const a = P[lo], b = P[(lo + 1) % n], l = D[lo + 1] - D[lo] || 1, t = (d - D[lo]) / l;
     const dx = (b[0] - a[0]) / l, dz = (b[1] - a[1]) / l;
@@ -6959,33 +7199,63 @@ class CityTraffic {
     out.dx = dx; out.dz = dz;
     return out;
   }
-  /** A free spot on a loop between rMin and rMax from (x, z), not too close to another car. */
-  place(car, x, z, rMin, rMax) {
-    const routes = this.city.routes, o = {};
-    for (let k = 0; k < 30; k++) {
-      const r = routes[Math.floor(this.rnd() * routes.length)], d = this.rnd() * r.len;
+  groundY(r, x, z, yPrev) {
+    const c = this.city, g = c._tg || (c._tg = {});
+    return c.groundAt(x, z, r.elev ? (yPrev !== undefined ? yPrev + 1 : 60) : c.base(x, z) + 0.5, g).h;
+  }
+  /** Seen by the camera (and close enough to notice)? */
+  visible(x, y, z, cam) {
+    if (!cam) return false;
+    const dx = x - cam.position.x, dz = z - cam.position.z;
+    if (dx * dx + dz * dz > 300 * 300) return false;
+    return this.frustum.containsPoint(this._v.set(x, y + 1, z));
+  }
+  /** A free spot on a route between rMin and rMax from (x, z): clear of every other car, out of the camera's view. */
+  place(car, x, z, rMin, rMax, cam) {
+    const routes = this.city.routes, o = this._o;
+    for (let k = 0; k < 40; k++) {
+      const r = routes[Math.floor(this.rnd() * routes.length)];
+      if (car.type.big && !r.big) continue;
+      const d = this.rnd() * r.len * (r.closed ? 1 : 0.85);
       this.at(r, d, o);
       const dist = Math.hypot(o.x - x, o.z - z);
       if (dist < rMin || dist > rMax) continue;
-      if (this.cars.some(c => c !== car && c.r === r && Math.abs(((c.d - d + r.len * 1.5) % r.len) - r.len / 2) < 25)) continue;
-      Object.assign(car, { r, d, v: r.slow ? 7 : 10, x: o.x, z: o.z, h: Math.atan2(o.dx, o.dz), kx: 0, kz: 0, kvx: 0, kvz: 0, ky: 0, kw: 0, hold: 0 });
+      const y = this.groundY(r, o.x, o.z);
+      if (this.cars.some(c => c !== car && Math.abs(c.x - o.x) + Math.abs(c.z - o.z) < 16 + car.type.hl + c.type.hl && Math.abs(c.y - y) < 4)) continue;
+      if (k < 30 && this.visible(o.x, y, o.z, cam)) continue;        // pop in only where nobody is looking
+      const h = Math.atan2(o.dx, o.dz);
+      Object.assign(car, { r, d, v: r.slow ? 6 : 9, x: o.x, z: o.z, y, h, hr: h, kx: 0, kz: 0, kvx: 0, kvz: 0, ky: 0, kw: 0, hold: 0, still: 0, wait: 0 });
       return true;
     }
     return false;
   }
-  /** Fill / recycle around the player, then drive. */
-  update(dt, player, phase, active) {
+  newCar() {
+    const T = this.types, tot = T.reduce((a, t) => a + t.weight, 0);
+    let u = this.rnd() * tot, type = T[0];
+    for (const t of T) { if ((u -= t.weight) < 0) { type = t; break; } }
+    const C = CONFIG.city.traffic;
+    return { id: this.nextId++, type, ti: T.indexOf(type), col: type.color || (type.big ? this.busColors : this.colors)[Math.floor(this.rnd() * (type.big ? 4 : 12))],
+             spd: (C.speed[0] + this.rnd() * (C.speed[1] - C.speed[0])) * (type.big ? 0.8 : 1) };
+  }
+
+  /** Fill / recycle round the player, then drive: own pace, the car ahead (any route), crossing traffic, red lights, you. */
+  update(dt, player, phase, active, cam) {
     this.time += dt;
-    if (!active || !this.max) { if (this.mesh.visible) { this.mesh.visible = false; } return; }
-    const ps = player.state, C = CONFIG.city.traffic, R = C.radius;
-    while (this.cars.length < this.max) {
-      const car = { col: this.colors[this.cars.length % this.colors.length], spd: C.speed[0] + this.rnd() * (C.speed[1] - C.speed[0]) };
-      if (!this.place(car, ps.x, ps.z, 40, R)) break;
-      this.cars.push(car);
+    if (!active || !this.max) { if (this.cars.length) this.clear(); return; }
+    if (cam) { this._m.multiplyMatrices(cam.projectionMatrix, cam.matrixWorldInverse); this.frustum.setFromProjectionMatrix(this._m); }
+    const ps = player.state, C = CONFIG.city.traffic, R = C.radius, o = this._o;
+    for (let tries = 0; this.cars.length < this.max && tries < 4; tries++) {
+      const car = this.newCar();
+      if (this.place(car, ps.x, ps.z, 40, R, cam)) this.cars.push(car);
     }
-    const o = this._o || (this._o = {});
-    for (const c of this.cars) {
-      if (Math.hypot(c.x - ps.x, c.z - ps.z) > R + 40) { if (!this.place(c, ps.x, ps.z, R * 0.45, R)) { c.dead = true; continue; } }
+    const cars = this.cars;
+    for (const c of cars) {
+      const far = Math.hypot(c.x - ps.x, c.z - ps.z) > R + 40, ended = !c.r.closed && c.d >= c.r.len - 0.5;
+      if ((far || ended || c.still > 25) && !this.visible(c.x, c.y, c.z, cam)) {   // recycle (never in sight)
+        if (c.still > 25) this.stats.unstuck++;
+        this.stats.respawns++;
+        if (!this.place(c, ps.x, ps.z, R * 0.4, R, cam)) { c.dead = true; continue; }
+      }
       // knocked: slide to a stop, then ease back into the lane
       if (c.kvx || c.kvz || c.kw) {
         c.kx += c.kvx * dt; c.kz += c.kvz * dt; c.ky += c.kw * dt;
@@ -6994,60 +7264,99 @@ class CityTraffic {
         c.hold = 2.5;
       } else if (c.hold > 0) c.hold -= dt;
       else { const f = Math.exp(-1.2 * dt); c.kx *= f; c.kz *= f; c.ky *= f; }
-      // target speed: own pace, the car ahead, red lights, the player in front
       const r = c.r, cap = r.slow ? Math.min(c.spd, 8) : c.spd;
-      let vT = c.hold > 0 ? 0 : cap;
-      for (const b of this.cars) if (b !== c && b.r === r) {
-        const gap = (b.d - c.d + r.len) % r.len;
-        if (gap < 30) vT = Math.min(vT, Math.max(0, (gap - 9) * 0.6));
+      let vT = c.hold > 0 || ended ? 0 : cap, yielded = false;
+      const fx = Math.sin(c.h), fz = Math.cos(c.h);
+      for (const b of cars) {
+        if (b === c || b.dead) continue;
+        const rx = b.x - c.x, rz = b.z - c.z;
+        if (Math.abs(rx) + Math.abs(rz) > 40 || Math.abs(b.y - c.y) > 3) continue;
+        const ahead = rx * fx + rz * fz; if (ahead <= 0) continue;
+        const lat = Math.abs(-rx * fz + rz * fx), dot = fx * Math.sin(b.h) + fz * Math.cos(b.h);
+        const reach = c.type.hl + b.type.hl;
+        if (dot > 0.5) { if (lat < c.type.hw + b.type.hw + 0.5) vT = Math.min(vT, Math.max(0, (ahead - reach - 4) * 0.6)); }   // follow
+        else if (dot > -0.5 && ahead < reach + 7 && c.wait < 2.5) {                                                         // crossing / merging
+          if (lat < c.type.hw + b.type.hl + 1) { vT = 0; yielded = true; }  // it is in my lane already: wait for it to clear
+          else if (lat < reach + 1.5 && c.id > b.id) { vT = 0; yielded = true; }   // both about to enter: lower id goes first
+        }
       }
       if (r.lights) for (const st of r.stops) {
-        const gap = (st.d - c.d + r.len) % r.len, light = phase[st.axis];
-        if (gap < 34 && (light === 'r' || (light === 'a' && gap > 10))) vT = Math.min(vT, Math.max(0, (gap - 1.5) * 0.45));
+        const gap = r.closed ? (st.d - c.d + r.len) % r.len : st.d - c.d, light = phase[st.axis];
+        if (gap > -1 && gap < 34 && (light === 'r' || (light === 'a' && gap > 10))) vT = Math.min(vT, Math.max(0, (gap - 1.5) * 0.45));
       }
-      const fx = Math.sin(c.h), fz = Math.cos(c.h), dx = ps.x - c.x, dz = ps.z - c.z, ahead = dx * fx + dz * fz;
-      if (ahead > 0 && ahead < 16 && Math.abs(-dx * fz + dz * fx) < 2.6 && Math.abs(ps.y - (c.y || 0)) < 4) vT = Math.min(vT, Math.max(0, (ahead - 6) * 0.5));
+      const dx = ps.x - c.x, dz = ps.z - c.z, ahead = dx * fx + dz * fz;
+      if (ahead > 0 && ahead < 16 + c.type.hl && Math.abs(-dx * fz + dz * fx) < 2.6 && Math.abs(ps.y - c.y) < 4) vT = Math.min(vT, Math.max(0, (ahead - c.type.hl - 4) * 0.5));
+      // waited a while at a crossing (two cars giving way to each other): creep on; the overlap check below keeps it safe
+      c.wait = yielded ? c.wait + dt : c.wait >= 2.5 ? (c.wait + dt > 5 ? 0 : c.wait + dt) : 0;
+      if (c.wait >= 2.5) vT = Math.min(cap, 3);
       c.v = c.v < vT ? Math.min(vT, c.v + 2.5 * dt) : Math.max(vT, c.v - 7 * dt);
-      c.d = (c.d + c.v * dt) % r.len;
+      const px = c.x, pz = c.z, ph = c.h, pd = c.d, phr = c.hr;
+      c.still = c.v < 0.3 && c.hold <= 0 ? c.still + dt : 0;          // (a red light is ~9 s: 25 s means stuck)
+      c.d = r.closed ? (c.d + c.v * dt) % r.len : Math.min(r.len, c.d + c.v * dt);
       this.at(r, c.d, o);
       c.x = o.x + c.kx; c.z = o.z + c.kz;
       const hT = Math.atan2(o.dx, o.dz);
       c.hr = c.hr === undefined ? hT : c.hr + wrapAngle(hT - c.hr) * (1 - Math.exp(-6 * dt));   // turns smoothly at the corners
       c.h = c.hr + c.ky;
-      c.y = this.city.groundAt(c.x, c.z, this.city.base(c.x, c.z) + 0.5, this.city._tg || (this.city._tg = {})).h;
+      // never drive into another car: a move that makes a new overlap is undone and the car stops
+      if (c.v > 0 && !c.kvx && !c.kvz) for (const b of cars) {
+        if (b === c || b.dead || Math.abs(b.x - c.x) + Math.abs(b.z - c.z) > 16 || Math.abs(b.y - c.y) > 3) continue;
+        if (this.sat(c.x, c.z, c.h, c.type.hl, c.type.hw, b.x, b.z, b.h, b.type.hl, b.type.hw) && !this.sat(px, pz, ph, c.type.hl, c.type.hw, b.x, b.z, b.h, b.type.hl, b.type.hw)) {
+          c.x = px; c.z = pz; c.h = ph; c.d = pd; c.hr = phr; c.v = 0; break;
+        }
+      }
+      c.y = this.groundY(r, c.x, c.z, c.y);
     }
-    if (this.cars.some(c => c.dead)) this.cars = this.cars.filter(c => !c.dead);   // nowhere near you to go (you are on the circuit)
+    if (cars.some(c => c.dead)) this.cars = cars.filter(c => !c.dead);
     this.draw();
   }
   draw() {
-    const m = this.mesh, C = this._c || (this._c = new THREE.Color());
-    m.count = this.cars.length;
-    this.cars.forEach((c, i) => { m.setMatrixAt(i, M(c.x, c.y, c.z, c.h)); m.setColorAt(i, C.setHex(c.col)); });
-    m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true;
-    m.visible = m.count > 0;
+    const C = this._c || (this._c = new THREE.Color());
+    for (const m of this.meshes) m.count = 0;
+    for (const c of this.cars) { const m = this.meshes[c.ti], i = m.count++; m.setMatrixAt(i, M(c.x, c.y, c.z, c.h)); m.setColorAt(i, C.setHex(c.col)); }
+    for (const m of this.meshes) { m.instanceMatrix.needsUpdate = true; if (m.instanceColor) m.instanceColor.needsUpdate = true; m.visible = m.count > 0; }
+  }
+  /** Overlapping pairs (cars inside each other), for the tests. */
+  overlaps() {
+    let n = 0; const cs = this.cars;
+    for (let i = 0; i < cs.length; i++) for (let j = i + 1; j < cs.length; j++) {
+      const a = cs[i], b = cs[j]; if (Math.abs(a.y - b.y) > 2 || Math.abs(a.x - b.x) + Math.abs(a.z - b.z) > 15) continue;
+      if (this.sat(a.x, a.z, a.h, a.type.hl - 0.3, a.type.hw - 0.2, b.x, b.z, b.h, b.type.hl - 0.3, b.type.hw - 0.2)) n++;
+    }
+    return n;
+  }
+  sat(ax, az, ah, ahl, ahw, bx, bz, bh, bhl, bhw) {
+    const A = [Math.sin(ah), Math.cos(ah)], B = [Math.sin(bh), Math.cos(bh)], axes = [A, [-A[1], A[0]], B, [-B[1], B[0]]], dx = bx - ax, dz = bz - az;
+    for (const [u, w] of axes) {
+      const d = Math.abs(dx * u + dz * w);
+      const ea = ahl * Math.abs(A[0] * u + A[1] * w) + ahw * Math.abs(-A[1] * u + A[0] * w), eb = bhl * Math.abs(B[0] * u + B[1] * w) + bhw * Math.abs(-B[1] * u + B[0] * w);
+      if (d > ea + eb) return false;
+    }
+    return true;
   }
   /** Player box vs traffic boxes: a two-body impulse; the traffic car gets shoved (and spins a little). */
   collide(car, fx, fz, rx, rz, hl, hw) {
-    const s = car.state, tm = 1300;
+    const s = car.state;
     for (const c of this.cars) {
-      const dx = s.x - c.x, dz = s.z - c.z;
-      if (dx * dx + dz * dz > 49 || Math.abs(s.y - c.y) > 2.5) continue;
+      const dx = s.x - c.x, dz = s.z - c.z, reach = hl + c.type.hl + 1;
+      if (dx * dx + dz * dz > reach * reach || Math.abs(s.y - c.y) > 2.5) continue;
+      const tm = c.type.big ? 11000 : 1300, chl = c.type.hl, chw = c.type.hw;
       const tfx = Math.sin(c.h), tfz = Math.cos(c.h), trx = -tfz, trz = tfx;
       const ax = [fx, fz, rx, rz, tfx, tfz, trx, trz];
       let best = Infinity, nx = 0, nz = 0, hit = true;
       for (let k = 0; k < 4 && hit; k++) {
         const a = ax[k * 2], b = ax[k * 2 + 1], d = dx * a + dz * b;
         const e1 = hl * Math.abs(fx * a + fz * b) + hw * Math.abs(rx * a + rz * b);
-        const e2 = 2.1 * Math.abs(tfx * a + tfz * b) + 0.9 * Math.abs(trx * a + trz * b);
+        const e2 = chl * Math.abs(tfx * a + tfz * b) + chw * Math.abs(trx * a + trz * b);
         const ov = e1 + e2 - Math.abs(d);
         if (ov <= 0) hit = false; else if (ov < best) { best = ov; const sg = d >= 0 ? 1 : -1; nx = a * sg; nz = b * sg; }
       }
       if (!hit) continue;
       let ox = 0, oz = 0, md = Infinity;
       for (let k = 0; k < 4; k++) { const lz = k < 2 ? hl : -hl, lx = (k & 1) ? hw : -hw, cx = fx * lz - rx * lx, cz = fz * lz - rz * lx, d = cx * nx + cz * nz; if (d < md) { md = d; ox = cx; oz = cz; } }
-      const tvx = tfx * c.v + c.kvx, tvz = tfz * c.v + c.kvz;
-      const j = Physics.resolveContact(car, nx, nz, best * 0.6, ox, oz, car.cfg.mass / (car.cfg.mass + tm) * 2, 0.15, tvx, tvz);
-      c.kx -= nx * best * 0.4; c.kz -= nz * best * 0.4;
+      const tvx = tfx * c.v + c.kvx, tvz = tfz * c.v + c.kvz, share = tm / (car.cfg.mass + tm);
+      const j = Physics.resolveContact(car, nx, nz, best * share, ox, oz, share * 2, 0.15, tvx, tvz);
+      c.kx -= nx * best * (1 - share); c.kz -= nz * best * (1 - share);
       if (j > 0) { c.kvx -= nx * j / tm; c.kvz -= nz * j / tm; c.kw += (Math.random() - 0.5) * j / tm * 0.6; c.v *= 0.3; c.hold = 2.5; }
     }
   }
@@ -7146,7 +7455,8 @@ class CityMap {
     for (let i = 0; i < track.n; i++) { x0 = Math.min(x0, track.X[i]); x1 = Math.max(x1, track.X[i]); z0 = Math.min(z0, track.Z[i]); z1 = Math.max(z1, track.Z[i]); }
     x0 -= 60; x1 += 60; z0 -= 60; z1 += 60;
     this.b = { x0, x1, z0, z1 };
-    this.sc = 0.5;                                                   // px per metre
+    // px per metre: 0.5, but never wider / taller than the canvas limit (iOS Safari: 2048 px keeps memory safe)
+    this.sc = Math.min(0.5, MAP_MAX_PX / Math.max(x1 - x0, z1 - z0));
     const cv = this.img = document.createElement('canvas');
     cv.width = Math.ceil((x1 - x0) * this.sc); cv.height = Math.ceil((z1 - z0) * this.sc);
     const g = cv.getContext('2d'), P = (x, z) => [(x - x0) * this.sc, (z - z0) * this.sc];
@@ -7210,6 +7520,132 @@ class CityMap {
     const s = car.state, [a, b] = Q(s.x, s.z), ang = Math.atan2(Math.cos(s.h), Math.sin(s.h));
     g.save(); g.translate(a, b); g.rotate(ang); g.fillStyle = '#ffb36b'; g.strokeStyle = '#000'; g.lineWidth = 1.5 * dpr;
     g.beginPath(); g.moveTo(10 * dpr, 0); g.lineTo(-6 * dpr, 6 * dpr); g.lineTo(-2 * dpr, 0); g.lineTo(-6 * dpr, -6 * dpr); g.closePath(); g.fill(); g.stroke(); g.restore();
+  }
+}
+
+/* =====================================================================
+ * PERSONAL BESTS + TIME TRIAL
+ * Bests (any mode): best lap and best single drift per car, shown on the car select screen.
+ * Time Trial: solo laps on the circuit, unlimited. Splits at the two sector lines (⅓, ⅔ of the lap) and the finish
+ * line are compared with your best lap (green = ahead, red = behind). The best lap per car is saved with its sector
+ * times and a ghost (the car's path sampled at 15 Hz), replayed as a see-through car on the next laps.
+ * Everything lives in localStorage ('islaRush.bests', 'islaRush.trial').
+ * ===================================================================== */
+const Bests = {
+  data: (() => { try { return JSON.parse(localStorage.getItem('islaRush.bests') || '{}') || {}; } catch (e) { return {}; } })(),
+  save() { try { localStorage.setItem('islaRush.bests', JSON.stringify(this.data)); } catch (e) { /* storage blocked / full */ } },
+  of(key) { return this.data[key] || (this.data[key] = {}); },
+  lap(key, t) { const b = this.of(key); if (!(b.lap <= t)) { b.lap = t; this.save(); return true; } return false; },
+  drift(key, pts) { const b = this.of(key); if (!(b.drift >= pts)) { b.drift = pts; this.save(); return true; } return false; },
+};
+
+const TrialStore = {
+  data: (() => { try { return JSON.parse(localStorage.getItem('islaRush.trial') || '{}') || {}; } catch (e) { return {}; } })(),
+  save() {
+    try { localStorage.setItem('islaRush.trial', JSON.stringify(this.data)); }
+    catch (e) { for (const k in this.data) if (this.data[k].ghost) delete this.data[k].ghost; try { localStorage.setItem('islaRush.trial', JSON.stringify(this.data)); } catch (e2) { /* full */ } }
+  },
+  of(key) { return this.data[key] || null; },
+  /** Ghost path: Float32 [t, x, y, z, h, pitch] × n, stored as base64. */
+  encode(arr) { const b = new Uint8Array(new Float32Array(arr).buffer); let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s); },
+  decode(str) { const s = atob(str), b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return new Float32Array(b.buffer); },
+};
+
+/** Clear every saved record (Settings → Reset records). */
+function resetAllRecords() {
+  for (const k of ['islaRush.bests', 'islaRush.trial', 'islaRush.cityRecords']) { try { localStorage.removeItem(k); } catch (e) { /* blocked */ } }
+  Bests.data = {}; TrialStore.data = {};
+}
+
+class TimeTrial {
+  constructor(game) {
+    this.g = game; this.key = game.carKey; this.L = game.track.length;
+    this.bounds = [this.L / 3, this.L * 2 / 3];
+    this.rec = []; this.recT = 0; this.splits = []; this.sector = 0; this.invalid = false; this.prevS = null;
+    this.events = [];
+    this.loadGhost();
+  }
+  /** The see-through car replaying the best lap. */
+  loadGhost() {
+    const g = this.g, r = TrialStore.of(this.key);
+    if (this.ghost) { g.scene.remove(this.ghost.root); this.ghost = null; }
+    if (!r || !r.ghost) { this.path = null; return; }
+    this.path = TrialStore.decode(r.ghost);
+    const cfg = CONFIG.cars[this.key], m = buildCarModel(cfg, null, { paint: 'phong' }, 0x9fd8ff);
+    const mat = new THREE.MeshLambertMaterial({ color: 0x9fd8ff, emissive: 0x1a3a55, transparent: true, opacity: 0.32, depthWrite: false });
+    m.root.traverse(o => {
+      if (!o.isMesh) return;
+      if (o.material.transparent) { o.visible = false; return; }        // the soft shadow under the car: not for a ghost
+      o.material = mat; o.castShadow = false; o.receiveShadow = false; o.renderOrder = 2;
+    });
+    m.flames.visible = false; if (m.glow) m.glow.visible = false;
+    g.scene.add(m.root);
+    this.ghost = m; this.ghostIdx = 0;
+    m.root.visible = false;
+  }
+  dispose() { if (this.ghost) this.g.scene.remove(this.ghost.root); this.ghost = null; }
+
+  /** Lap line crossed for the first time / again. */
+  lapStart() { this.rec.length = 0; this.recT = 0; this.splits = []; this.sector = 0; this.invalid = false; this.ghostIdx = 0; }
+  /** A reset mid-lap voids the lap (the clock keeps running, no record). */
+  voidLap() { if (this.g.laps.started) { this.invalid = true; this.g.hud.popup('LAP VOID', 'reset during the lap', 'lost'); } }
+
+  /** After each physics step: record the path, catch sector lines. */
+  step(dt) {
+    const g = this.g, laps = g.laps, s = g.car.state;
+    if (!laps.started) { this.prevS = s.s; return; }
+    if ((this.recT -= dt) <= 0) { this.recT += 1 / 15; this.rec.push(laps.time, s.x, s.y, s.z, s.h, s.pitch); }
+    const ps = this.prevS; this.prevS = s.s;
+    if (ps === null || this.sector >= 2) return;
+    const b = this.bounds[this.sector];
+    if (ps < b && s.s >= b && s.s - ps < 50) this.split(laps.time - dt * (s.s - b) / Math.max(1e-6, s.s - ps));
+  }
+  /** Sector line or finish: delta against the best lap at the same point. */
+  split(t) {
+    const r = TrialStore.of(this.key), i = this.splits.length;
+    this.splits.push(t);
+    const prevT = i ? this.splits[i - 1] : 0, secT = t - prevT;
+    let delta = null;
+    if (r && r.splits) delta = t - r.splits[i];
+    const bestSec = r && r.bestSectors ? r.bestSectors[i] : null;
+    this.events.push({ type: 'split', n: i + 1, t, delta, sector: secT, purple: !this.invalid && (bestSec === null || secT < bestSec) });
+    if (i < 2) this.sector = i + 1;
+  }
+  /** A lap finished (time t): split 3, records, ghost. */
+  lapDone(t) {
+    if (this.splits.length < 2) this.invalid = true;                 // (missed a sector line: a shortcut or a reset)
+    this.split(t);
+    if (this.invalid) { this.events.push({ type: 'void' }); return; }
+    const key = this.key, r = TrialStore.of(key) || { lap: null, splits: null, bestSectors: [null, null, null], laps: 0 };
+    const secs = this.splits.map((v, i) => v - (i ? this.splits[i - 1] : 0));
+    r.laps = (r.laps || 0) + 1;
+    r.bestSectors = (r.bestSectors || [null, null, null]).map((b, i) => (b === null || secs[i] < b ? secs[i] : b));
+    const best = r.lap === null || t < r.lap;
+    if (best) {
+      r.lap = t; r.splits = this.splits.slice(); r.sectors = secs;
+      this.rec.push(t, this.g.car.state.x, this.g.car.state.y, this.g.car.state.z, this.g.car.state.h, this.g.car.state.pitch);
+      r.ghost = TrialStore.encode(this.rec); r.date = Date.now();
+    }
+    TrialStore.data[key] = r; TrialStore.save();
+    Bests.lap(key, t);
+    this.events.push({ type: 'lap', t, best, theo: r.bestSectors.every(x => x !== null) ? r.bestSectors.reduce((a, b) => a + b, 0) : null });
+    if (best) this.loadGhost();
+  }
+  /** Place the ghost at the current lap time (render time). */
+  frame(show) {
+    const G = this.ghost, P = this.path, laps = this.g.laps;
+    if (!G) return;
+    const on = show && P && laps.started && laps.time <= P[P.length - 6];
+    G.root.visible = !!on;
+    if (!on) return;
+    const t = laps.time, n = P.length / 6;
+    let i = Math.min(this.ghostIdx, n - 2);
+    while (i > 0 && P[i * 6] > t) i--;
+    while (i < n - 2 && P[(i + 1) * 6] <= t) i++;
+    this.ghostIdx = i;
+    const a = i * 6, b = a + 6, k = clamp((t - P[a]) / Math.max(1e-4, P[b] - P[a]), 0, 1);
+    G.root.position.set(lerp(P[a + 1], P[b + 1], k), lerp(P[a + 2], P[b + 2], k), lerp(P[a + 3], P[b + 3], k));
+    G.root.rotation.set(-lerp(P[a + 5], P[b + 5], k), P[a + 4] + wrapAngle(P[b + 4] - P[a + 4]) * k, 0);
   }
 }
 
@@ -7449,7 +7885,7 @@ class Game {
     if (on) this.ensureCity();
     this.freeOn = on; this.wasCity = false; this.district = null;
     if (this.cityView) this.cityView.setVisible(on);
-    if (on && !this.cityCompiled) { this.cityCompiled = true; this.cityView.warm(this.renderer, this.scene, this.camera, this.traffic.mesh); }
+    if (on && !this.cityCompiled) { this.cityCompiled = true; this.cityView.warm(this.renderer, this.scene, this.camera, this.traffic.meshes); }
     if (this.track.gate) this.track.gate.visible = !on;
     if (this.traffic) { this.traffic.clear(); this.traffic.setDensity(on ? Settings.data.traffic : 'off'); }
     if (this.free) { this.free.inCity = false; this.free.events.length = 0; }
@@ -7513,7 +7949,7 @@ class Game {
       if (this.results) continue;
       if (a === 'pause') this.setPaused(!this.paused);
       else if (this.paused) continue;                        // other actions wait until resumed
-      else if (a === 'reset') this.resetCar();
+      else if (a === 'reset') { if (this.trial) this.trial.voidLap(); this.resetCar(); }
       else if (a === 'camera') this.cameraRig.toggle();
       else if (a === 'gearUp' || a === 'gearDown') { if (this.car.manual && this.intro <= 0 && this.countdown <= 0) this.car.shift(a === 'gearUp' ? 1 : -1); }
       else if (a === 'quality') this.cycleQuality();
@@ -7595,6 +8031,8 @@ class Game {
     document.body.classList.remove('finished', 'wrongway');
     this.endRace();
     this.setFree(this.raceOpts.mode === 'free');
+    if (this.raceOpts.mode === 'trial') { this.trial = new TimeTrial(this); this.hud.showBanner('Time Trial', this.trial.path ? 'Best ' + formatTime(TrialStore.of(this.carKey).lap) + ' \u00b7 race your ghost' : 'Set your first lap', 2.5); }
+    document.body.classList.toggle('trial', !!this.trial);
     if (this.raceOpts.mode === 'race') {
       this.race = new Race(this, this.raceOpts);
       this.race.setup(this.carKey, this.carColor);
@@ -7603,7 +8041,7 @@ class Game {
       this.intro = CONFIG.race.introTime; this.countdown = 0;
       const n = this.raceOpts.laps;
       this.hud.showBanner(n + (n > 1 ? ' laps' : ' lap'), CONFIG.race.difficultyNames[this.raceOpts.difficulty] + ' \u00b7 6 cars \u00b7 you start 4th', CONFIG.race.introTime - 0.3);
-    } else if (Settings.data.spawn !== 'circuit' && CONFIG.city.spawns[Settings.data.spawn]) {
+    } else if (this.raceOpts.mode === 'free' && Settings.data.spawn !== 'circuit' && CONFIG.city.spawns[Settings.data.spawn]) {
       this.spawnFree(Settings.data.spawn);                          // Free Drive from a spot in the city
     } else {
       this.intro = 0; this.startCountdown();
@@ -7617,6 +8055,8 @@ class Game {
   /** Remove the AI field (back to Free Drive / menus). */
   endRace() {
     if (this.race) { this.race.dispose(); this.race = null; }
+    if (this.trial) { this.trial.dispose(); this.trial = null; }
+    document.body.classList.remove('trial');
     this.clearTags();
     this.sound.setOpponents(null);
     document.body.classList.remove('racing', 'drafting', 'finished', 'wrongway');
@@ -7839,7 +8279,12 @@ class Game {
         if (!ic) this.laps.update(P.dt, this.car.state.s);
       } else {
         Physics.step(this.car, ctrl, this.track, P.dt);
+        const lp = this.laps.lap;
         this.laps.update(P.dt, this.car.state.s);
+        if (this.trial) {                                           // Time Trial: lap / sector bookkeeping on the exact step
+          if (this.laps.lap !== lp) { if (lp > 0) this.trial.lapDone(this.laps.last); this.trial.lapStart(); }
+          this.trial.step(P.dt);
+        }
       }
       if (race) race.step(P.dt);
       this.acc -= P.dt; steps++;
@@ -7855,6 +8300,7 @@ class Game {
     if (!(race && race.playerDone)) this.nitro.add(this.drift.update(dt, this.car));
     for (const e of this.drift.events) {
       const D = CONFIG.drift;
+      if (e.type === 'bank' && e.points > 0 && Bests.drift(this.carKey, e.points) && e.points > 2000) this.hud.toast('New best drift for this car: ' + fmtPts(e.points), 2.5);
       if (e.type === 'bank') {
         if (e.tier >= 0) { this.hud.popup(D.tiers[e.tier][1], '+' + fmtPts(e.points), 't' + (e.tier + 1)); this.sound.ui('tier' + e.tier); }
         else if (e.points > 0) { this.hud.popup('+' + fmtPts(e.points), '', 't0'); this.sound.ui('bank'); }
@@ -7869,6 +8315,7 @@ class Game {
         this.drift.newLap();
       }
       else if (e.type === 'lap') {
+        if (!this.trial && !(race && race.playerDone)) Bests.lap(this.carKey, e.time);
         const dl = this.drift.newLap(); this.raceDrift += dl;
         const sub = formatTime(e.time) + '  \u00b7  drift ' + fmtPts(dl);
         if (!race) this.hud.showBanner(e.best ? 'Best lap!' : 'Lap ' + (e.lap - 1), sub, 2.5);
@@ -7877,6 +8324,7 @@ class Game {
       }
     }
     this.laps.events.length = 0;
+    if (this.trial) this.trialEvents();
     if (this.freeOn) {
       this.activities.update(dt, this.car, this.free.events);
       this.free.events.length = 0;
@@ -7892,6 +8340,26 @@ class Game {
       if (this.lastSection !== -1 && this.hud.bannerTimer <= 0) this.hud.showBanner(this.track.sectionOf(this.car.state.idx).name, '', 2);
       this.lastSection = sec;
     }
+  }
+
+  /** Time Trial HUD: split deltas at the sector lines and the finish, lap results. */
+  trialEvents() {
+    const el = document.getElementById('split');
+    for (const e of this.trial.events) {
+      if (e.type === 'split') {
+        const lbl = e.n < 3 ? 'SECTOR ' + e.n : 'LAP';
+        el.className = 'show ' + (e.delta === null ? 'even' : e.delta < 0 ? 'ahead' : 'behind') + (e.purple ? ' purple' : '');
+        el.innerHTML = '';
+        const b = document.createElement('div'); b.textContent = e.delta === null ? formatTime(e.t) : (e.delta < 0 ? '\u2212' : '+') + Math.abs(e.delta).toFixed(2);
+        const sm = document.createElement('small'); sm.textContent = lbl + '  ' + e.sector.toFixed(2) + 's' + (e.purple ? '  BEST SECTOR' : '');
+        el.append(b, sm);
+        clearTimeout(this.splitTO); this.splitTO = setTimeout(() => el.classList.remove('show'), 3000);
+        this.sound.ui(e.delta !== null && e.delta < 0 ? 'mult' : 'beep');
+      } else if (e.type === 'lap' && e.best) {
+        this.hud.popup('NEW BEST LAP', formatTime(e.t) + (e.theo ? '  \u00b7  theoretical ' + formatTime(e.theo) : ''), 't2'); this.sound.ui('tier2');
+      } else if (e.type === 'void') this.hud.popup('LAP NOT COUNTED', 'reset or missed a sector', 'lost');
+    }
+    this.trial.events.length = 0;
   }
 
   /** Keep the shadow camera centred on the car. */
@@ -7921,12 +8389,13 @@ class Game {
       if (this.race) for (const r of this.race.racers) if (r.ai) r.car.updateVisual(alpha, live);
       if (this.intro > 0 && this.race) this.introCamera(dt); else this.cameraRig.update(live, this.car);
       if (this.race) { this.updateTags(); this.minimap.draw(this.race.racers); }
+      if (this.trial) this.trial.frame(Settings.data.ghost === 'on');
       if (this.freeOn) {                                            // city: stream the near chunks, lights, props, traffic, minimap
         const s = this.car.state, v = this.cityView;
         this.cityClock += live; v.time = this.cityClock;
         v.update(s.x, s.z);
         v.refreshBulbs(false); v.updateProps(live);
-        if (live > 0) this.traffic.update(live, this.car, this.city.lightPhase(this.cityClock), true);
+        if (live > 0) this.traffic.update(live, this.car, this.city.lightPhase(this.cityClock), true, this.camera);
         this.cityMap.drawMini(this.minimap.cv, this.car.renderPos.x, this.car.renderPos.z, this.car.renderH);
       }
       this.world.update(live, this.camera);

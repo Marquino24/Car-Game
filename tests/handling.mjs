@@ -233,6 +233,9 @@ await page.waitForFunction(() => window.IslaRush && window.IslaRush.track && win
 await page.evaluate(`window.__S = (${pageSuite.toString()})()`);
 const run = (expr) => page.evaluate(expr);
 
+if (process.env.ONLY) {                                             // dev: evaluate one expression against the suite, print it
+  console.log(JSON.stringify(await run(process.env.ONLY))); console.log('errors', errors); await browser.close(); process.exit(0);
+}
 const R = { file: path.basename(file), errors };
 R.keys = await run('__S.KEYS');
 R.power = await run('[1, 0.85, 0.7, 0.6, 0.5, 0.25, 0.08].map(l => [l, +__S.power(l).toFixed(3)])');
